@@ -17,7 +17,7 @@ as_app_user() {
   runuser -u rapidsims -- "$@"
 }
 
-echo "Installing runtime dependencies..."
+echo "Installing shared PostgreSQL and Redis clients..."\nas_app_user npm install --prefix "$ROOT" --omit=dev --no-save --no-package-lock --no-audit --no-fund pg@^8 redis@^5\n\necho "Installing app dependencies..."
 for app in platform sim sim-02 sim03 sim04 sim05 sim06 sim07 sim08 sim09 sim10 sim-plus-01 simplus02; do
   as_app_user npm install --prefix "$ROOT/$app" --omit=dev --no-package-lock --no-audit --no-fund
 done
