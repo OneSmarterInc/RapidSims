@@ -26,7 +26,7 @@ module.exports = async (req, res) => {
   }
 
   const missing = [];
-  if (!store.configured()) missing.push('KV_REST_API_URL / KV_REST_API_TOKEN');
+  if (!store.configured()) missing.push('REDIS_URL (or Upstash Redis REST credentials)');
   if (!process.env.LAUNCH_SECRET) missing.push('LAUNCH_SECRET');
   if (!process.env.PLATFORM_URL) missing.push('PLATFORM_URL');
   if (!canonicalUrl(req)) missing.push('SIM_URL / PLATFORM_URL');
