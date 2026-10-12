@@ -1,5 +1,6 @@
 'use strict';
 // Minimal key-value interface. Values are JSON. TTL 30 days on every write.
+const { command: redisCommand } = require('../../ec2/redis-command');
 const TTL = 60 * 60 * 24 * 30;
 
 function memoryStore() {
@@ -46,6 +47,22 @@ function upstashStore(url, token) {
 let shared = null;
 function defaultStore() {
   if (shared && (shared.kind !== 'memory' || (!process.env.VERCEL && process.env.DEV_OPEN === '1'))) return shared;
+  if (process.env.REDIS_URL) {
+    shared = {
+      kind: 'redis',
+      async get(k) { const r = await redisCommand(['GET', k]); return r == null ? null : JSON.parse(r); },
+      async set(k, v) { await redisCommand(['SET', k, JSON.stringify(v), 'EX', String(TTL)]); },
+      async setnx(k, v) { return (await redisCommand(['SET', k, JSON.stringify(v), 'NX', 'EX', String(TTL)])) === 'OK'; },
+      async compareAndSet(k, expected, next) {
+        const script = "local old=redis.call('GET',KEYS[1]); if (not old and ARGV[1]=='') or old==ARGV[1] then redis.call('SET',KEYS[1],ARGV[2],'EX',ARGV[3]); return 1 end; return 0";
+        return Number(await redisCommand(['EVAL', script, '1', k, expected === null ? '' : JSON.stringify(expected), JSON.stringify(next), String(TTL)])) === 1;
+      },
+      async mget(keys) { if (!keys.length) return []; return (await redisCommand(['MGET', ...keys])).map(x => x == null ? null : JSON.parse(x)); },
+      async sadd(k, m) { await redisCommand(['SADD', k, m]); await redisCommand(['EXPIRE', k, String(TTL)]); },
+      async smembers(k) { return (await redisCommand(['SMEMBERS', k])) || []; }
+    };
+    return shared;
+  }
   const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
   if (url && token) shared = upstashStore(url, token);
