@@ -216,7 +216,9 @@ async function handle(req, res) {
 
   if (url.pathname === '/api' || url.pathname.startsWith('/api/')) {
     const route = url.pathname === '/api' ? 'index' : url.pathname.slice('/api/'.length);
-    const found = matchApi(route);
+    // RapidSim 10 uses a Vercel rewrite to one catch-all entry (api/index.js).
+    // Route unmatched API paths there on EC2 so its own router can handle them.
+    const found = matchApi(route) || (id === 'sim10' ? apiFiles.find(file => file.rel === 'index.js') : null);
     if (!found) { res.statusCode = 404; return res.json({ error: 'Not found' }); }
     req.url = url.pathname + url.search;
     req.originalUrl = req.url;
