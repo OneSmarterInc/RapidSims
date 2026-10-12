@@ -21,6 +21,7 @@ jobs:
     env:
       AWS_REGION: ${{ vars.AWS_REGION }}
       EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+      AWS_DEPLOY_ROLE_ARN: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
 
     steps:
       - name: Check required deployment settings
@@ -28,12 +29,12 @@ jobs:
         run: |
           test -n "$AWS_REGION" || { echo "Set the AWS_REGION repository variable."; exit 1; }
           test -n "$EC2_INSTANCE_ID" || { echo "Set the EC2_INSTANCE_ID repository variable."; exit 1; }
-          test -n "${{ vars.AWS_DEPLOY_ROLE_ARN }}" || { echo "Set the AWS_DEPLOY_ROLE_ARN repository variable."; exit 1; }
+          test -n "$AWS_DEPLOY_ROLE_ARN" || { echo "Set the AWS_DEPLOY_ROLE_ARN repository variable."; exit 1; }
 
       - name: Authenticate to AWS with GitHub OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          role-to-assume: ${{ env.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Deploy latest master through Systems Manager
