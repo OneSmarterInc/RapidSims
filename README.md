@@ -64,3 +64,7 @@ separate `HEALTH_SECRET`, shared by the platform and all ten sims. Public
 `/api/health` responses report liveness only. Send the diagnostic key in the
 `x-health-key` header; never put it in a URL. See
 [the integration fixes and rollout notes](docs/integration-fixes-2026-09-28.md).
+
+## Deploying the full repository on EC2
+
+For a single-instance deployment of the platform and all simulation folders using one shared environment file, systemd, and Nginx (without Docker, RDS, or S3), follow [the EC2 deployment guide](ec2/README.md). The existing Neon Postgres and Upstash Redis application connections remain required.
