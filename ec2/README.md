@@ -30,19 +30,32 @@ sudo -u postgres psql
 
 At the `psql` prompt, run `CREATE ROLE rapidsims LOGIN;`, then `\password rapidsims` and enter a strong password, then `CREATE DATABASE rapidsims OWNER rapidsims;` and `\q`. Put the same password in DATABASE_URL in `/etc/rapidsims.env` (URL-encode special characters). Configure the EC2 security group to allow SSH only from administrator IP addresses and HTTP/HTTPS from users. Point the site's DNS A record to the EC2 Elastic IP.
 
-1. Create the service account and checkout location:
+1. Create the service account with a home directory and prepare the checkout location:
 
 ```bash
-sudo useradd --system --user-group --no-create-home --shell /usr/sbin/nologin rapidsims
+sudo useradd --system --user-group --create-home --home-dir /var/lib/rapidsims --shell /usr/sbin/nologin rapidsims
 sudo mkdir -p /opt/rapidsims
 sudo chown rapidsims:rapidsims /opt/rapidsims
+sudo install -d -o rapidsims -g rapidsims -m 0700 /var/lib/rapidsims/.ssh
 ```
 
-2. Give the instance read-only Git access to this private repository using a GitHub deploy key, then clone it:
+2. Create a read-only GitHub deploy key for this private repository:
 
 ```bash
-sudo -u rapidsims git clone git@github.com:OneSmarterInc/RapidSims.git /opt/rapidsims
+sudo -u rapidsims env HOME=/var/lib/rapidsims ssh-keygen -t ed25519 -C rapidsims-ec2 -f /var/lib/rapidsims/.ssh/id_ed25519 -N ""
+sudo cat /var/lib/rapidsims/.ssh/id_ed25519.pub
 ```
+
+Copy the displayed public key. In GitHub, open **OneSmarterInc/RapidSims → Settings → Deploy keys → Add deploy key**. Give it a recognizable title such as `EC2 RapidSims`, paste the public key, leave **Allow write access** unchecked, and save it.
+
+Test SSH and accept GitHub's host key on the first connection, then clone as the service account:
+
+```bash
+sudo -u rapidsims env HOME=/var/lib/rapidsims ssh -T git@github.com
+sudo -u rapidsims env HOME=/var/lib/rapidsims git clone git@github.com:OneSmarterInc/RapidSims.git /opt/rapidsims
+```
+
+GitHub's SSH test may finish with a message that shell access is not provided; successful authentication is what matters.
 
 3. Create the single server-side environment file:
 
@@ -74,7 +87,7 @@ The script installs shared `pg` and `redis` clients plus each app's production d
 Thereafter deploy updates with:
 
 ```bash
-sudo -u rapidsims git -C /opt/rapidsims pull --ff-only
+sudo -u rapidsims env HOME=/var/lib/rapidsims git -C /opt/rapidsims pull --ff-only
 sudo bash /opt/rapidsims/ec2/deploy.sh
 ```
 
