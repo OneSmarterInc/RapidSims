@@ -10,7 +10,7 @@ All 13 systemd services load the same file: /etc/rapidsims.env. Start from ec2/r
 
 For production, use a strong random LAUNCH_SECRET and a separate HEALTH_SECRET. Keep the file owned by root and readable by the service group only. Remove SETUP_KEY after creating the first administrator.
 
-The standalone ACCESS_CODE and FACULTY_CODES values are shared by all simulations because there is one environment file. Platform sign-in and signed launch tokens remain the preferred account flow.
+The standalone ACCESS_CODE, FACULTY_CODE, and FACULTY_CODES values are shared by all simulations because there is one environment file. Platform sign-in and signed launch tokens remain the preferred account flow.
 
 ## EC2 setup
 
@@ -52,25 +52,16 @@ Edit server_name in /etc/nginx/conf.d/rapidsims.conf to your domain before reloa
 5. Install dependencies and build the generated assets:
 
 ```bash
-sudo -u rapidsims /opt/rapidsims/ec2/deploy.sh
+sudo bash /opt/rapidsims/ec2/deploy.sh
 ```
 
-The script installs production dependencies in each app folder, runs available simulation build scripts, restarts the 13 systemd services, and checks the platform health endpoint.
+The script installs production dependencies in each app folder, runs available simulation build scripts, enables and restarts all 13 systemd services, and checks the platform health endpoint.
 
-6. Enable automatic service startup:
-
-```bash
-for app in platform sim01 sim02 sim03 sim04 sim05 sim06 sim07 sim08 sim09 sim10 simplus01 simplus02; do
-  sudo systemctl enable --now "rapidsims@$app.service"
-done
-```
-
-The deploy script's initial restart assumes those units are installed; enable/start them once first if systemd reports that a unit is not found. Thereafter deploy with:
+Thereafter deploy updates with:
 
 ```bash
-cd /opt/rapidsims
-sudo -u rapidsims git pull --ff-only
-sudo -u rapidsims /opt/rapidsims/ec2/deploy.sh
+sudo -u rapidsims git -C /opt/rapidsims pull --ff-only
+sudo bash /opt/rapidsims/ec2/deploy.sh
 ```
 
 ## Routes
