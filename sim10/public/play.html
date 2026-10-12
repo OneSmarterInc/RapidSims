@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!--BASE-->
+<script>
+// The browser path is authoritative: a platform rewrite may serve this page
+// with a server-injected base for the sim's own domain, while the visible URL
+// still lives under /sim10/.
+const mount = /^\/sim10(?:\/|$)/.test(location.pathname) ? '/sim10/' : '/';
+let base = document.querySelector('base');
+if (!base) { base = document.createElement('base'); document.head.appendChild(base); }
+base.href = mount;
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Infrastructure or Bubble?</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body class="play-page">
+<header class="brandbar"><a class="brand" href="./"><span class="brand-mark">R</span><span>RapidSims<small>10 / INFRASTRUCTURE OR BUBBLE?</small></span></a><a class="account-link" href="/student.html">Back to courses</a></header>
+<header class="rail">
+  <div class="rail-inner">
+    <span class="case" id="case-label"></span>
+    <span class="phase" id="phase-label">Connecting</span>
+    <span class="time" id="time" aria-label="Time left"></span>
+  </div>
+  <div class="track" role="progressbar" aria-label="Current phase elapsed" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="track"></i></div>
+</header>
+
+<main class="wrap play-wrap">
+  <section id="recovery" class="panel recovery" hidden role="alert"><p id="recovery-message"></p><a id="recovery-link" class="btn quiet" href="./">Return to RapidSims</a></section>
+  <p id="unsaved-warning" class="error" role="status" hidden></p>
+  <details id="unsaved-copy" class="panel" hidden><summary>View the draft that was not submitted</summary><pre id="unsaved-text"></pre></details>
+  <section id="waiting" class="panel" hidden>
+    <h2>You're in.</h2>
+    <p>Your host will start the clock. The company's figures will appear here when they do.</p>
+    <p class="muted" id="waiting-team"></p>
+  </section>
+
+  <section id="result" hidden></section>
+  <section id="reveal" hidden></section>
+  <p><button class="btn" id="solo-next" type="button" hidden>Show next part</button></p>
+  <section id="solo-done" class="panel" hidden><h2>Run complete</h2><p id="completion-status" role="status">Your answers are recorded.</p><a class="account-link" href="/student.html">Return to your courses</a></section>
+
+  <nav class="mobile-jump" id="workspace-links" hidden aria-label="Workspace"><a href="#pack-wrap">View figures</a><a href="#dock">Go to your answer</a></nav>
+  <div class="workspace" id="workspace">
+  <details id="pack-wrap" open>
+    <summary class="muted" id="pack-summary" hidden>The figures you read</summary>
+    <div id="briefing"></div>
+    <div id="doc" class="doc"></div>
+  </details>
+<aside class="dock" id="dock" hidden aria-label="Your call">
+  <div class="dock-inner" id="dock-inner"></div>
+</aside>
+  </div>
+  <p class="error" id="err" role="alert"></p>
+</main>
+<dialog id="commit-dialog" aria-labelledby="commit-title"><div class="modal-head"><h2 id="commit-title">Review your answer</h2></div><div class="modal-body" id="commit-summary"></div><div class="modal-actions"><button type="button" class="btn quiet" id="commit-cancel">Keep editing</button><button type="button" class="btn" id="commit-confirm">Commit final answer</button></div></dialog>
+
+<script src="common.js"></script>
+<script src="draft-queue.js"></script>
+<script src="play.js"></script>
+</body>
+</html>
