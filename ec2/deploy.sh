@@ -14,7 +14,7 @@ if ! id rapidsims >/dev/null 2>&1; then
 fi
 
 as_app_user() {
-  runuser -u rapidsims -- "$@"
+  runuser -u rapidsims -- env HOME=/var/lib/rapidsims npm_config_cache=/var/lib/rapidsims/.npm "$@"
 }
 
 echo "Installing shared PostgreSQL and Redis clients..."
