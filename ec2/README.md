@@ -34,8 +34,8 @@ At the `psql` prompt, run `CREATE ROLE rapidsims LOGIN;`, then `\password rapids
 
 ```bash
 sudo useradd --system --user-group --create-home --home-dir /var/lib/rapidsims --shell /usr/sbin/nologin rapidsims
-sudo mkdir -p /opt/rapidsims
-sudo chown rapidsims:rapidsims /opt/rapidsims
+sudo mkdir -p /var/www/rapidsims
+sudo chown rapidsims:rapidsims /var/www/rapidsims
 sudo install -d -o rapidsims -g rapidsims -m 0700 /var/lib/rapidsims/.ssh
 ```
 
@@ -52,7 +52,7 @@ Test SSH and accept GitHub's host key on the first connection, then clone as the
 
 ```bash
 sudo -u rapidsims env HOME=/var/lib/rapidsims ssh -T git@github.com
-sudo -u rapidsims env HOME=/var/lib/rapidsims git clone git@github.com:OneSmarterInc/RapidSims.git /opt/rapidsims
+sudo -u rapidsims env HOME=/var/lib/rapidsims git clone git@github.com:OneSmarterInc/RapidSims.git /var/www/rapidsims
 ```
 
 GitHub's SSH test may finish with a message that shell access is not provided; successful authentication is what matters.
@@ -60,15 +60,15 @@ GitHub's SSH test may finish with a message that shell access is not provided; s
 3. Create the single server-side environment file:
 
 ```bash
-sudo install -o root -g rapidsims -m 0640 /opt/rapidsims/ec2/rapidsims.env.example /etc/rapidsims.env
+sudo install -o root -g rapidsims -m 0640 /var/www/rapidsims/ec2/rapidsims.env.example /etc/rapidsims.env
 sudoedit /etc/rapidsims.env
 ```
 
 4. Install the systemd and Nginx configuration:
 
 ```bash
-sudo cp /opt/rapidsims/ec2/rapidsims@.service /etc/systemd/system/rapidsims@.service
-sudo cp /opt/rapidsims/ec2/nginx-rapidsims.conf /etc/nginx/conf.d/rapidsims.conf
+sudo cp /var/www/rapidsims/ec2/rapidsims@.service /etc/systemd/system/rapidsims@.service
+sudo cp /var/www/rapidsims/ec2/nginx-rapidsims.conf /etc/nginx/conf.d/rapidsims.conf
 sudo nginx -t
 sudo systemctl reload nginx
 sudo systemctl daemon-reload
@@ -79,7 +79,7 @@ Edit server_name in /etc/nginx/conf.d/rapidsims.conf to your domain before reloa
 5. Install dependencies and build the generated assets:
 
 ```bash
-sudo bash /opt/rapidsims/ec2/deploy.sh
+sudo bash /var/www/rapidsims/ec2/deploy.sh
 ```
 
 The script installs shared `pg` and `redis` clients plus each app's production dependencies, runs available simulation build scripts, enables and restarts all 13 systemd services, and checks the platform health endpoint.
@@ -87,8 +87,8 @@ The script installs shared `pg` and `redis` clients plus each app's production d
 Thereafter deploy updates with:
 
 ```bash
-sudo -u rapidsims env HOME=/var/lib/rapidsims git -C /opt/rapidsims pull --ff-only
-sudo bash /opt/rapidsims/ec2/deploy.sh
+sudo -u rapidsims env HOME=/var/lib/rapidsims git -C /var/www/rapidsims pull --ff-only
+sudo bash /var/www/rapidsims/ec2/deploy.sh
 ```
 
 ## Routes
