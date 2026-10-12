@@ -1,29 +1,11 @@
 // Upstash/Vercel KV REST storage for RapidSim 07 sessions (48-hour expiry).
 // W07_MEMORY_STORE=1 swaps in an in-process store for the dependency-free checks.
-const URL_ = () => process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-const TOK_ = () => process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
-const MEMORY = () => process.env.W07_MEMORY_STORE === '1';
-const TTL = 60 * 60 * 48;
-const J = (v) => { if (v == null) return null; try { return JSON.parse(v); } catch { return null; } };
-
-const K = {
-  sess: (c) => `w07:sess:${c}`,
-  people: (c) => `w07:sess:${c}:p`,
-  beat: (c) => `w07:sess:${c}:hb`
-};
-
-function configured() { return MEMORY() || !!(URL_() && TOK_()); }
+const { configured: redisConfigured, command: redisCommand } = require('../../ec2/redis-command');
+function configured() { return MEMORY() || redisConfigured(); }
 
 async function cmd(args) {
-  if (!configured()) { const e = new Error('Session storage is not configured.'); e.code = 'NO_STORE'; throw e; }
-  const r = await fetch(URL_(), {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${TOK_()}` },
-    body: JSON.stringify(args)
-  });
-  const d = await r.json();
-  if (!r.ok || d.error) throw new Error(d.error || `KV error ${r.status}`);
-  return d.result;
+  if (MEMORY()) throw new Error('Memory backend commands are not used');
+  return redisCommand(args);
 }
 
 const CAS_SESSION = `
