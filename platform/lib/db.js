@@ -1,16 +1,16 @@
 'use strict';
 const { Pool } = require('pg');
 
-let pool = null;
+let adapter = null;
 function sql() {
-  if (pool) return pool;
+  if (adapter) return adapter;
   const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
   if (!connectionString) {
     const error = new Error('DATABASE_URL is not set');
     error.code = 'NO_DB';
     throw error;
   }
-  pool = new Pool({ connectionString, max: Number(process.env.PG_POOL_MAX || 10) });
+  const pool = new Pool({ connectionString, max: Number(process.env.PG_POOL_MAX || 10) });
   pool.on('error', error => console.error('Unexpected PostgreSQL pool error:', error));
   const tagged = async (strings, ...values) => {
     let text = strings[0];
@@ -19,7 +19,8 @@ function sql() {
     return result.rows;
   };
   tagged.query = async (text, values = []) => (await pool.query(text, values)).rows;
-  return (pool = tagged);
+  adapter = tagged;
+  return adapter;
 }
 
 const crypto = require('crypto');
