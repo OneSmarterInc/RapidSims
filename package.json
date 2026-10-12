@@ -1,0 +1,9 @@
+{
+  "name": "rapidsims-ec2-runtime",
+  "private": true,
+  "description": "Shared native PostgreSQL and Redis clients for EC2 runtime",
+  "dependencies": {
+    "pg": "^8.16.3",
+    "redis": "^5.8.2"
+  }
+}
