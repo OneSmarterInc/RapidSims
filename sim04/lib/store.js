@@ -2,6 +2,10 @@
 // One compare-and-set JSON document per room. Slots, assignments and final
 // commitments change atomically, including two teammates pressing Commit at once.
 const { configured, command: cmd } = require('../../ec2/redis-command');
+const TTL = 48 * 3600;
+const key = code => `m04:sess:${code}`;
+const courseKey = courseId => `m04:course:${Buffer.from(String(courseId)).toString('base64url')}`;
+const courseReadyKey = index => `${index}:ready`;
 const CAS = `
 if (redis.call('GET', KEYS[1]) or '') ~= ARGV[1] then return 0 end
 redis.call('SET', KEYS[1], ARGV[2], 'EX', ARGV[3])
