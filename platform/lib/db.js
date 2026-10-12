@@ -1,18 +1,29 @@
-const { neon } = require('@neondatabase/serverless');
+'use strict';
+const { Pool } = require('pg');
 
-let _sql = null;
+let pool = null;
 function sql() {
-  if (_sql) return _sql;
-  const url = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-  if (!url) { const e = new Error('DATABASE_URL is not set'); e.code = 'NO_DB'; throw e; }
-  _sql = neon(url);
-  return _sql;
+  if (pool) return pool;
+  const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  if (!connectionString) {
+    const error = new Error('DATABASE_URL is not set');
+    error.code = 'NO_DB';
+    throw error;
+  }
+  pool = new Pool({ connectionString, max: Number(process.env.PG_POOL_MAX || 10) });
+  pool.on('error', error => console.error('Unexpected PostgreSQL pool error:', error));
+  const tagged = async (strings, ...values) => {
+    let text = strings[0];
+    for (let i = 0; i < values.length; i++) text += '$' + (i + 1) + strings[i + 1];
+    const result = await pool.query(text, values);
+    return result.rows;
+  };
+  tagged.query = async (text, values = []) => (await pool.query(text, values)).rows;
+  return (pool = tagged);
 }
 
 const crypto = require('crypto');
 const id = (p) => p + '_' + crypto.randomBytes(9).toString('base64url');
-
-// Human-friendly course join codes, no ambiguous characters.
 const CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const joinCode = () => Array.from({ length: 6 }, () => CHARS[crypto.randomInt(CHARS.length)]).join('');
 
