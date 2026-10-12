@@ -6,7 +6,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
-const crypto = require('node:crypto');
 
 const REPO = path.resolve(__dirname, '..');
 const APPS = {
@@ -77,6 +76,7 @@ function matchApi(route) {
     let params = {};
     let score = 0;
     let i = 0;
+    let catchAll = false;
     for (; i < pattern.length; i++) {
       const segment = pattern[i];
       if (/^\[\.\.\..+\]$/.test(segment)) {
@@ -91,7 +91,8 @@ function matchApi(route) {
       } else if (segment === parts[i]) score += 10;
       else { score = -1; break; }
     }
-    if (score >= 0 && i === parts.length && pattern.length === parts.length && score > bestScore) {
+    const matchedLength = catchAll ? i === parts.length : pattern.length === parts.length && i === pattern.length;
+    if (score >= 0 && matchedLength && score > bestScore) {
       best = { ...file, params };
       bestScore = score;
     }
@@ -221,6 +222,9 @@ async function handle(req, res) {
     req.query = Object.fromEntries(url.searchParams.entries());
     req.cookies = parseCookies(req.headers.cookie);
     req.params = found.params;
+    req.protocol = String(req.headers['x-forwarded-proto'] || 'http').split(',')[0].trim();
+    req.secure = req.protocol === 'https';
+    req.ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress;
     try {
       req.body = await readBody(req);
       const handler = require(found.full);
