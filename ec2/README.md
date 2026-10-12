@@ -91,6 +91,68 @@ sudo -u rapidsims env HOME=/var/lib/rapidsims git -C /var/www/rapidsims pull --f
 sudo bash /var/www/rapidsims/ec2/deploy.sh
 ```
 
+## Automatic deployment after pushes (CD)
+
+The workflow `.github/workflows/deploy-ec2.yml` deploys automatically after each push to `master`. It uses AWS Systems Manager (SSM), so the EC2 security group does not need to expose SSH to GitHub-hosted runners. There is no separate CI/test gate. The existing `ec2/deploy.sh` installs dependencies, builds generated assets, restarts all 13 services, and checks platform health.
+
+### One-time AWS setup
+
+1. Confirm the EC2 instance is an SSM managed node and shows **Online** in Systems Manager. Its attached instance role must include `AmazonSSMManagedInstanceCore`. Install/start the SSM Agent if needed.
+2. In IAM, ensure the GitHub OIDC identity provider exists for `token.actions.githubusercontent.com` with audience `sts.amazonaws.com`.
+3. Create an IAM role for GitHub Actions with this trust policy. Replace `ACCOUNT_ID` with your AWS account ID:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Federated": "arn:aws:iam::ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com"
+    },
+    "Action": "sts:AssumeRoleWithWebIdentity",
+    "Condition": {
+      "StringEquals": {
+        "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+        "token.actions.githubusercontent.com:sub": "repo:OneSmarterInc/RapidSims:ref:refs/heads/master"
+      }
+    }
+  }]
+}
+```
+
+4. Give that role permission to send the deploy command only to this instance and read its command result. Replace `REGION`, `ACCOUNT_ID`, and `INSTANCE_ID`:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "ssm:SendCommand",
+      "Resource": [
+        "arn:aws:ssm:REGION::document/AWS-RunShellScript",
+        "arn:aws:ec2:REGION:ACCOUNT_ID:instance/INSTANCE_ID"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": "ssm:GetCommandInvocation",
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+### One-time GitHub setup
+
+In **OneSmarterInc/RapidSims → Settings → Secrets and variables → Actions → Variables**, add:
+
+- `AWS_REGION`: the EC2 instance's AWS region.
+- `EC2_INSTANCE_ID`: the EC2 instance ID (format `i-...`).
+- `AWS_DEPLOY_ROLE_ARN`: the IAM role ARN created above.
+
+After these are set and SSM reports the instance Online, each push to `master` starts a deployment. Follow it under the repository's **Actions** tab. A failed build/deploy stops the workflow and shows the deployment output there. The workflow pulls the latest `master` on EC2 and runs the existing deployment script; it does not change the one-env-file, local PostgreSQL/Redis, or systemd setup.
+
 ## Routes
 
 | App | URL path | Local service |
