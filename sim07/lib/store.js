@@ -1,6 +1,13 @@
 // Upstash/Vercel KV REST storage for RapidSim 07 sessions (48-hour expiry).
 // W07_MEMORY_STORE=1 swaps in an in-process store for the dependency-free checks.
 const { configured: redisConfigured, command: redisCommand } = require('../../ec2/redis-command');
+const TTL = 60 * 60 * 48;
+const J = (v) => { if (v == null) return null; try { return JSON.parse(v); } catch { return null; } };
+const K = {
+  sess: (c) => `w07:sess:${c}`,
+  people: (c) => `w07:sess:${c}:p`,
+  beat: (c) => `w07:sess:${c}:hb`
+};
 const MEMORY = () => process.env.W07_MEMORY_STORE === '1';
 function configured() { return MEMORY() || redisConfigured(); }
 
