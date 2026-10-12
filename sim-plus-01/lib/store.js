@@ -2,26 +2,7 @@
 // Deliberately dependency-free — it's just fetch against two environment variables,
 // which Vercel's KV integration sets for you (KV_REST_API_URL, KV_REST_API_TOKEN).
 
-const URL_ = () => process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-const TOK_ = () => process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
-
-function configured() { return !!(URL_() && TOK_()); }
-
-async function cmd(args) {
-  if (!configured()) {
-    const e = new Error('Session storage is not configured. Add a KV store to the Vercel project.');
-    e.code = 'NO_STORE';
-    throw e;
-  }
-  const r = await fetch(URL_(), {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${TOK_()}` },
-    body: JSON.stringify(args)
-  });
-  const d = await r.json();
-  if (!r.ok || d.error) throw new Error(d.error || `KV error ${r.status}`);
-  return d.result;
-}
+const { configured, command: cmd } = require('../../ec2/redis-command');
 
 // RapidSim+ may span multiple class meetings and devices. Keep resumable state for 30 days.
 const TTL = 60 * 60 * 24 * 30;
