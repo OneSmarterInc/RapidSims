@@ -2,11 +2,11 @@
 
 This deploys the platform and every simulation folder from this repository on one Ubuntu EC2 instance. Each app runs as its own Node process under systemd. Nginx routes the platform and simulations by URL path.
 
-**No Docker, RDS, or S3 are used by this deployment.** The current application still requires its existing PostgreSQL and Redis services: DATABASE_URL (currently Neon Postgres) and the Upstash Redis REST URL/token for session state. Those are application dependencies, not EC2 hosting resources. The EC2 instance hosts all web apps and API handlers.
+**No Docker, RDS, or S3 are used.** PostgreSQL and Redis run locally on the EC2 instance as Ubuntu packages; all 13 Node app services run under systemd.
 
 ## One environment file
 
-All 13 systemd services load the same file: /etc/rapidsims.env. Start from ec2/rapidsims.env.example, fill in the existing database, Redis, signing, AI, and access-code values, then copy it to that path. There are no per-app environment files. The runtime calculates each app's SIM_URL from PUBLIC_BASE_URL and its route; optional overrides are in the example.
+All 13 systemd services load the same file: /etc/rapidsims.env. It contains DATABASE_URL for local PostgreSQL and REDIS_URL for local Redis, plus shared signing, AI, and access-code values. There are no per-app environment files. The runtime calculates each app's SIM_URL from PUBLIC_BASE_URL and its route; optional overrides are in the example.
 
 For production, use a strong random LAUNCH_SECRET and a separate HEALTH_SECRET. Keep the file owned by root and readable by the service group only. Remove SETUP_KEY after creating the first administrator.
 
@@ -14,7 +14,21 @@ The standalone ACCESS_CODE, FACULTY_CODE, and FACULTY_CODES values are shared by
 
 ## EC2 setup
 
-Use an Ubuntu EC2 instance with Node.js 20 or newer, Nginx, Git, and curl. Configure the EC2 security group to allow SSH only from administrator IP addresses and HTTP/HTTPS from users. Point the site's DNS A record to the EC2 Elastic IP.
+Use an Ubuntu EC2 instance with Node.js 20 or newer, Nginx, Git, curl, PostgreSQL, and Redis. Install native packages (no containers):
+
+```bash
+sudo apt update
+sudo apt install -y postgresql postgresql-contrib redis-server nginx git curl
+sudo systemctl enable --now postgresql redis-server
+```
+
+Keep PostgreSQL and Redis bound to localhost; do not allow ports 5432 or 6379 in the EC2 security group. Create the application database and user:
+
+```bash
+sudo -u postgres psql
+```
+
+At the `psql` prompt, run `CREATE ROLE rapidsims LOGIN;`, then `\password rapidsims` and enter a strong password, then `CREATE DATABASE rapidsims OWNER rapidsims;` and `\q`. Put the same password in DATABASE_URL in `/etc/rapidsims.env` (URL-encode special characters). Configure the EC2 security group to allow SSH only from administrator IP addresses and HTTP/HTTPS from users. Point the site's DNS A record to the EC2 Elastic IP.
 
 1. Create the service account and checkout location:
 
@@ -55,7 +69,7 @@ Edit server_name in /etc/nginx/conf.d/rapidsims.conf to your domain before reloa
 sudo bash /opt/rapidsims/ec2/deploy.sh
 ```
 
-The script installs production dependencies in each app folder, runs available simulation build scripts, enables and restarts all 13 systemd services, and checks the platform health endpoint.
+The script installs shared `pg` and `redis` clients plus each app's production dependencies, runs available simulation build scripts, enables and restarts all 13 systemd services, and checks the platform health endpoint.
 
 Thereafter deploy updates with:
 
@@ -98,4 +112,4 @@ The public health endpoint confirms process liveness; it does not prove a full d
 - Check Nginx: sudo nginx -t && sudo systemctl reload nginx
 - Protect /etc/rapidsims.env and repository access. Never commit production secrets.
 
-The local platform setup currently uses Neon-compatible Postgres and simulation sessions use Upstash-compatible Redis REST. If the requirement changes to keep the database and Redis on the EC2 host too, those integrations must be migrated to native PostgreSQL and Redis clients; setting DATABASE_URL to a local PostgreSQL socket or KV_REST_API_URL to a Redis TCP address will not work with the current adapters.
+The platform uses the native PostgreSQL client and simulation sessions use the native Redis client when REDIS_URL is set. Redis Lua scripts, hashes, sets, and TTL behavior work directly against local Redis. Existing Upstash REST configuration remains supported for non-EC2 deployments.
