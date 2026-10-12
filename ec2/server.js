@@ -83,6 +83,7 @@ function matchApi(route) {
         params[segment.slice(4, -1)] = parts.slice(i).join('/');
         score += 1;
         i = parts.length;
+        catchAll = true;
         break;
       }
       if (i >= parts.length) break;
