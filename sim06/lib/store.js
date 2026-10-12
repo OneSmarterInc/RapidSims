@@ -1,22 +1,7 @@
 'use strict';
 // Upstash/Vercel KV REST storage for Sim-06 sessions. Keys expire after 48 hours.
 // Every write that can race is a compare-and-set in one Lua call; callers retry on false.
-const URL_ = () => process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-const TOK_ = () => process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
-
-function configured() { return !!(URL_() && TOK_()); }
-
-async function cmd(args) {
-  if (!configured()) { const e = new Error('Session storage is not configured.'); e.code = 'NO_STORE'; throw e; }
-  const r = await fetch(URL_(), {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${TOK_()}` },
-    body: JSON.stringify(args),
-  });
-  const d = await r.json();
-  if (!r.ok || d.error) throw new Error(d.error || `KV error ${r.status}`);
-  return d.result;
-}
+const { configured, command: cmd } = require('../../ec2/redis-command');
 
 const TTL = 60 * 60 * 48;
 const J = v => { try { return JSON.parse(v); } catch { return null; } };
