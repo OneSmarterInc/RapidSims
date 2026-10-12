@@ -19,7 +19,7 @@ Use an Ubuntu EC2 instance with Node.js 20 or newer, Nginx, Git, and curl. Confi
 1. Create the service account and checkout location:
 
 ```bash
-sudo useradd --system --no-create-home --shell /usr/sbin/nologin rapidsims
+sudo useradd --system --user-group --no-create-home --shell /usr/sbin/nologin rapidsims
 sudo mkdir -p /opt/rapidsims
 sudo chown rapidsims:rapidsims /opt/rapidsims
 ```
