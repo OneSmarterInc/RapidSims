@@ -10,7 +10,7 @@
   const entry = new URLSearchParams({ sim: 'rapid-01-disaster' });
   if (q.get('session')) entry.set('session', q.get('session'));
   if (q.get('course')) entry.set('course', q.get('course'));
-  location.replace('https://rapidsims.flexee.org/open.html?' + entry.toString());
+  location.replace('/open.html?' + entry.toString());
 })();
 </script>
 
