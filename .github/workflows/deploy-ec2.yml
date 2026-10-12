@@ -1,0 +1,96 @@
+name: Deploy RapidSims to EC2
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: rapidsims-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy production
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+
+    steps:
+      - name: Check required deployment settings
+        shell: bash
+        run: |
+          test -n "$AWS_REGION" || { echo "Set the AWS_REGION repository variable."; exit 1; }
+          test -n "$EC2_INSTANCE_ID" || { echo "Set the EC2_INSTANCE_ID repository variable."; exit 1; }
+          test -n "${{ vars.AWS_DEPLOY_ROLE_ARN }}" || { echo "Set the AWS_DEPLOY_ROLE_ARN repository variable."; exit 1; }
+
+      - name: Authenticate to AWS with GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Deploy latest master through Systems Manager
+        shell: bash
+        env:
+          DEPLOY_COMMIT: ${{ github.sha }}
+        run: |
+          python3 - <<'PY' > /tmp/rapidsims-ssm-parameters.json
+          import json
+          command = """#!/usr/bin/env bash
+          set -euo pipefail
+          sudo -u rapidsims env HOME=/var/lib/rapidsims git -C /var/www/rapidsims fetch origin master
+          sudo -u rapidsims env HOME=/var/lib/rapidsims git -C /var/www/rapidsims merge --ff-only origin/master
+          sudo bash /var/www/rapidsims/ec2/deploy.sh
+          """
+          print(json.dumps({"commands": [command], "executionTimeout": ["3600"]}))
+          PY
+
+          command_id="$(aws ssm send-command \
+            --document-name AWS-RunShellScript \
+            --instance-ids "$EC2_INSTANCE_ID" \
+            --comment "RapidSims production deploy ${DEPLOY_COMMIT}" \
+            --timeout-seconds 600 \
+            --parameters file:///tmp/rapidsims-ssm-parameters.json \
+            --query 'Command.CommandId' \
+            --output text)"
+          echo "SSM deployment command: $command_id"
+
+          for attempt in $(seq 1 360); do
+            status="$(aws ssm get-command-invocation \
+              --command-id "$command_id" \
+              --instance-id "$EC2_INSTANCE_ID" \
+              --query 'Status' \
+              --output text 2>/dev/null || true)"
+
+            case "$status" in
+              Success)
+                aws ssm get-command-invocation \
+                  --command-id "$command_id" \
+                  --instance-id "$EC2_INSTANCE_ID" \
+                  --query '{Status:Status,Output:StandardOutputContent,Error:StandardErrorContent}' \
+                  --output json
+                exit 0
+                ;;
+              Failed|Cancelled|TimedOut|Cancelling)
+                aws ssm get-command-invocation \
+                  --command-id "$command_id" \
+                  --instance-id "$EC2_INSTANCE_ID" \
+                  --query '{Status:Status,Output:StandardOutputContent,Error:StandardErrorContent}' \
+                  --output json
+                exit 1
+                ;;
+              *)
+                sleep 10
+                ;;
+            esac
+          done
+
+          echo "Timed out waiting for the EC2 deployment. Check Systems Manager Run Command history."
+          exit 1
