@@ -1,0 +1,24 @@
+[Unit]
+Description=Flexee RapidSims Node app (%i)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=rapidsims
+Group=rapidsims
+WorkingDirectory=/opt/rapidsims
+EnvironmentFile=/etc/rapidsims.env
+ExecStart=/usr/bin/node /opt/rapidsims/ec2/server.js %i
+Restart=always
+RestartSec=3
+TimeoutStopSec=20
+KillSignal=SIGINT
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+UMask=0027
+
+[Install]
+WantedBy=multi-user.target
