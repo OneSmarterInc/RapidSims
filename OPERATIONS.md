@@ -48,3 +48,17 @@ Vercel refuses to build commits whose author email does not match a GitHub accou
 Changing Root Directory needs a redeploy with the build cache disabled, or the old output is served.
 
 `sim/public/index.html` is generated. Edit `sim/src/` and run `node build.js`, which refuses to write a bundle containing scenario content.
+
+## Temporary traffic monitor
+
+The EC2 runtime exposes an operator-only, in-process traffic snapshot at
+`/_ops/traffic` when the request includes the existing `HEALTH_SECRET` in the
+`x-health-key` header. The temporary dashboard is at `/traffic-monitor` and
+uses the same key only in browser memory. It can ramp read-only GET requests
+from 1 to a selected maximum of 50 requests/second, and automatically cools
+down after repeated errors, timeouts, or high p95 latency.
+
+This telemetry is per Node process and is retained for two minutes. It stores
+aggregate counts and latency values only; it does not store request bodies or
+client IP addresses. Remove the dashboard route, page, and telemetry block in
+`ec2/server.js` after the load-test work is complete.
