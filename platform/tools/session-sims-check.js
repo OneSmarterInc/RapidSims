@@ -8,8 +8,9 @@ let me = null, simId = '', paid = true, attached = true, owner = 'teacher', disa
 const course = { id: 'course-a', title: 'Test course', join_code: 'COURSE', faculty_id: 'teacher', archived: false };
 const sql = async (strings, ...v) => {
   const q = strings.join('?').replace(/\s+/g, ' ').trim();
+  if (q.startsWith('SELECT id, detail FROM sims')) return [{id:simId,detail:{}}];
   if (q.startsWith('SELECT c.title, c.term, c.join_code')) return attached && v[0] === course.id && v[1] === simId ? [course] : [];
-  if (q.startsWith('SELECT * FROM sims WHERE')) return [{ id: simId, launch_url: 'https://platform.test/sim' + simId.slice(6, 8) }];
+  if (q.startsWith('SELECT * FROM sims WHERE')) return [{ id: v[0], launch_url: 'https://platform.test/sim' + v[0].slice(6, 8) }];
   if (q.startsWith('SELECT c.id, c.title FROM course_sims')) return [{ id: course.id, title: course.title }];
   if (q.startsWith('SELECT id, faculty_id, archived FROM courses')) return [{ ...course, faculty_id: owner }];
   if (q.startsWith('SELECT 1 FROM course_sims')) return attached && (q.includes('JOIN courses') || v[1] === simId) ? [{ one: 1 }] : [];
@@ -76,3 +77,4 @@ const eq = (a, b, message) => { assert.deepEqual(a, b, message); assertions++; }
   eq((await call(launch, { query: { sim: 'unknown-sim', session: 'ABCDE' } })).code, 400, 'unknown sim invitation denied');
   console.log(`PASS session-sims-check: ${assertions} assertions across ${SESSION_SIMS.size} session sims`);
 })().catch(e => { console.error(e); process.exit(1); });
+

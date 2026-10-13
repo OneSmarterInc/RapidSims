@@ -19,6 +19,8 @@ mock('platform/lib/db.js', { sql: () => async(strings, ...values) => {
   return sims;
 }, id: () => 'test-id' });
 mock('platform/lib/auth.js', { requireRole: async() => ({ id:'test-admin', role:'admin' }) });
+// Network destination policy is tested separately in security/operations.test.cjs.
+mock('platform/lib/health-probe.js', { probeHealth: address => global.fetch(address.replace(/\/+$/, '') + '/api/health', { headers: require('../lib/sim-health').healthHeaders() }) });
 const admin = require('../api/admin.js');
 const { inspectHealth } = require('../lib/sim-health.js');
 async function invoke(handler, req) {
@@ -75,3 +77,4 @@ const call = body => invoke(admin,{method:'POST',headers:{},body});
   assert.equal(inspectHealth({ok:true,sim:'unexpected'},sims[0]).state,'needs attention');
   console.log(`Health contracts passed for all ${handlers.size} sims (${requests} admin probes), missing/wrong diagnostic keys, storage, signing and legacy aliases.`);
 })().catch(error=>{console.error(error);process.exitCode=1;});
+

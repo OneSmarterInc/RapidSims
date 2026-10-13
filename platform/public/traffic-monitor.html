@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Traffic monitor · Flexee RapidSims</title>
+  <link rel="stylesheet" href="/app.css">
+  <style>
+    .monitor-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0}
+    .monitor-stat{background:var(--card);border:1px solid var(--line);padding:18px}
+    .monitor-stat .value{font:600 25px var(--mono);margin-top:5px}
+    .monitor-stat .label{font:10px var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--ink3)}
+    .monitor-controls{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:14px;align-items:end}
+    .monitor-status{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px;font:12px var(--mono);color:var(--ink2)}
+    .pill{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line2);padding:5px 9px;background:var(--sunk)}
+    .pill::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ink3)}
+    .pill.live::before{background:var(--green)}
+    .pill.warn::before{background:var(--rose)}
+    .chart{width:100%;height:190px;display:block;background:var(--sunk);border:1px solid var(--line);margin-top:12px}
+    .chart-grid{stroke:var(--line);stroke-width:1}.chart-line{fill:none;stroke:var(--amber);stroke-width:2.5;vector-effect:non-scaling-stroke}
+    .chart-label{font:10px var(--mono);fill:var(--ink3)}
+    .warning{background:var(--amber-soft);border:1px solid var(--amber-line);padding:12px 14px;color:var(--ink2);font-size:14px}
+    .error{color:var(--rose)}
+    @media (max-width:800px){.monitor-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.monitor-controls{grid-template-columns:1fr 1fr}}
+    @media (max-width:520px){.monitor-grid{grid-template-columns:1fr 1fr}.monitor-controls{grid-template-columns:1fr}.wrap{padding-left:16px;padding-right:16px}}
+  </style>
+</head>
+<body>
+  <header class="bar"><a class="brand" href="/">Flexee <span>RapidSims</span></a><span class="who">TEMPORARY OPERATOR TOOL</span></header>
+  <main class="wrap">
+    <div class="eyebrow">Controlled load test</div>
+    <h1>Traffic <em>monitor</em></h1>
+    <p class="lede">Ramp a small, bounded stream of read-only GET requests and watch when the service begins to degrade. This panel is temporary telemetry, not a DDoS tool.</p>
+
+    <div class="warning"><b>Safety limits:</b> this browser runner is capped at 50 requests/second and 10 minutes. Use only on your own deployment, begin in staging, and stop if real users are affected. The default endpoint is the side-effect-free health check.</div>
+
+    <section class="card" style="margin-top:18px">
+      <div class="monitor-controls">
+        <div class="field"><label class="f" for="health-key">Diagnostic key</label><input id="health-key" type="password" autocomplete="off" placeholder="HEALTH_SECRET"></div>
+        <div class="field"><label class="f" for="endpoint">GET endpoint</label><select id="endpoint"><option value="/api/health">/api/health · read-only</option><option value="/">/ · homepage</option></select></div>
+        <div class="field"><label class="f" for="peak-rate">Peak requests/sec</label><input id="peak-rate" type="number" min="1" max="50" step="1" value="10"></div>
+        <div class="field"><button id="start" class="btn pri" type="button">Start ramp</button> <button id="stop" class="btn danger" type="button" disabled>Stop</button></div>
+      </div>
+      <div class="monitor-status"><span id="state" class="pill">idle</span><span id="message">Enter the diagnostic key to read server telemetry.</span></div>
+    </section>
+
+    <section class="monitor-grid" aria-live="polite">
+      <div class="monitor-stat"><div class="label">Client rate</div><div id="client-rate" class="value">0/s</div></div>
+      <div class="monitor-stat"><div class="label">Server last second</div><div id="server-rate" class="value">—</div></div>
+      <div class="monitor-stat"><div class="label">p95 latency</div><div id="p95" class="value">—</div></div>
+      <div class="monitor-stat"><div class="label">Errors / 10s</div><div id="errors" class="value">0</div></div>
+    </section>
+
+    <section class="card">
+      <div class="eyebrow">Requests per second · last 60 seconds</div>
+      <svg id="chart" class="chart" viewBox="0 0 800 190" role="img" aria-label="Requests per second chart"></svg>
+      <p id="server-summary" class="tiny dim" style="margin-top:12px">No telemetry received yet.</p>
+    </section>
+
+    <section class="card">
+      <div class="eyebrow">How the stop condition works</div>
+      <p class="tiny" style="margin-top:10px">The runner starts at 1 request/second and increases every 15 seconds until it reaches the selected peak. It automatically enters cooldown after two consecutive one-second windows with over 20% errors, a timeout, or p95 latency above 3 seconds. Requests then ramp down to zero.</p>
+    </section>
+  </main>
+  <script>
+    (() => {
+      'use strict';
+      const MAX_RATE = 50;
+      const MAX_DURATION_MS = 10 * 60 * 1000;
+      const SERVICE_PATHS = ['', '/sim01', '/sim02', '/sim03', '/sim04', '/sim05', '/sim06', '/sim07', '/sim08', '/sim09', '/sim10', '/sim-plus-01', '/simplus02'];
+      const $ = (id) => document.getElementById(id);
+      const ui = { key: $('health-key'), endpoint: $('endpoint'), peak: $('peak-rate'), start: $('start'), stop: $('stop'), state: $('state'), message: $('message'), clientRate: $('client-rate'), serverRate: $('server-rate'), p95: $('p95'), errors: $('errors'), chart: $('chart'), summary: $('server-summary') };
+      const run = { active: false, mode: 'idle', rate: 0, peak: 0, tokens: 0, lastPump: 0, startedAt: 0, nextStepAt: 0, badWindows: 0, inFlight: 0, events: [], monitor: null };
+
+      function setState(mode, message) { ui.state.textContent = mode; ui.state.className = 'pill ' + (mode === 'running' ? 'live' : mode === 'cooling' || mode === 'error' ? 'warn' : ''); ui.message.textContent = message; }
+      function numericPeak() { const value = Number(ui.peak.value); return Number.isFinite(value) ? Math.min(MAX_RATE, Math.max(1, Math.floor(value))) : 10; }
+      function endpointUrl() { return ui.endpoint.value + (ui.endpoint.value.includes('?') ? '&' : '?') + 'monitor=' + Date.now(); }
+      function rememberEvent(event) { run.events.push(event); const cutoff = Date.now() - 60000; run.events = run.events.filter((item) => item.at >= cutoff); }
+      function statsFor(seconds) { const cutoff = Date.now() - seconds * 1000; const events = run.events.filter((item) => item.at >= cutoff); const completed = events.filter((item) => item.done); const errors = completed.filter((item) => item.error); const durations = completed.map((item) => item.duration).sort((a,b) => a-b); const p95 = durations.length ? durations[Math.min(durations.length - 1, Math.ceil(durations.length * .95) - 1)] : null; return { events, completed, errors, p95 }; }
+      function updateClientStats() { const recent = statsFor(10); ui.clientRate.textContent = (recent.events.length / 10).toFixed(1) + '/s'; ui.errors.textContent = String(recent.errors.length); ui.p95.textContent = recent.p95 == null ? '—' : Math.round(recent.p95) + ' ms'; }
+      function drawChart(points) { const width = 800, height = 190, pad = 28; const values = points.map((point) => point.requests || 0); const max = Math.max(1, ...values); const line = values.map((value, index) => { const x = pad + (index / Math.max(1, values.length - 1)) * (width - pad * 2); const y = height - pad - (value / max) * (height - pad * 2); return (index ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1); }).join(' '); const mid = height / 2; ui.chart.innerHTML = '<line class="chart-grid" x1="28" y1="' + pad + '" x2="772" y2="' + pad + '"/><line class="chart-grid" x1="28" y1="' + mid + '" x2="772" y2="' + mid + '"/><line class="chart-grid" x1="28" y1="162" x2="772" y2="162"/><text class="chart-label" x="4" y="32">' + max + '</text><text class="chart-label" x="4" y="166">0</text>' + (line ? '<path class="chart-line" d="' + line + '"/>' : ''); }
+      async function serverSnapshot() { const key = ui.key.value; if (!key) return null; const responses = await Promise.all(SERVICE_PATHS.map(async (prefix) => { try { const response = await fetch(prefix + '/_ops/traffic', { headers: { 'x-health-key': key }, cache: 'no-store' }); if (!response.ok) return null; return await response.json(); } catch { return null; } })); const live = responses.filter(Boolean); if (!live.length) return null; const points = new Map(); let lastSecond = 0, p95 = [], errors = 0, requests = 0; live.forEach((snapshot) => { lastSecond += snapshot.requestsLastSecond || 0; p95.push(...(snapshot.perSecond || []).flatMap((point) => point.completed ? [] : [])); errors += snapshot.errorsLastMinute || 0; requests += snapshot.requestsLastMinute || 0; (snapshot.perSecond || []).forEach((point) => { points.set(point.at, (points.get(point.at) || 0) + (point.requests || 0)); }); }); const series = [...points.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([at, requestsAt]) => ({ at, requests: requestsAt })); const maxP95 = Math.max(...live.map((snapshot) => snapshot.p95LatencyMsLastMinute || 0)); ui.serverRate.textContent = lastSecond + '/s'; ui.p95.textContent = maxP95 ? Math.round(maxP95) + ' ms' : ui.p95.textContent; ui.summary.textContent = requests + ' requests started across ' + live.length + ' service process' + (live.length === 1 ? '' : 'es') + ' in the last minute; ' + errors + ' HTTP errors. Updated ' + new Date().toLocaleTimeString(); drawChart(series); return { lastSecond, errors, requests, p95: maxP95 }; }
+      function sendOne() { if (!run.active || run.inFlight >= Math.max(10, run.rate * 2)) return; run.inFlight += 1; const started = performance.now(); const event = { at: Date.now(), done: false, error: false, duration: 0 }; rememberEvent(event); const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), 5000); fetch(endpointUrl(), { cache: 'no-store', signal: controller.signal }).then((response) => { event.error = !response.ok; }).catch(() => { event.error = true; }).finally(() => { clearTimeout(timeout); event.done = true; event.duration = performance.now() - started; run.inFlight = Math.max(0, run.inFlight - 1); }); }
+      function pump(now) { if (!run.active) return; const elapsed = run.lastPump ? Math.min(1000, now - run.lastPump) : 100; run.lastPump = now; run.tokens = Math.min(run.tokens + run.rate * elapsed / 1000, run.rate * 2 + 1); while (run.tokens >= 1) { sendOne(); run.tokens -= 1; } updateClientStats(); requestAnimationFrame(pump); }
+      function beginCooldown(reason) { if (!run.active || run.mode === 'cooling') return; run.mode = 'cooling'; run.rate = Math.max(0, run.rate - Math.max(1, Math.ceil(run.peak / 5))); setState('cooling', reason + ' Reducing request rate.'); }
+      function monitor() { if (!run.active) return; const now = Date.now(); if (now - run.startedAt > MAX_DURATION_MS) { stop('10-minute safety limit reached.'); return; } const recent = statsFor(10); const completed = recent.completed.length; const errorRate = completed ? recent.errors.length / completed : 0; const timedOut = recent.events.some((event) => event.done && event.duration >= 4900); const unhealthy = (completed >= 3 && (errorRate > .2 || (recent.p95 != null && recent.p95 > 3000))) || timedOut; run.badWindows = unhealthy ? run.badWindows + 1 : 0; if (run.badWindows >= 2) beginCooldown('The endpoint is degrading.'); if (run.mode === 'running' && run.rate < run.peak && now >= run.nextStepAt) { run.rate = Math.min(run.peak, run.rate + Math.max(1, Math.ceil(run.peak / 10))); run.nextStepAt = now + 15000; } if (run.mode === 'cooling') { run.rate = Math.max(0, run.rate - Math.max(1, Math.ceil(run.peak / 5))); if (run.rate === 0 && run.inFlight === 0) stop('Cooldown complete after degradation was detected.'); } serverSnapshot().catch(() => {}); updateClientStats(); }
+      async function start() { if (run.active) return; if (!ui.key.value.trim()) { setState('error', 'Enter HEALTH_SECRET before starting.'); return; } ui.start.disabled = true; setState('checking', 'Checking the diagnostic key before starting.'); const telemetry = await serverSnapshot(); if (!telemetry) { ui.start.disabled = false; setState('error', 'The key was rejected, or this deployment has no EC2 telemetry endpoint.'); return; } run.active = true; run.mode = 'running'; run.rate = 1; run.peak = numericPeak(); run.tokens = 0; run.lastPump = 0; run.startedAt = Date.now(); run.nextStepAt = run.startedAt + 15000; run.badWindows = 0; run.events = []; run.inFlight = 0; ui.stop.disabled = false; ui.peak.disabled = true; ui.endpoint.disabled = true; setState('running', 'Ramping from 1 request/second toward ' + run.peak + '/second.'); run.monitor = setInterval(monitor, 1000); requestAnimationFrame(pump); }
+      function stop(message = 'Stopped by operator.') { run.active = false; run.mode = 'idle'; run.rate = 0; if (run.monitor) clearInterval(run.monitor); run.monitor = null; ui.start.disabled = false; ui.stop.disabled = true; ui.peak.disabled = false; ui.endpoint.disabled = false; setState('idle', message); updateClientStats(); }
+      ui.start.addEventListener('click', start); ui.stop.addEventListener('click', () => stop()); ui.key.addEventListener('change', () => { if (!run.active) serverSnapshot().then((result) => { if (!result) setState('error', 'The key was rejected, or this deployment has no EC2 telemetry endpoint.'); else setState('idle', 'Telemetry connected. Ready for a bounded test.'); }); });
+      drawChart([]); setInterval(() => { if (!run.active) serverSnapshot().catch(() => {}); }, 3000);
+    })();
+  </script>
+  <div class="foot-note"><div>&copy; Flexee. Operator tools. <a href="mailto:support@flexee.org">support@flexee.org</a></div></div>
+</body>
+</html>

@@ -34,6 +34,10 @@
       "destination": "/join.html"
     },
     {
+      "source": "/traffic-monitor",
+      "destination": "/traffic-monitor.html"
+    },
+    {
       "source": "/sim01",
       "destination": "https://flexee-rapid-sim-01-vercel.vercel.app/"
     },
@@ -358,3 +362,4 @@
     }
   ]
 }
+

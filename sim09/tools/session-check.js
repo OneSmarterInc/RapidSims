@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+require('../../tools/security/report-fixture.cjs');
 // Exercises the real /api/session and /api/finish handlers against an in-memory
 // store that honours the same compare-and-set contract as the Redis scripts.
 const assert = require('node:assert/strict');
@@ -40,7 +41,7 @@ const session = require('../api/session.js');
 const finish = require('../api/finish.js');
 
 function token({ sub, name = 'Student', role = 'student', mode = 'play', course = null, sim = C.META.id }) {
-  const p = { sub, name, role, sim, mode, course, iat: Date.now(), exp: Date.now() + 3600e3 };
+  const p = { kind: 'launch', run: 'fixture-launch', sub, name, role, sim, mode, course, iat: Date.now(), exp: Date.now() + 3600e3 };
   const body = Buffer.from(JSON.stringify(p)).toString('base64url');
   return body + '.' + createHmac('sha256', process.env.LAUNCH_SECRET).update(body).digest('base64url');
 }
@@ -193,7 +194,7 @@ const alloc = (m) => Object.fromEntries(['RA', 'IC', 'LS', 'MS', 'PS', 'cash'].m
   // ---------- Solo run ----------
   eq((await api({ action: 'solo', name: 'Gil' })).status, 401, 'solo needs the access code');
   eq((await api({ action: 'create', mode: 'individual' }, { 'x-launch-token': token({ role: 'faculty' }) })).status, 401, 'faculty launch requires an account');
-  for (const [claim, status] of [[{ sub: 's', sim: null }, 403], [{ role: 'student' }, 401], [{ sub: 's', role: 'admin' }, 401]]) {
+  for (const [claim, status] of [[{ sub: 's', sim: null }, 401], [{ role: 'student' }, 401], [{ sub: 's', role: 'admin' }, 401]]) {
     eq((await api({ action: 'solo' }, { 'x-launch-token': token(claim) })).status, status, 'solo rejects incomplete or invalid launch claims');
   }
   const solo = (await api({ action: 'solo', name: 'Gil' }, { 'x-access-code': 'open-sesame' })).body;
@@ -222,3 +223,4 @@ const alloc = (m) => Object.fromEntries(['RA', 'IC', 'LS', 'MS', 'PS', 'cash'].m
 
   console.log(`PASS session-check: ${n} assertions`);
 })().catch(e => { console.error(e); process.exit(1); });
+

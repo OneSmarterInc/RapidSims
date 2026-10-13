@@ -34,7 +34,7 @@ async function reportAll(code) {
     const summary = slot?.commit
       ? `${slot.label} reported ${slot.commit.number.toFixed(1)}% with confidence ${slot.commit.confidence}/5.`
       : `${slot?.label || 'Participant'}: No number reported.`;
-    const ok = await reportCompletion({ participantId: person.id, courseId: claimed.courseId,
+    const ok = await reportCompletion({ participantId: person.id, courseId: claimed.courseId, runId: code, launchId: person.launchId,
       summary, metrics: { reported: !!slot?.commit, confidence: slot?.commit?.confidence || null } });
     for (let retry = 0; retry < 5; retry++) {
       const latest = await store.getSession(code);
@@ -155,6 +155,7 @@ module.exports = async (req, res) => {
           const id = me.platform ? me.id : (me.id || newId());
           try { next = room.join(session, id, me.platform ? (me.email || b.email) : b.email, Date.now()); }
           catch (e) { return error(res, 409, 'join_rejected', e.message); }
+          if (me.platform) next.participants[id].launchId = me.launchId;
           if (!await store.compareAndSetSession(code, session, next)) continue;
           return res.status(200).json({ participantId: id, ...studentResult(next, id) });
         }
@@ -178,3 +179,4 @@ module.exports = async (req, res) => {
     return error(res, e.status || 503, 'session_unavailable', 'Please try again.');
   }
 };
+

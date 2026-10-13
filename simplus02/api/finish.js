@@ -30,7 +30,7 @@ module.exports = async (req, res) => {
     if (previous && previous.lockAt && Date.now() - previous.lockAt < 30000) return res.status(200).json({ ok: true, reported: false, pending: true });
     const lock = { id: crypto.randomUUID(), lockAt: Date.now() };
     if (!await store.cas(key, previous, lock)) return res.status(200).json({ ok: true, reported: false, pending: true });
-    const r = await reportCompletion({ launch, ...done });
+    const r = await reportCompletion({ launch, runId: code, ...done });
     const saved = await store.cas(key, lock, r.ok ? { reportedAt: Date.now() } : { failedAt: Date.now() });
     return res.status(200).json({ ok: true, reported: !!r.ok && saved });
   } catch (e) {
@@ -38,3 +38,4 @@ module.exports = async (req, res) => {
     return res.status(503).json({ error: 'finish_unavailable' });
   }
 };
+

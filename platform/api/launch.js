@@ -4,21 +4,22 @@
 const { sql, id } = require('../lib/db.js');
 const A = require('../lib/auth.js');
 const { launchToken } = require('../lib/launch.js');
+const escapeHtml = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 function deny(res, wants, title, message) {
   if (wants === 'json') return res.status(403).json({ error: 'not_entitled', title, message });
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   return res.status(403).send(`<!DOCTYPE html><html><head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>${title}</title><link rel="stylesheet" href="/app.css"></head><body>
+    <title>${escapeHtml(title)}</title><link rel="stylesheet" href="/app.css"></head><body>
     <div class="narrow">
       <div class="eyebrow">Flexee RapidSims</div>
-      <h1>${title}</h1><p class="lede">${message}</p>
+      <h1>${escapeHtml(title)}</h1><p class="lede">${escapeHtml(message)}</p>
       <p><a href="/">Back to your courses</a></p>
     </div></body></html>`);
 }
 
-const { SESSION_SIMS } = require('../lib/session-sims.js');
+const { sessionSupported } = require('../lib/session-sims.js');
 
 module.exports = async (req, res) => {
   const q = req.query || {};
@@ -26,7 +27,7 @@ module.exports = async (req, res) => {
   const simId = String(q.sim || '');
   let courseId = String(q.course || '') || null;
   const session = String(q.session || '').trim().toUpperCase();
-  if (session && (!SESSION_SIMS.has(simId) || !/^[A-Z2-9]{5}$/.test(session))) {
+  if (session && !/^[A-Z2-9]{5}$/.test(session)) {
     return res.status(400).json({ error: 'invalid_session_invite' });
   }
   res.setHeader('Cache-Control', 'no-store');
@@ -55,11 +56,13 @@ module.exports = async (req, res) => {
   try {
     const sim = (await s`SELECT * FROM sims WHERE id = ${simId}`)[0];
     if (!sim) return deny(res, wants, 'No such simulation', "That simulation isn't in the catalogue.");
+    const supportsSession = sessionSupported(sim);
+    if (session && !supportsSession) return res.status(400).json({ error: 'session_invites_not_supported' });
     if (!sim.launch_url) return deny(res, wants, 'Not available yet', 'This simulation has no address set. Ask an administrator.');
 
     // A recovered instructor tab may have no launch token/course.
     // Never guess among classes or create an unbound room for a course owner.
-    if (SESSION_SIMS.has(simId) && mode === 'session' && !courseId && me.role === 'faculty') {
+    if (supportsSession && mode === 'session' && !courseId && me.role === 'faculty') {
       const eligible = await s`
         SELECT c.id, c.title FROM course_sims cs JOIN courses c ON c.id = cs.course_id
         WHERE cs.sim_id = ${simId} AND c.faculty_id = ${me.id} AND c.archived = false
@@ -75,7 +78,7 @@ module.exports = async (req, res) => {
     }
     // Explicit class context must be authorized, even when the faculty member
     // has access to this simulation through a different course or a preview.
-    if (SESSION_SIMS.has(simId) && mode === 'session' && courseId) {
+    if (mode === 'session' && courseId) {
       const course = (await s`SELECT id, faculty_id, archived FROM courses WHERE id = ${courseId}`)[0];
       const attached = await s`SELECT 1 FROM course_sims WHERE course_id = ${courseId} AND sim_id = ${simId}`;
       if (!course || course.archived || !attached.length || (me.role !== 'admin' && course.faculty_id !== me.id)) {
@@ -166,8 +169,9 @@ module.exports = async (req, res) => {
       asRole = 'student';
     }
 
+    const runId = id('lch');
     await s`INSERT INTO launches (id, user_id, sim_id, course_id, as_role)
-            VALUES (${id('lch')}, ${me.id}, ${simId}, ${courseId}, ${asRole})`;
+            VALUES (${runId}, ${me.id}, ${simId}, ${courseId}, ${asRole})`;
 
     const token = launchToken({
       userId: me.id, name: me.name, email: me.email, role: asRole,
@@ -176,7 +180,7 @@ module.exports = async (req, res) => {
       // in sim 03 it expired on day seven of eight, before the debrief, which
       // is where a completion gets reported. Faculty saw every run as started
       // and never finished.
-      simId, courseId, mode, minutes: 60
+      simId, courseId, mode, runId, minutes: Math.min(720, Math.max(180, (Number(sim.minutes) || 60) + 90))
     });
 
     // In the fragment, not the query. A fragment is never sent in the HTTP
@@ -205,3 +209,4 @@ module.exports = async (req, res) => {
     return deny(res, wants, 'Something went wrong', 'Try again in a moment.');
   }
 };
+

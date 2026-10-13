@@ -4,18 +4,7 @@
 const crypto = require('crypto');
 
 function verifyLaunch(token) {
-  const secret = process.env.LAUNCH_SECRET;
-  if (!secret || typeof token !== 'string' || !token.includes('.')) return null;
-  const parts = token.split('.');
-  if (parts.length !== 2) return null;
-  const [bodyPart, mac] = parts;
-  const expect = crypto.createHmac('sha256', secret).update(bodyPart).digest('base64url');
-  const a = Buffer.from(mac || ''), b = Buffer.from(expect);
-  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
-  let p;
-  try { p = JSON.parse(Buffer.from(bodyPart, 'base64url').toString('utf8')); } catch (e) { return null; }
-  if (!p.exp || Date.now() > p.exp) return null;
-  return p;
+  return require('../../shared/launch-contract').verifyLaunch(token);
 }
 
 function signBack(payload) {
@@ -44,14 +33,8 @@ async function post(path, payload, label) {
 }
 
 // Best effort: a failure here never reaches the participant.
-async function reportCompletion({ launch, summary, metrics }) {
-  if (!launch || !launch.sub) return { ok: false, reason: 'no_launch' };
-  return post('/api/complete', {
-    sub: launch.sub, sim: launch.sim, course: launch.course || null,
-    duration: launch.iat ? Math.round((Date.now() - launch.iat) / 1000) : null,
-    summary: summary || null, metrics: metrics || null,
-    iat: Date.now(), exp: Date.now() + 5 * 60000,
-  }, 'completion');
+async function reportCompletion(options) {
+  return require('../../shared/report-delivery').reportCompletion(options);
 }
 
 let announced = null;
@@ -60,7 +43,7 @@ function announce() {
   if (!process.env.PLATFORM_URL || !process.env.SIM_URL || !process.env.LAUNCH_SECRET) return Promise.resolve();
   const meta = require('./meta');
   const attempt = post('/api/register', {
-    ...meta, sim: meta.id, kind: 'register', launchUrl: process.env.SIM_URL,
+    ...meta, sim: meta.id, kind: 'register', protocolVersion: 2, launchUrl: process.env.SIM_URL,
     iat: Date.now(), exp: Date.now() + 5 * 60000,
   }, 'registration');
   announced = attempt;
@@ -69,3 +52,4 @@ function announce() {
 }
 function resetAnnounce() { announced = null; }
 module.exports = { verifyLaunch, reportCompletion, announce, resetAnnounce };
+

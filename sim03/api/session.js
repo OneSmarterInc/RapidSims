@@ -459,6 +459,7 @@ module.exports = async (req, res) => {
 
         const participant = {
           ...existing,
+          launchId: launched?.run || existing?.launchId || null,
           id,
           name,
           groupId,
@@ -640,3 +641,4 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'server_error' });
   }
 };
+

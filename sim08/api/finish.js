@@ -35,7 +35,7 @@ module.exports = async (req, res) => {
       if (me.reportingAt && now - me.reportingAt < 30000) return res.status(200).json({ ok: true, reported: false, pending: true });
       const next = { ...me, reportingAt: now };
       if (!await store.compareAndSetParticipant(code, pid, me, next, sess)) continue;
-      const r = await reportCompletion({ launch, summary: done.summary, metrics: done.metrics });
+      const r = await reportCompletion({ launch, runId: code, summary: done.summary, metrics: done.metrics });
       const saved = { ...next, reportingAt: null, ...(r.ok ? { reportedAt: now } : {}) };
       const persisted = await store.compareAndSetParticipant(code, pid, next, saved, sess);
       return res.status(200).json({ ok: true, reported: !!r.ok && persisted });
@@ -46,3 +46,4 @@ module.exports = async (req, res) => {
     return res.status(503).json({ error: 'finish_unavailable' });
   }
 };
+

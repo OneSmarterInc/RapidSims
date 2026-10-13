@@ -14,7 +14,22 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  verify:
+    name: Verify exact release revision
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm test
+      - run: bash -n ec2/deploy.sh
   deploy:
+    needs: verify
     name: Deploy production
     runs-on: ubuntu-latest
     timeout-minutes: 70
@@ -37,19 +52,23 @@ jobs:
           role-to-assume: ${{ env.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Deploy latest master through Systems Manager
+      - name: Deploy tested commit through Systems Manager
         shell: bash
         env:
           DEPLOY_COMMIT: ${{ github.sha }}
         run: |
           python3 - <<'PY' > /tmp/rapidsims-ssm-parameters.json
-          import json
+          import json, os, re
+          sha = os.environ['DEPLOY_COMMIT']
+          if not re.fullmatch(r'[a-f0-9]{40}', sha):
+              raise ValueError('Invalid deployment SHA')
           command = """#!/usr/bin/env bash
           set -euo pipefail
           sudo -u rapidsims env HOME=/var/lib/rapidsims git -C /var/www/rapidsims fetch origin master
-          sudo -u rapidsims env HOME=/var/lib/rapidsims git -C /var/www/rapidsims merge --ff-only origin/master
-          sudo bash /var/www/rapidsims/ec2/deploy.sh
+          sudo -u rapidsims git -C /var/www/rapidsims cat-file -e RELEASE_SHA^{commit}
+          sudo -u rapidsims git -C /var/www/rapidsims archive RELEASE_SHA ec2/deploy.sh | tar -xO | sudo bash -s -- RELEASE_SHA /var/www/rapidsims
           """
+          command = command.replace('RELEASE_SHA', sha)
           print(json.dumps({"commands": [command], "executionTimeout": ["3600"]}))
           PY
 
@@ -95,3 +114,4 @@ jobs:
 
           echo "Timed out waiting for the EC2 deployment. Check Systems Manager Run Command history."
           exit 1
+

@@ -1,3 +1,4 @@
+require('../../tools/security/report-fixture.cjs');
 'use strict';
 // Runs the real handlers end to end against an in-memory store honouring the same compare-and-set contract.
 const assert = require('node:assert/strict');
@@ -127,7 +128,7 @@ let n = 0; const ok = (c, m) => { assert.ok(c, m); n++; };
 
   // Finish: non-platform run reports nothing; platform run reports once
   ok((await call(finish, { code, participantId: people[0].participantId }, people[0].h)).body.reported === false, 'standalone not reported');
-  const tokenFor = sub => { const p = { sub, name: 'L', role: 'student', sim: C.id, iat: Date.now(), exp: Date.now() + 3600e3 };
+  const tokenFor = sub => { const p = { kind: 'launch', run: 'fixture-launch', sub, name: 'L', role: 'student', sim: C.id, iat: Date.now(), exp: Date.now() + 3600e3 };
     const b = Buffer.from(JSON.stringify(p)).toString('base64url'); return b + '.' + createHmac('sha256', process.env.LAUNCH_SECRET).update(b).digest('base64url'); };
   const p0 = people[0];
   const denied = await call(finish, { code, participantId: p0.participantId }, { ...p0.h, 'x-launch-token': tokenFor('u1') });
@@ -139,3 +140,4 @@ let n = 0; const ok = (c, m) => { assert.ok(c, m); n++; };
 
   console.log(`All API tests pass (${n} assertions).`);
 })().catch(e => { console.error('FAIL', e.message); process.exit(1); });
+

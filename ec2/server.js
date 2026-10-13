@@ -6,23 +6,10 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
+const crypto = require('node:crypto');
 
 const REPO = path.resolve(__dirname, '..');
-const APPS = {
-  platform: { dir: 'platform', port: 3100, prefix: '', title: 'flexee-platform' },
-  sim01: { dir: 'sim', port: 3101, prefix: '/sim01', title: 'rapid-sim-01' },
-  sim02: { dir: 'sim-02', port: 3102, prefix: '/sim02', title: 'rapid-sim-02' },
-  sim03: { dir: 'sim03', port: 3103, prefix: '/sim03', title: 'rapid-sim-03' },
-  sim04: { dir: 'sim04', port: 3104, prefix: '/sim04', title: 'rapid-sim-04' },
-  sim05: { dir: 'sim05', port: 3105, prefix: '/sim05', title: 'rapid-sim-05' },
-  sim06: { dir: 'sim06', port: 3106, prefix: '/sim06', title: 'rapid-sim-06' },
-  sim07: { dir: 'sim07', port: 3107, prefix: '/sim07', title: 'rapid-sim-07' },
-  sim08: { dir: 'sim08', port: 3108, prefix: '/sim08', title: 'rapid-sim-08' },
-  sim09: { dir: 'sim09', port: 3109, prefix: '/sim09', title: 'rapid-sim-09' },
-  sim10: { dir: 'sim10', port: 3110, prefix: '/sim10', title: 'rapid-sim-10' },
-  simplus01: { dir: 'sim-plus-01', port: 3111, prefix: '/sim-plus-01', title: 'rapid-sim-plus-01' },
-  simplus02: { dir: 'simplus02', port: 3112, prefix: '/simplus02', title: 'rapid-sim-plus-02' }
-};
+const APPS = require('./apps.json');
 
 const id = process.argv[2];
 const config = APPS[id];
@@ -35,6 +22,100 @@ const appRoot = path.join(REPO, config.dir);
 const publicRoot = fs.existsSync(path.join(appRoot, 'public', 'index.html'))
   ? path.join(appRoot, 'public')
   : appRoot;
+
+// Short-lived, in-process request telemetry for the temporary operator
+// dashboard. It is deliberately bounded and contains no request bodies or
+// client IPs. Each app process reports its own traffic; the dashboard merges
+// the per-process snapshots.
+const TRAFFIC_RETENTION_MS = 2 * 60 * 1000;
+const trafficBuckets = new Map();
+let trafficInFlight = 0;
+
+function trafficBucket(timestamp = Date.now()) {
+  pruneTraffic();
+  const second = Math.floor(timestamp / 1000) * 1000;
+  let bucket = trafficBuckets.get(second);
+  if (!bucket) {
+    bucket = { started: 0, completed: 0, errors: 0, latencies: [] };
+    trafficBuckets.set(second, bucket);
+  }
+  return { second, bucket };
+}
+
+function pruneTraffic() {
+  const cutoff = Date.now() - TRAFFIC_RETENTION_MS;
+  for (const second of trafficBuckets.keys()) {
+    if (second < cutoff) trafficBuckets.delete(second);
+  }
+}
+
+function isTelemetryRequest(req) {
+  const pathname = String(req.url || '').split('?', 1)[0];
+  return pathname === '/traffic-monitor' || pathname === '/traffic-monitor.html' || pathname.startsWith('/_ops/');
+}
+
+function beginTraffic(req) {
+  if (isTelemetryRequest(req)) return null;
+  const startedAt = Date.now();
+  const { bucket } = trafficBucket(startedAt);
+  bucket.started += 1;
+  trafficInFlight += 1;
+  return { startedAt, bucket };
+}
+
+function finishTraffic(metric, statusCode) {
+  if (!metric) return;
+  const duration = Math.max(0, Date.now() - metric.startedAt);
+  metric.bucket.completed += 1;
+  if (statusCode >= 400) metric.bucket.errors += 1;
+  if (metric.bucket.latencies.length < 2048) metric.bucket.latencies.push(duration);
+  trafficInFlight = Math.max(0, trafficInFlight - 1);
+}
+
+function percentile(values, fraction) {
+  if (!values.length) return null;
+  const sorted = values.slice().sort((a, b) => a - b);
+  return sorted[Math.min(sorted.length - 1, Math.ceil(sorted.length * fraction) - 1)];
+}
+
+function trafficSnapshot() {
+  pruneTraffic();
+  const now = Date.now();
+  const recent = [...trafficBuckets.entries()]
+    .filter(([second]) => second >= now - 60 * 1000)
+    .sort(([a], [b]) => a - b);
+  const latencies = recent.flatMap(([, bucket]) => bucket.latencies);
+  const started = recent.reduce((total, [, bucket]) => total + bucket.started, 0);
+  const completed = recent.reduce((total, [, bucket]) => total + bucket.completed, 0);
+  const errors = recent.reduce((total, [, bucket]) => total + bucket.errors, 0);
+  const perSecond = recent.slice(-60).map(([second, bucket]) => ({
+    at: new Date(second).toISOString(),
+    requests: bucket.started,
+    completed: bucket.completed,
+    errors: bucket.errors,
+  }));
+  const current = trafficBuckets.get(Math.floor(now / 1000) * 1000);
+  return {
+    service: config.title,
+    generatedAt: new Date(now).toISOString(),
+    requestsLastSecond: current ? current.started : 0,
+    requestsLast10Seconds: recent.slice(-10).reduce((total, [, bucket]) => total + bucket.started, 0),
+    requestsLastMinute: started,
+    averageRpsLastMinute: Number((started / 60).toFixed(2)),
+    completedLastMinute: completed,
+    errorsLastMinute: errors,
+    errorRateLastMinute: completed ? Number((errors / completed).toFixed(4)) : 0,
+    inFlight: trafficInFlight,
+    p95LatencyMsLastMinute: percentile(latencies, 0.95),
+    perSecond,
+  };
+}
+
+function hasTrafficAccess(req) {
+  const want = Buffer.from(String(process.env.HEALTH_SECRET || ''));
+  const given = Buffer.from(String(req.headers['x-health-key'] || ''));
+  return want.length > 0 && want.length === given.length && crypto.timingSafeEqual(want, given);
+}
 
 if (id !== 'platform') {
   const key = 'SIM_URL_' + id.toUpperCase();
@@ -194,6 +275,7 @@ async function handle(req, res) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Robots-Tag', 'noindex, nofollow');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Content-Security-Policy', "base-uri 'self'; object-src 'none'; frame-ancestors 'self'");
   res.setHeader('Cache-Control', 'no-store, max-age=0, must-revalidate');
 
   let url;
@@ -205,13 +287,28 @@ async function handle(req, res) {
   }
   if (req.method === 'GET' && id === 'platform') {
     const pages = { '/admin': '/admin.html', '/faculty': '/faculty.html', '/student': '/student.html',
-      '/signin': '/signin.html', '/account': '/account.html', '/join': '/join.html' };
+      '/signin': '/signin.html', '/account': '/account.html', '/join': '/join.html',
+      '/traffic-monitor': '/traffic-monitor.html' };
     if (pages[url.pathname]) url.pathname = pages[url.pathname];
   }
   if (req.method === 'GET' && /^sim0[3-9]$/.test(id) && url.pathname === '/') {
     res.statusCode = 302;
     res.setHeader('Location', config.prefix + '/launch.html');
     return res.end();
+  }
+
+  if (req.method === 'GET' && url.pathname === '/_ops/traffic') {
+    if (!hasTrafficAccess(req)) return res.status(401).json({ error: 'Unauthorized' });
+    return res.status(200).json(trafficSnapshot());
+  }
+
+  if (req.method === 'GET' && url.pathname === '/_ops/ready') {
+    if (!hasTrafficAccess(req)) return res.status(401).json({ error: 'Unauthorized' });
+    try { return res.status(200).json(await require('./readiness').check(id)); }
+    catch (error) {
+      console.error('Readiness failed:', error.code || error.message);
+      return res.status(503).json({ ok: false, service: id });
+    }
   }
 
   if (url.pathname === '/api' || url.pathname.startsWith('/api/')) {
@@ -263,6 +360,8 @@ async function handle(req, res) {
 }
 
 http.createServer((req, res) => {
+  const traffic = beginTraffic(req);
+  res.once('finish', () => finishTraffic(traffic, res.statusCode));
   handle(req, res).catch(error => {
     console.error(config.title + ' request error:', error);
     if (!res.headersSent) res.statusCode = 500;
@@ -271,3 +370,4 @@ http.createServer((req, res) => {
 }).listen(config.port, '127.0.0.1', () => {
   console.log(config.title + ' listening on 127.0.0.1:' + config.port);
 });
+

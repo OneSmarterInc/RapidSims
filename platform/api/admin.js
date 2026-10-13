@@ -5,6 +5,9 @@ const { healthHeaders, inspectHealth } = require('../lib/sim-health.js');
 const { present, FIELDS, statesOutcome } = require('../lib/catalogue.js');
 const { sql, id } = require('../lib/db.js');
 const A = require('../lib/auth.js');
+const credentials = require('../lib/credential-tokens');
+const { jsonDetail, launchUrl } = require('../lib/metadata');
+const { probeHealth } = require('../lib/health-probe');
 
 function body(req) {
   let b = req.body;
@@ -104,10 +107,8 @@ module.exports = async (req, res) => {
                   VALUES (${uid}, ${email}, ${name}, 'faculty', ${institution})`;
         }
 
-        const token = crypto.randomBytes(24).toString('base64url');
         const expires = new Date(Date.now() + 14 * 86400000);
-        await s`INSERT INTO tokens (token, user_id, purpose, expires_at)
-                VALUES (${token}, ${uid}, 'invite', ${expires})`;
+        const token = await credentials.issue(s, uid, 'invite', expires);
         return res.status(200).json({
           facultyId: uid,
           inviteUrl: `${baseUrl(req)}/accept.html?t=${token}`,
@@ -158,7 +159,7 @@ module.exports = async (req, res) => {
         }
         let health;
         try {
-          const r = await fetch(raw + '/api/health', { headers: healthHeaders(), signal: AbortSignal.timeout(8000) });
+          const r = await probeHealth(raw);
           if (!r.ok && r.status !== 503) return res.status(502).json({ error: 'no_health',
             message: `That address answered ${r.status}. Is it a simulation, and is it deployed?` });
           health = await r.json();
@@ -204,8 +205,7 @@ module.exports = async (req, res) => {
         // Ask it to describe itself again rather than waiting for a cold start.
         let refreshed = false;
         try {
-          const r = await fetch(String(row.launch_url).replace(/\/+$/, '') + '/api/health',
-            { headers: healthHeaders(), signal: AbortSignal.timeout(7000) });
+          const r = await probeHealth(row.launch_url);
           refreshed = r.ok;
         } catch (e) { /* it will announce itself next time it is used */ }
         return res.status(200).json({ ok: true, refreshed });
@@ -218,64 +218,62 @@ module.exports = async (req, res) => {
       case 'save_detail': {
         const sid = String(b.id || '').trim();
         if (!sid) return res.status(400).json({ error: 'need_id' });
-        const cur = (await s`SELECT detail FROM sims WHERE id = ${sid}`)[0];
-        if (!cur) return res.status(404).json({ error: 'no_such_sim' });
-
-        // Refuse copy that gives the simulation away. The page is read by people
-        // deciding whether to teach with it, and a description that names the
-        // ending removes the reason to.
         for (const f of FIELDS) {
-          if (b[f.key] === undefined) continue;
-          const told = statesOutcome(b[f.key]);
-          if (told.length) return res.status(400).json({ error: 'states_outcome',
-            message: `"${f.label}" gives the ending away — it says ${told.map(t => `"${t}"`).join(' and ')}. The catalogue is public.` });
+          if (b[f.key] !== undefined && statesOutcome(b[f.key]).length) return res.status(400).json({ error: 'states_outcome' });
         }
-
-        // Two of these are columns of their own; the rest live in detail.
-        if (b.tagline !== undefined) {
-          const v = String(b.tagline).trim();
-          await s`UPDATE sims SET tagline = ${v || null} WHERE id = ${sid}`;
-        }
-        if (b.description !== undefined) {
-          const v = String(b.description).trim();
-          await s`UPDATE sims SET description = ${v || null} WHERE id = ${sid}`;
-        }
-        const next = Object.assign({}, cur.detail || {});
-        const words = FIELDS.map(f => f.key).filter(k => k !== 'description' && k !== 'tagline');
-        for (const k of words) {
-          if (b[k] === undefined) continue;
-          const v = String(b[k]).trim();
-          if (v) next[k] = v.slice(0, 2000); else delete next[k];
-        }
-        // Anything an administrator has touched is theirs from now on.
-        next._edited = Array.from(new Set([...(cur.detail && cur.detail._edited || []),
-          ...FIELDS.map(f => f.key).filter(k => b[k] !== undefined && String(b[k]).trim())]));
-
-        await s`UPDATE sims SET detail = ${JSON.stringify(next).slice(0, 12000)} WHERE id = ${sid}`;
-        return res.status(200).json({ ok: true, detail: next });
+        const detail = await s.transaction(async tx => {
+          const cur = (await tx`SELECT * FROM sims WHERE id = ${sid} FOR UPDATE`)[0];
+          if (!cur) throw Object.assign(new Error('no_such_sim'), { status: 404 });
+          const next = { ...(cur.detail || {}) };
+          const edited = new Set(next._edited || []);
+          for (const {key} of FIELDS) {
+            if (b[key] === undefined) continue;
+            const value = String(b[key]).trim();
+            if (value) { edited.add(key); if (!['tagline','description'].includes(key)) next[key] = value; }
+            else { edited.delete(key); delete next[key]; }
+          }
+          next._edited = [...edited];
+          const serialised = jsonDetail(next);
+          await tx`UPDATE sims SET detail = ${serialised},
+            tagline = ${b.tagline === undefined ? cur.tagline : String(b.tagline).trim() || null},
+            description = ${b.description === undefined ? cur.description : String(b.description).trim() || null}
+            WHERE id = ${sid}`;
+          return next;
+        });
+        return res.status(200).json({ ok: true, detail });
       }
 
       case 'save_sim': {
         const sid = String(b.id || '').trim();
-        if (!sid) return res.status(400).json({ error: 'need_id' });
-        const num = b.number === '' || b.number === undefined || b.number === null
-          ? null : parseInt(b.number, 10);
-        if (num !== null) {
-          const clash = await s`SELECT id FROM sims WHERE number = ${num} AND id <> ${sid}`;
-          if (clash.length) return res.status(409).json({ error: 'number_taken',
-            message: `Number ${num} already belongs to ${clash[0].id}. Every simulation needs its own.` });
-        }
-        await s`
-          INSERT INTO sims (id, number, title, tagline, description, minutes, launch_url, published)
-          VALUES (${sid}, ${num}, ${String(b.title || '')}, ${b.tagline || null}, ${b.description || null},
-                  ${b.minutes ? parseInt(b.minutes, 10) : null}, ${String(b.launchUrl || '')}, ${!!b.published})
-          ON CONFLICT (id) DO UPDATE SET
-            number = EXCLUDED.number,
-            title = EXCLUDED.title, tagline = EXCLUDED.tagline, description = EXCLUDED.description,
-            minutes = EXCLUDED.minutes, launch_url = EXCLUDED.launch_url, published = EXCLUDED.published`;
-        // Once it's published, review grants mean nothing and would otherwise
-        // accumulate as rows nobody reads.
-        if (b.published) await s`DELETE FROM sim_access WHERE sim_id = ${sid}`;
+        if (!sid || sid.length > 200) return res.status(400).json({ error: 'need_id' });
+        const number = b.number === '' || b.number == null ? null : Number(b.number);
+        const minutes = b.minutes === '' || b.minutes == null ? null : Number(b.minutes);
+        if (number !== null && (!Number.isSafeInteger(number) || number < 1)) return res.status(400).json({ error: 'invalid_number' });
+        if (minutes !== null && (!Number.isSafeInteger(minutes) || minutes < 1 || minutes > 600)) return res.status(400).json({ error: 'invalid_minutes' });
+        const address = launchUrl(b.launchUrl);
+        const title = String(b.title || '').trim();
+        if (!title || title.length > 200) return res.status(400).json({ error: 'invalid_title' });
+        await s.transaction(async tx => {
+          await tx.query('LOCK TABLE sims IN SHARE ROW EXCLUSIVE MODE');
+          const cur = (await tx`SELECT * FROM sims WHERE id = ${sid}`)[0];
+          if (number !== null && (await tx`SELECT id FROM sims WHERE number = ${number} AND id <> ${sid}`).length) {
+            throw Object.assign(new Error('number_taken'), { status: 409 });
+          }
+          const detail = { ...(cur?.detail || {}) };
+          detail._edited = [...new Set([...(detail._edited || []), 'title', 'tagline', 'description', 'launch_url', 'minutes'])];
+          if (b.sessionSupported !== undefined) {
+            if (typeof b.sessionSupported !== 'boolean') throw Object.assign(new Error('Invalid session capability'), {status:400});
+            detail._sessionSupported = b.sessionSupported;
+            detail._protocolVersion = 2;
+          }
+          const serialised = jsonDetail(detail);
+          await tx`INSERT INTO sims (id, number, title, tagline, description, minutes, launch_url, published, detail)
+            VALUES (${sid}, ${number}, ${title}, ${b.tagline || null}, ${b.description || null}, ${minutes}, ${address}, ${!!b.published}, ${serialised})
+            ON CONFLICT (id) DO UPDATE SET number = EXCLUDED.number, title = EXCLUDED.title,
+              tagline = EXCLUDED.tagline, description = EXCLUDED.description, minutes = EXCLUDED.minutes,
+              launch_url = EXCLUDED.launch_url, published = EXCLUDED.published, detail = EXCLUDED.detail`;
+          if (b.published) await tx`DELETE FROM sim_access WHERE sim_id = ${sid}`;
+        });
         return res.status(200).json({ ok: true });
       }
 
@@ -300,10 +298,8 @@ module.exports = async (req, res) => {
         const uid = String(b.userId || '');
         const person = (await s`SELECT id, name, email FROM users WHERE id = ${uid}`)[0];
         if (!person) return res.status(404).json({ error: 'no_such_user' });
-        const token = crypto.randomBytes(24).toString('base64url');
         const expires = new Date(Date.now() + 3 * 86400000);
-        await s`INSERT INTO tokens (token, user_id, purpose, expires_at)
-                VALUES (${token}, ${uid}, 'reset', ${expires})`;
+        const token = await credentials.issue(s, uid, 'reset', expires);
         return res.status(200).json({
           resetUrl: `${baseUrl(req)}/reset.html?t=${token}`,
           who: person.name, expiresAt: expires
@@ -431,9 +427,7 @@ module.exports = async (req, res) => {
         for (const sim of sims) {
           const base = String(sim.launch_url).replace(/\/+$/, '');
           try {
-            const r = await fetch(base + '/api/health', {
-              headers: healthHeaders(),
-              signal: AbortSignal.timeout(7000) });
+            const r = await probeHealth(base);
             if (!r.ok && r.status !== 503) { results.push({ id: sim.id, title: sim.title, state: 'unreachable',
               detail: `answered ${r.status}` }); continue; }
             const h = await r.json();
@@ -474,10 +468,8 @@ module.exports = async (req, res) => {
 
         // Never used the account? They need a way in as well as the grant.
         if (!person.password_hash) {
-          const token = crypto.randomBytes(24).toString('base64url');
           const expires = new Date(Date.now() + 14 * 86400000);
-          await s`INSERT INTO tokens (token, user_id, purpose, expires_at)
-                  VALUES (${token}, ${person.id}, 'invite', ${expires})`;
+          const token = await credentials.issue(s, person.id, 'invite', expires);
           inviteUrl = `${baseUrl(req)}/accept.html?t=${token}`;
         }
 
@@ -526,8 +518,10 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: 'unknown_action' });
     }
   } catch (e) {
+    if (e.status) return res.status(e.status).json({ error: e.message });
     if (e.code === 'NO_DB') return res.status(503).json({ error: 'no_db' });
     console.error('admin failure', e.message);
     return res.status(500).json({ error: 'server_error', message: e.message });
   }
 };
+

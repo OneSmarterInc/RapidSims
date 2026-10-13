@@ -1,3 +1,4 @@
+require('../../tools/security/report-fixture.cjs');
 const assert = require('assert');
 const { signBack } = require('../lib/launch.js');
 const handler = require('../api/config.js');
@@ -33,7 +34,7 @@ function invoke(headers = {}) {
     assert.equal(r.statusCode, 503, 'direct access must fail closed when ACCESS_CODE is not configured');
     assert.equal(r.payload.error, 'access_code_not_configured');
 
-    const tokenWithoutCode = signBack({
+    const tokenWithoutCode = signBack({ kind: 'launch', run: 'fixture-launch',
       sub: 'usr_student', sim: 'rapid-03-midland', role: 'student',
       iat: Date.now(), exp: Date.now() + 60000
     });
@@ -53,14 +54,14 @@ function invoke(headers = {}) {
     assert.equal(r.statusCode, 200, 'correct access code must unlock standalone config');
     assert.ok(r.payload && Array.isArray(r.payload.lines), 'config should be returned after access');
 
-    const token = signBack({
+    const token = signBack({ kind: 'launch', run: 'fixture-launch',
       sub: 'usr_student', sim: 'rapid-03-midland', role: 'student',
       iat: Date.now(), exp: Date.now() + 60000
     });
     r = await invoke({ 'x-launch-token': token });
     assert.equal(r.statusCode, 200, 'valid platform launch token must bypass standalone access code');
 
-    const wrongSim = signBack({
+    const wrongSim = signBack({ kind: 'launch', run: 'fixture-launch',
       sub: 'usr_student', sim: 'rapid-02', role: 'student',
       iat: Date.now(), exp: Date.now() + 60000
     });
@@ -77,3 +78,4 @@ function invoke(headers = {}) {
   console.error(e);
   process.exit(1);
 });
+

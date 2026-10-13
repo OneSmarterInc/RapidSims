@@ -3,7 +3,7 @@
 // so it can't be used to mint a second one later.
 const SCHEMA = require('../lib/schema.js');
 const { sql, id } = require('../lib/db.js');
-const { hashPassword, startSession } = require('../lib/auth.js');
+const { hashPasswordAsync, startSession } = require('../lib/auth.js');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
@@ -49,7 +49,7 @@ module.exports = async (req, res) => {
 
   const uid = id('usr');
   await s`INSERT INTO users (id, email, name, role, password_hash)
-          VALUES (${uid}, ${email}, ${name}, 'admin', ${hashPassword(password)})`;
+          VALUES (${uid}, ${email}, ${name}, 'admin', ${await hashPasswordAsync(password)})`;
 
     // Nothing is seeded into the catalogue. A simulation describes itself the
     // first time its deployment is used, and an entry written here would sit
@@ -60,3 +60,4 @@ module.exports = async (req, res) => {
   await startSession(res, uid);
   return res.status(200).json({ ok: true, admin: { id: uid, email, name } });
 };
+

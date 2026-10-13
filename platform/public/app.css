@@ -61,9 +61,10 @@ p{color:var(--ink2);margin-bottom:14px}
 
 /* controls */
 .btn{
+  display:inline-flex;align-items:center;justify-content:center;max-width:100%;text-align:center;
   border:1px solid var(--line2);padding:9px 15px;font-family:var(--mono);font-size:10.5px;
   letter-spacing:.13em;text-transform:uppercase;color:var(--ink2);background:var(--card);
-  transition:.13s;white-space:nowrap;
+  transition:.13s;white-space:normal;
 }
 .btn:hover{border-color:var(--ink);color:var(--ink)}
 .btn.pri{background:var(--amber);border-color:var(--amber);color:#fff}
@@ -79,6 +80,8 @@ input[type=text],input[type=email],input[type=password],input[type=number],selec
   font-size:15px;font-family:var(--serif);
 }
 input:focus,select:focus,textarea:focus{border-color:var(--amber);outline:none}
+input,select,textarea{min-width:0;max-width:100%}
+textarea{resize:vertical}
 .field{margin-bottom:16px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .grow{flex:1;min-width:180px}
@@ -287,8 +290,11 @@ td input,td select,td textarea{font-size:14.5px}
 .foot .info{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--ink3);text-transform:uppercase}
 
 .expand td{background:var(--sunk);padding:16px 14px}
-.field{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap}
-.field > div{flex:1;min-width:170px}
+.field{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:flex-end;min-width:0}
+.field > label{flex-basis:100%;margin-bottom:-5px}
+.field > div{flex:1;min-width:min(170px,100%)}
+.field.catalogue-fields{display:grid;grid-template-columns:112px minmax(0,1fr) 100px;align-items:end}
+.field.catalogue-fields > div{min-width:0}
 .field input,.field textarea,.field select{width:100%;background:var(--card);border:1px solid var(--line2);padding:7px 10px;font-size:14px}
 .hint{font-size:12.5px;color:var(--ink3);line-height:1.5;margin:8px 0 12px;max-width:74ch}
 .empty{padding:26px 14px;color:var(--ink3);font-size:14px}
@@ -304,7 +310,8 @@ td input,td select,td textarea{font-size:14.5px}
 .sim .t{font-size:16px;font-weight:500;letter-spacing:-.01em}
 .sim .tag{font-size:13.5px;color:var(--ink2);margin-top:2px}
 .sim .id{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-top:6px;word-break:break-all}
-.sim .side{display:flex;flex-direction:column;align-items:flex-end;gap:8px;white-space:nowrap}
+.sim .side{position:static;display:flex;flex-direction:column;align-items:flex-end;gap:8px;min-width:0;max-width:40%;white-space:normal}
+.sim .side > div{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;max-width:100%}
 
 .crumb{font-family:var(--mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink3);margin:18px 0 8px}
 .crumb a{color:var(--ink3);cursor:pointer}
@@ -321,7 +328,8 @@ td input,td select,td textarea{font-size:14.5px}
   .strip .cell{padding:12px 18px;border-bottom:1px solid var(--line)}
   .strip .cell:first-child{padding-left:0}
   .sim{flex-wrap:wrap}
-  .sim .side{align-items:flex-start;width:100%;flex-direction:row;justify-content:space-between}
+  .sim .side{align-items:flex-start;width:100%;max-width:100%;flex-direction:row;flex-wrap:wrap;justify-content:space-between}
+  .sim .side > div{justify-content:flex-start}
   .top{height:auto;min-height:52px;flex-wrap:wrap;padding:8px 14px}
   .top .brand{width:100%}
 }
@@ -373,6 +381,8 @@ td input,td select,td textarea{font-size:14.5px}
 }
 .foot-note a{color:var(--ink3)}
 .foot-note a:hover{color:var(--ink);text-decoration:none}
+.narrow + .narrow{padding-top:0}
+.narrow + .narrow .foot-note{margin-top:0}
 
 
 /* ── looking at a simulation ────────────────────────────────────────────────
@@ -479,3 +489,30 @@ body.console .panel > .foot:last-child{border-bottom:0}
 @media(max-width:820px){
   .admin-detail-course .chead{align-items:flex-start}
 }
+
+/* Keep content-sized controls and long account details within their layout. */
+.top .role,.top .right,.head > div,.chead > div{min-width:0;overflow-wrap:anywhere}
+.top .right,.foot,.section{flex-wrap:wrap}
+.sub,.hint,.note,.err,.foot-note{overflow-wrap:anywhere}
+.tablewrap,.panel,.copyrow,.copybox{min-width:0;max-width:100%}
+@media(max-width:820px){
+  .panel td.num,.panel td.act,td.mono,td[data-l=""]{width:auto;text-align:left;white-space:normal}
+  .panel td.num{padding-left:14px}
+  .panel td.act{display:block}
+  .panel td.act .btn{margin:2px 4px 2px 0}
+  .panel td.act:before{display:none}
+  td{flex-wrap:wrap;overflow-wrap:anywhere}
+}
+@media(max-width:560px){
+  .field.catalogue-fields{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .catalogue-fields > div:nth-child(2){grid-column:1 / -1;grid-row:1}
+  .sim{gap:10px;padding:14px 12px}
+  .sim .body{flex-basis:calc(100% - 32px)}
+  .top{gap:8px}
+  .top .right{margin-left:0}
+  .search{min-width:0;flex-basis:100%}
+  .seg{max-width:100%;flex-wrap:wrap}
+  .copyrow input{min-width:0;flex-basis:100%}
+  .foot{align-items:flex-start}
+}
+

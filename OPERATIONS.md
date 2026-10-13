@@ -1,50 +1,40 @@
-# Configuration
+# RapidSims operations — AWS
 
-One platform and ten simulation projects share this repository, each with its own Root Directory. The tables below describe the original platform/Sim01 configuration; see docs/integration-fixes-2026-09-28.md for the current shared diagnostic contract.
+The current repository contains one platform and 12 simulations. Each simulation is an independent Node service; the included AWS deployment uses EC2, systemd and Nginx. PostgreSQL stores central platform data, and Redis stores simulation sessions and pending academic reports.
 
-## sim/ — RapidSim 01
+## Required configuration
 
-Root Directory `sim`. Serves the simulation and its facilitator session console.
+Use [the environment example](ec2/rapidsims.env.example) and [the rollout guide](docs/aws-security-rollout.md). Global configuration is in `/etc/rapidsims.env`, with optional per-service overrides in `/etc/rapidsims/<service>.env`. Do not commit these files or print their contents in logs.
 
-| Variable | Needed | What it does |
-|---|---|---|
-| `ANTHROPIC_API_KEY` | yes | Generates the characters. Store as sensitive. |
-| `ACCESS_CODE` | for standalone use | What someone types to open the sim directly. Not needed when everyone arrives from the platform. |
-| `FACULTY_CODES` | for live sessions | `Name:code` per person, comma separated. Gates the session console. |
-| `LAUNCH_SECRET` | to accept platform launches | Must match the platform's exactly. |
-| `PLATFORM_URL` | to report completions | Where to post when a student finishes. |
-| `KV_REST_API_URL` / `KV_REST_API_TOKEN` | for live sessions | Set by the Upstash Redis integration. Do not set by hand. |
+The platform needs `DATABASE_URL`, `PUBLIC_BASE_URL`, `LAUNCH_SECRET`, a separate `REPORT_SECRET` (or per-sim key map), `HEALTH_SECRET`, and access to the report Redis database. Sims need launch/report signing configuration, their stable URL, the platform address and session storage. AI-backed sims also need their provider key. Standalone access codes are optional and deliberately bypass portal enrolment, so leave them unset unless required.
 
-## platform/ — catalogue, courses, entitlement
+All services and the retry worker must agree on `REPORT_REDIS_URL` and `APP_ENV`. Enable Redis persistence, backups and capacity alerts; pending reports must not be evicted as cache. The worker is `rapidsims-reports.service`.
 
-Root Directory `platform`.
+## Database
 
-| Variable | Needed | What it does |
-|---|---|---|
-| `DATABASE_URL` | yes | Postgres. Set by the Neon integration. |
-| `LAUNCH_SECRET` | yes | Must match every sim it launches into. |
-| `PUBLIC_BASE_URL` | optional | Its own address, used to build invitation and enrolment links. No trailing slash. |
-| `SETUP_KEY` | first run only | Guards `/setup.html`. Delete it once setup is done. |
-| `RAPID_01_URL` | optional | Seeds the catalogue during setup. |
+`platform/lib/schema.sql` is the source of truth. After edits, regenerate `schema.js` with `node platform/lib/build-schema.js`. Runtime queries use native `pg`, parameterized tagged templates or `.query()`; `.transaction()` keeps related statements on one database connection.
 
-## Checking a deployment
+The AWS release script applies additive migrations in a transaction before promotion. Back up first and assess index-locking time on staging. The admin migration action remains available, but it is not a substitute for release readiness checks.
 
-All eleven projects answer at `/api/health`. Public responses contain only liveness and service identity. Configure a dedicated `HEALTH_SECRET` with the same value on the platform and every simulation, different from `LAUNCH_SECRET`. Diagnostics require that key in `x-health-key`; query-string secrets are rejected. The protected response includes configuration status and a launch-secret fingerprint. These checks establish configuration, not a complete student playthrough or a live database/model transaction.
+## Health and monitoring
 
-Admin → Catalogue → Check all reports `unverified` when diagnostics are unavailable; it does not mistake hidden fields for missing credentials. Different Git revisions are shown for inspection and do not alone indicate a broken simulation.
+Public `/api/health` is cheap liveness only. Protected diagnostic requests require `x-health-key`; never put the key into a URL. Admin diagnostics can probe only approved origins, reject unexpected private destinations and redirects, and pin validated DNS addresses.
 
-## After a release that changes the schema
+Protected `/_ops/ready` checks actual storage connections, required schema and essential configuration. It returns the release SHA. It does not test external AI billing, every classroom flow, or backups.
 
-Admin console, Catalogue tab, "Bring the database up to date". Every statement is create-if-missing, so running it repeatedly is harmless and it never drops anything.
+Check service logs with `journalctl -u rapidsims@<service>` and worker logs with `journalctl -u rapidsims-reports`. Alert on callback backlog, retry failures, worker restarts, readiness failure, PostgreSQL/Redis capacity, and disk usage from retained releases.
 
-## Things that have caught us out
+## Temporary traffic monitor
 
-Vercel only bundles files it can see being required, so nothing may be read from disk at runtime. The schema lives in `lib/schema.js`, generated from `schema.sql` by `lib/build-schema.js`.
+`/_ops/traffic` and `/traffic-monitor` use the diagnostic key. Telemetry is per process, aggregate only, with a two-minute rolling window and a cap of 2,048 latency samples per second. Pruning occurs during traffic, not only when a dashboard is open. At high rates, displayed latency percentiles are sampled, not exact for every request.
 
-The neon driver is a tagged-template function with no `.query()` method, and its templates cannot be nested — write two statements rather than composing one.
+The existing temporary dashboard generates bounded read-only test traffic. Do not use it against production during classes. Remove the monitor once testing is complete.
 
-Vercel refuses to build commits whose author email does not match a GitHub account.
+## Releases, recovery and new simulations
 
-Changing Root Directory needs a redeploy with the build cache disabled, or the old output is served.
+The AWS workflow deploys the exact tested SHA. Release files and locked dependencies are built outside the live checkout; affected services have independent pointers. Shared changes affect all consumers. The prior pointers and Nginx locations are retained for rollback.
 
-`sim/public/index.html` is generated. Edit `sim/src/` and run `node build.js`, which refuses to write a bundle containing scenario content.
+A new colocated service requires a reviewed `ec2/apps.json` entry and generated routes. An externally hosted AWS service needs an approved origin and compatible protocol, but no new local process entry. Register as draft, review, approve session capability if implemented, assign to a test course and complete an end-to-end test before publishing.
+
+See [the coordinated rollout and recovery procedure](docs/aws-security-rollout.md) for required manual infrastructure setup and remaining validation. Existing legacy sessions are not silently migrated into the strengthened ownership model.
+

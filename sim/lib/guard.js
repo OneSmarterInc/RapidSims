@@ -20,12 +20,12 @@ function checkAccess(req, res) {
   const lt = req.headers['x-launch-token'];
   if (lt) {
     const p = verifyLaunch(String(lt));
-    if (p) { req.launch = p; return true; }
+    if (p && p.sim === S.META.id) { req.launch = p; return true; }
     res.status(401).json({ error: 'launch_token_invalid' });
     return false;
   }
   const required = process.env.ACCESS_CODE;
-  if (!required) return true;
+  if (!required) { res.status(401).json({ error: 'platform_launch_required' }); return false; }
   if (req.headers['x-access-code'] !== required) {
     res.status(401).json({ error: 'access_code_required' });
     return false;
@@ -67,3 +67,4 @@ function body(req) {
 }
 
 module.exports = { checkAccess, requireKey, anthropic, body };
+

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+require('../../tools/security/report-fixture.cjs');
 // Exercises the real /api/session and /api/finish handlers against an in-memory
 // store that honours the same compare-and-set contract as the Redis scripts.
 const assert = require('node:assert/strict');
@@ -53,7 +54,7 @@ const config = require('../api/config.js');
 const joinEntry = require('../api/join.js');
 
 function token({ sub, name = 'Student', role = 'student', mode = 'play', course = null, sim = C.META.id }) {
-  const p = { sub, name, role, sim, mode, course, iat: Date.now(), exp: Date.now() + 3600e3 };
+  const p = { kind: 'launch', run: 'fixture-launch', sub, name, role, sim, mode, course, iat: Date.now(), exp: Date.now() + 3600e3 };
   const body = Buffer.from(JSON.stringify(p)).toString('base64url');
   return body + '.' + createHmac('sha256', process.env.LAUNCH_SECRET).update(body).digest('base64url');
 }
@@ -254,7 +255,7 @@ const goto = (code, phase) => { clockMs = startAt[code] + E.phaseStart(phase) * 
   global.fetch = async (url, options) => {
     assert.equal(url, 'https://platform.test/api/complete');
     reports++;
-    callback = require('../lib/launch.js').verifyLaunch(JSON.parse(options.body).token);
+    callback = require('../../shared/report-contract').verifyReport(JSON.parse(options.body).token, 'complete');
     return { ok: reports > 1, status: reports > 1 ? 200 : 503, json: async () => ({}) };
   };
   eq((await call(finish, { code: sc, participantId: sp }, lt)).body.reported, false, '503 callback retried');
@@ -302,3 +303,4 @@ const goto = (code, phase) => { clockMs = startAt[code] + E.phaseStart(phase) * 
 
   console.log(`PASS session-check: ${n} assertions`);
 })().catch(e => { console.error(e); process.exit(1); });
+

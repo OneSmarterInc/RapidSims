@@ -1,3 +1,4 @@
+require('../../tools/security/report-fixture.cjs');
 'use strict';
 const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
@@ -25,7 +26,7 @@ Object.assign(store, {
 });
 const session = require('../api/session'), finish = require('../api/finish'), health = require('../api/health');
 function token(p) {
-  const raw = Buffer.from(JSON.stringify({ sim: C.id, role: 'student', sub: 'student', course: 'c1', iat: now, exp: now + 3600000, ...p })).toString('base64url');
+  const raw = Buffer.from(JSON.stringify({ kind: 'launch', run: 'fixture-launch', sim: C.id, role: 'student', sub: 'student', course: 'c1', iat: now, exp: now + 3600000, ...p })).toString('base64url');
   return raw + '.' + crypto.createHmac('sha256', process.env.LAUNCH_SECRET).update(raw).digest('base64url');
 }
 const auth = p => ({ 'x-launch-token': token(p) });
@@ -40,7 +41,8 @@ const callbacks = [];
 let registrationOk = false, completionOk = false, releaseCallback, callbackStarted;
 global.fetch = async (url, options) => {
   assert.ok(url.startsWith(process.env.PLATFORM_URL + '/api/'));
-  const payload = L.verifyLaunch(JSON.parse(options.body).token);
+  const token = JSON.parse(options.body).token;
+  const payload = url.endsWith('/register') ? require('../../platform/lib/launch').verify(token) : require('../../shared/report-contract').verifyReport(token, 'complete');
   assert.ok(payload, 'all callbacks are signed');
   callbacks.push({ url, payload });
   if (url.endsWith('/register')) return { ok: registrationOk, status: registrationOk ? 200 : 503, text: async () => 'fixture unavailable' };
@@ -228,3 +230,4 @@ global.fetch = async (url, options) => {
   eq((await call(session, { action: 'console', code: guestRoom.body.code }, owner)).status, 403, 'platform faculty cannot take over a standalone instructor room');
   console.log(`All integration tests pass (${assertions} assertions).`);
 })().catch(e => { console.error('FAIL', e.stack); process.exit(1); });
+

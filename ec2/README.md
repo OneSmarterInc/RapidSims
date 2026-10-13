@@ -4,17 +4,19 @@ This deploys the platform and every simulation folder from this repository on on
 
 **No Docker, RDS, or S3 are used.** PostgreSQL and Redis run locally on the EC2 instance as Ubuntu packages; all 13 Node app services run under systemd.
 
-## One environment file
+Read [the security rollout guide](../docs/aws-security-rollout.md) before upgrading an existing installation. The launch/report protocol change requires a maintenance window and fresh launches/rooms.
 
-All 13 systemd services load the same file: /etc/rapidsims.env. It contains DATABASE_URL for local PostgreSQL and REDIS_URL for local Redis, plus shared signing, AI, and access-code values. There are no per-app environment files. The runtime calculates each app's SIM_URL from PUBLIC_BASE_URL and its route; optional overrides are in the example.
+## Environment files
 
-For production, use a strong random LAUNCH_SECRET and a separate HEALTH_SECRET. Keep the file owned by root and readable by the service group only. Remove SETUP_KEY after creating the first administrator.
+All 13 app services load /etc/rapidsims.env, then optional /etc/rapidsims/<service>.env overrides. The report worker uses the global and platform files. Configure DATABASE_URL, REDIS_URL, the shared durable REPORT_REDIS_URL, distinct launch/report/diagnostic keys, and the public portal address. The runtime calculates each app's SIM_URL from PUBLIC_BASE_URL and the route manifest.
 
-The standalone ACCESS_CODE, FACULTY_CODE, and FACULTY_CODES values are shared by all simulations because there is one environment file. Platform sign-in and signed launch tokens remain the preferred account flow.
+For production, use strong independent LAUNCH_SECRET, REPORT_SECRET and HEALTH_SECRET values. Keep files root-owned and readable by the service group only. Remove SETUP_KEY after creating the first administrator. Enable Redis persistence and backups; the report outbox is not disposable cache.
+
+Leave standalone ACCESS_CODE, FACULTY_CODE and FACULTY_CODES unset for account-only access. Where intentionally needed, configure them per service. Platform sign-in and signed launch tokens remain the preferred account flow.
 
 ## EC2 setup
 
-Use an Ubuntu EC2 instance with Node.js 20 or newer, Nginx, Git, curl, PostgreSQL, and Redis. Install native packages (no containers):
+Use an Ubuntu EC2 instance with Node.js 24 (matching CI), Nginx, Git, curl, PostgreSQL, and Redis. Install native packages (no containers):
 
 ```bash
 sudo apt update
@@ -57,17 +59,17 @@ sudo -u rapidsims env HOME=/var/lib/rapidsims git clone git@github.com:OneSmarte
 
 GitHub's SSH test may finish with a message that shell access is not provided; successful authentication is what matters.
 
-3. Create the single server-side environment file:
+3. Create the server-side environment file and provision optional per-service overrides:
 
 ```bash
 sudo install -o root -g rapidsims -m 0640 /var/www/rapidsims/ec2/rapidsims.env.example /etc/rapidsims.env
 sudoedit /etc/rapidsims.env
 ```
 
-4. Install the systemd and Nginx configuration:
+4. Prepare the managed Nginx locations. For an existing HTTPS site, follow the rollout guide to preserve its certificate and server configuration. For a fresh HTTP-only bootstrap:
 
 ```bash
-sudo cp /var/www/rapidsims/ec2/rapidsims@.service /etc/systemd/system/rapidsims@.service
+node /var/www/rapidsims/ec2/render-nginx.js --locations | sudo tee /etc/nginx/rapidsims-locations.conf >/dev/null
 sudo cp /var/www/rapidsims/ec2/nginx-rapidsims.conf /etc/nginx/conf.d/rapidsims.conf
 sudo nginx -t
 sudo systemctl reload nginx
@@ -76,82 +78,20 @@ sudo systemctl daemon-reload
 
 Edit server_name in /etc/nginx/conf.d/rapidsims.conf to your domain before reloading Nginx. Ensure Node is available at /usr/bin/node (the path used by the unit).
 
-5. Install dependencies and build the generated assets:
+5. Fetch a reviewed commit and deploy its exact tested SHA (replace the placeholder):
 
 ```bash
-sudo bash /var/www/rapidsims/ec2/deploy.sh
+sudo bash /var/www/rapidsims/ec2/deploy.sh <40-character-tested-SHA> /var/www/rapidsims
 ```
 
-The script installs shared `pg` and `redis` clients plus each app's production dependencies, runs available simulation build scripts, enables and restarts all 13 systemd services, and checks the platform health endpoint.
+The script uses locked root dependencies, runs the full test gate and builds in a versioned release directory, applies additive database migrations, installs systemd units, and promotes only affected service pointers. Every affected service must pass authenticated storage readiness with the new build SHA. The result-delivery worker is also installed and restarted.
 
 Thereafter deploy updates with:
 
 ```bash
-sudo -u rapidsims env HOME=/var/lib/rapidsims git -C /var/www/rapidsims pull --ff-only
-sudo bash /var/www/rapidsims/ec2/deploy.sh
+sudo -u rapidsims env HOME=/var/lib/rapidsims git -C /var/www/rapidsims fetch origin master
+sudo bash /var/www/rapidsims/ec2/deploy.sh <40-character-tested-SHA> /var/www/rapidsims
 ```
-
-## Automatic deployment after pushes (CD)
-
-The workflow `.github/workflows/deploy-ec2.yml` deploys automatically after each push to `master`. It uses AWS Systems Manager (SSM), so the EC2 security group does not need to expose SSH to GitHub-hosted runners. There is no separate CI/test gate. The existing `ec2/deploy.sh` installs dependencies, builds generated assets, restarts all 13 services, and checks platform health.
-
-### One-time AWS setup
-
-1. Confirm the EC2 instance is an SSM managed node and shows **Online** in Systems Manager. Its attached instance role must include `AmazonSSMManagedInstanceCore`. Install/start the SSM Agent if needed.
-2. In IAM, ensure the GitHub OIDC identity provider exists for `token.actions.githubusercontent.com` with audience `sts.amazonaws.com`.
-3. Create an IAM role for GitHub Actions with this trust policy. Replace `ACCOUNT_ID` with your AWS account ID:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Principal": {
-      "Federated": "arn:aws:iam::ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com"
-    },
-    "Action": "sts:AssumeRoleWithWebIdentity",
-    "Condition": {
-      "StringEquals": {
-        "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
-        "token.actions.githubusercontent.com:sub": "repo:OneSmarterInc/RapidSims:ref:refs/heads/master"
-      }
-    }
-  }]
-}
-```
-
-4. Give that role permission to send the deploy command only to this instance and read its command result. Replace `REGION`, `ACCOUNT_ID`, and `INSTANCE_ID`:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": "ssm:SendCommand",
-      "Resource": [
-        "arn:aws:ssm:REGION::document/AWS-RunShellScript",
-        "arn:aws:ec2:REGION:ACCOUNT_ID:instance/INSTANCE_ID"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ssm:GetCommandInvocation",
-      "Resource": "*"
-    }
-  ]
-}
-```
-
-### One-time GitHub setup
-
-In **OneSmarterInc/RapidSims → Settings → Secrets and variables → Actions → Variables**, add:
-
-- `AWS_REGION`: the EC2 instance's AWS region.
-- `EC2_INSTANCE_ID`: the EC2 instance ID (format `i-...`).
-- `AWS_DEPLOY_ROLE_ARN`: the IAM role ARN created above.
-
-After these are set and SSM reports the instance Online, each push to `master` starts a deployment. Follow it under the repository's **Actions** tab. A failed build/deploy stops the workflow and shows the deployment output there. The workflow pulls the latest `master` on EC2 and runs the existing deployment script; it does not change the one-env-file, local PostgreSQL/Redis, or systemd setup.
 
 ## Routes
 
@@ -178,7 +118,7 @@ The checked-in Nginx config listens on HTTP so first boot and certificate issuan
 - Use the platform's protected health probe with HEALTH_SECRET to check the configured database and launch-secret fingerprint.
 - Check logs with sudo journalctl -u 'rapidsims@*' -f or sudo journalctl -u rapidsims@sim03 -n 100.
 
-The public health endpoint confirms process liveness; it does not prove a full database, AI, Redis, or student-playthrough flow. Run the repository's simulation checks before publishing a release.
+The public health endpoint confirms process liveness. Protected /_ops/ready checks storage connectivity, required schema and essential configuration; neither proves a complete student playthrough or external AI availability. Run the staging acceptance checks in the rollout guide before publishing a release.
 
 ## Operations
 
@@ -188,3 +128,4 @@ The public health endpoint confirms process liveness; it does not prove a full d
 - Protect /etc/rapidsims.env and repository access. Never commit production secrets.
 
 The platform uses the native PostgreSQL client and simulation sessions use the native Redis client when REDIS_URL is set. Redis Lua scripts, hashes, sets, and TTL behavior work directly against local Redis. Existing Upstash REST configuration remains supported for non-EC2 deployments.
+

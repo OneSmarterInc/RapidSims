@@ -1,3 +1,4 @@
+require('../../tools/security/report-fixture.cjs');
 'use strict';
 const assert = require('node:assert/strict');
 const sheets = require('../data/sheets');
@@ -40,7 +41,7 @@ store.compareAndSetSession = async (code, previous, next) => {
 };
 
 const handler = require('../api/session');
-const token = (sub, role) => signBack({ sub, name: sub, email: `${sub}@school.edu`, role, sim: config.simId,
+const token = (sub, role) => signBack({ kind: 'launch', run: 'fixture-launch', sub, name: sub, email: `${sub}@school.edu`, role, sim: config.simId,
   course: 'course-4', mode: role === 'student' ? 'play' : 'session', iat: now, exp: now + 600000 });
 const teacher = token('instructor', 'faculty');
 const students = ['ada', 'ben', 'cy'].map(id => token(id, 'student'));
@@ -105,7 +106,7 @@ await check('student course launch lists only open rooms for its course', async 
   const listed = await call({ action: 'course_sessions' }, students[0]);
   assert.equal(listed.status, 200);
   assert.deepEqual(listed.body.sessions.map(session => session.code), [code]);
-  const otherCourse = signBack({ sub: 'other', name: 'other', role: 'student', sim: config.simId,
+  const otherCourse = signBack({ kind: 'launch', run: 'fixture-launch', sub: 'other', name: 'other', role: 'student', sim: config.simId,
     course: 'different-course', mode: 'play', iat: now, exp: now + 600000 });
   assert.deepEqual((await call({ action: 'course_sessions' }, otherCourse)).body.sessions, []);
   assert.equal((await call({ action: 'course_sessions' }, teacher)).status, 403);
@@ -306,3 +307,4 @@ await check('registration states explicit identity, number and canonical route',
   for (const k of Object.keys(process.env)) if (!(k in oldEnv)) delete process.env[k];
   Object.assign(process.env, oldEnv);
 });
+

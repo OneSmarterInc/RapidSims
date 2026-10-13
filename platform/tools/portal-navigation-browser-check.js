@@ -79,6 +79,58 @@ function reply(url,b) {
  async function check(label,fn){await fn();assert.deepEqual(errors,[],label+' browser errors');checks++;console.log('ok '+label);}
  async function refresh(selector){requestLog=[];await page.reload();await settled();await page.locator(selector).first().waitFor();assert(requestLog.every(x=>readActions.has(x)),'Refresh replayed an action: '+requestLog);}
  try {
+  if (process.env.PORTAL_LAYOUT_CHECK) {
+    const failures=[];
+    const views=[
+      ['admin','/admin.html?tab=cat&edit='+simId,'[data-simsave]'],
+      ['admin','/admin.html?tab=cat&copy='+simId,'[data-copysave]'],
+      ['admin','/admin.html?tab=cat&reviewers='+simId,'[data-grant]'],
+      ['admin','/admin.html?tab=fac&invite=1','#invgo'],
+      ['admin','/admin.html?tab=stu','[data-tab="stu"].on'],
+      ['admin','/admin.html?tab=crs','[data-tab="crs"].on'],
+      ['admin','/admin.html?faculty=f1','#rst'],
+      ['faculty','/faculty.html?course=c1','#ce'],
+      ['faculty','/faculty.html?course=c1&edit=1','#e_go'],
+      ['faculty','/faculty.html?new=1','#ncgo'],
+      ['faculty','/faculty.html?tab=sim&look='+simId,'#lookClose'],
+      ['student','/student.html','#studentSearch'],
+      ['student','/student.html?course=c1&sim='+simId,'#resultHome'],
+      ['student','/account.html','#psave'],
+      ['student','/signin.html','#go'],
+      ['student','/join.html','#go'],
+      ['student','/setup.html','#go'],
+      ['student','/','[data-open]']
+    ];
+    for (const width of [320,390,768,1024,1440]) {
+      await page.setViewportSize({width,height:900});
+      for (const [r,url,selector] of views) {
+        role=r; signedIn=!url.includes('signin');
+        await goto(url); await page.locator(selector).first().waitFor();
+        const problems=await page.evaluate(()=>{
+          const result=[];
+          if(document.documentElement.scrollWidth>innerWidth+1)result.push('page overflow '+document.documentElement.scrollWidth);
+          for(const el of document.querySelectorAll('input,textarea,select,.sim .side,.top,.foot')){
+            const rect=el.getBoundingClientRect();
+            if(!rect.width||!rect.height||el.closest('.tablewrap'))continue;
+            if(rect.left < -1 || rect.right>innerWidth+1)result.push(el.tagName+'.'+el.className+' outside viewport');
+          }
+          const fields=[...document.querySelectorAll('[data-sf="number"],[data-sf="title"],[data-sf="minutes"]')];
+          if(innerWidth>=768 && fields.length===3 && Math.max(...fields.map(e=>e.getBoundingClientRect().top))-Math.min(...fields.map(e=>e.getBoundingClientRect().top))>1)result.push('catalogue inputs misaligned');
+          return result;
+        });
+        if(problems.length)failures.push({width,url,problems});
+        if(process.env.PORTAL_SCREENSHOTS && [390,1440].includes(width) && (url.includes('&edit=') || url==='/student.html' || url==='/signin.html')){
+          fs.mkdirSync(process.env.PORTAL_SCREENSHOTS,{recursive:true});
+          await page.screenshot({path:path.join(process.env.PORTAL_SCREENSHOTS,`${r}-${url.split('?')[0].replace(/\W/g,'')}-${width}.png`),fullPage:true});
+        }
+      }
+    }
+    console.log(JSON.stringify(failures,null,2));
+    assert.equal(failures.length,0,'Responsive layout failures');
+    assert.deepEqual(errors,[],'Browser errors');
+    console.log(`${views.length*5} portal layout checks passed`);
+    return;
+  }
   role='admin';
   for(const tab of ['fac','stu','crs','cat'])await check('admin '+tab+' direct and refresh',async()=>{await goto('/admin.html?tab='+tab);await page.locator(`[data-tab="${tab}"].on`).waitFor();await refresh(`[data-tab="${tab}"].on`);});
   await check('admin tab Back and Forward',async()=>{await goto('/admin.html');await page.locator('[data-tab="stu"]').click();await page.locator('[data-tab="cat"]').click();await page.goBack();await settled();await page.locator('[data-tab="stu"].on').waitFor();await page.goForward();await settled();await page.locator('[data-tab="cat"].on').waitFor();});
@@ -184,3 +236,4 @@ function reply(url,b) {
   assert.deepEqual(errors,[]);console.log(`${checks} browser checks passed`);
  } finally {await browser.close();await new Promise(resolve=>server.close(resolve));}
 })().catch(error=>{console.error(error);process.exitCode=1;});
+

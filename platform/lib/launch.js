@@ -23,7 +23,7 @@ function sign(payload) {
 }
 
 function verify(token) {
-  if (typeof token !== 'string' || !token.includes('.')) return null;
+  if (typeof token !== 'string' || token.length > 100000 || !/^[\w-]+\.[\w-]+$/.test(token)) return null;
   const [body, mac] = token.split('.');
   let expect;
   try { expect = crypto.createHmac('sha256', SECRET()).update(body).digest('base64url'); }
@@ -32,7 +32,7 @@ function verify(token) {
   if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
   let p;
   try { p = unb64(body); } catch (e) { return null; }
-  if (!p.exp || Date.now() > p.exp) return null;
+  if (!Number.isFinite(p?.exp) || Date.now() >= p.exp) return null;
   return p;
 }
 
@@ -42,8 +42,10 @@ function verify(token) {
 // was under the length of every simulation in the catalogue, so a token could
 // expire mid-run — and it did, silently, because the sims only need it at the
 // start and at the end.
-function launchToken({ userId, name, email, role, simId, courseId, mode, minutes = 60 }) {
+function launchToken({ userId, name, email, role, simId, courseId, mode, runId, minutes = 180 }) {
   return sign({
+    kind: 'launch',
+    run: runId || idForLaunch(),
     sub: userId,
     name,
     email: email || null,      // sims that group students by email (Sim-04) read this
@@ -56,4 +58,7 @@ function launchToken({ userId, name, email, role, simId, courseId, mode, minutes
   });
 }
 
+function idForLaunch() { return 'lch_' + crypto.randomBytes(18).toString('base64url'); }
+
 module.exports = { sign, verify, launchToken };
+

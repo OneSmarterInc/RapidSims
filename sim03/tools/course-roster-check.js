@@ -1,3 +1,4 @@
+require('../../tools/security/report-fixture.cjs');
 const assert=require('node:assert/strict');const {createHmac}=require('node:crypto');
 const store=require('../lib/store.js'),handler=require('../api/session.js');
 const copy=v=>v==null?v:structuredClone(v),sessions=new Map(),participants=new Map(),runs=new Map();
@@ -6,7 +7,7 @@ store.configured=()=>true;store.putSession=async(c,v)=>sessions.set(c,copy(v));s
 store.getParticipants=async c=>copy(participants.get(c)||{});store.getRuns=async c=>copy(runs.get(c)||{});
 require('./roster-fixture.js').installRosterTransactions(store,sessions,participants);
 process.env.LAUNCH_SECRET='roster-test-secret-not-production';
-const token=(sub='faculty',role='faculty',course='course-a')=>{const body=Buffer.from(JSON.stringify({sub,role,name:sub,course,sim:'rapid-03-midland',mode:'session',exp:Date.now()+60000})).toString('base64url');return body+'.'+createHmac('sha256',process.env.LAUNCH_SECRET).update(body).digest('base64url');};
+const token=(sub='faculty',role='faculty',course='course-a')=>{const body=Buffer.from(JSON.stringify({kind:'launch',run:'fixture-launch',sub,role,name:sub,course,sim:'rapid-03-midland',mode:'session',exp:Date.now()+60000})).toString('base64url');return body+'.'+createHmac('sha256',process.env.LAUNCH_SECRET).update(body).digest('base64url');};
 let students=[{participantId:'platform:a',name:'Same Name',accessReleased:true},{participantId:'platform:b',name:'Same Name',accessReleased:true},{participantId:'platform:c',name:'Unapproved Student',accessReleased:false}];
 let offline=false;
 global.fetch=async()=>{if(offline)throw Object.assign(new Error('Course temporarily unavailable'),{status:503});return new Response(JSON.stringify({students}),{status:200,headers:{'Content-Type':'application/json'}});};
@@ -38,3 +39,4 @@ async function call(body,auth=token()){const req={method:'POST',headers:{'x-laun
  r=await call({action:'join',code},token('c','student'));eq(r.status,200);eq(r.body.me.groupId,'team:team-1','concurrent assignment survives first launch');
  console.log(`Course-roster checks passed (${checks} assertions: pre-launch grouping, idempotency, attendance, identity, access, late approval, outage and join race).`);
 }finally{Object.assign(store,originals);global.fetch=nativeFetch;if(oldSecret===undefined)delete process.env.LAUNCH_SECRET;else process.env.LAUNCH_SECRET=oldSecret;}})().catch(e=>{console.error(e);process.exitCode=1;});
+

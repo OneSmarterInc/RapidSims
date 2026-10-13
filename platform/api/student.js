@@ -1,6 +1,6 @@
 const { sql, id } = require('../lib/db.js');
 const A = require('../lib/auth.js');
-const { SESSION_SIMS } = require('../lib/session-sims.js');
+const { supportsSessions } = require('../lib/session-sims.js');
 
 function body(req) {
   let b = req.body;
@@ -14,13 +14,17 @@ module.exports = async (req, res) => {
   const s = sql();
 
   try {
+    if (b.action === 'signup_and_enrol' && !await require('../lib/auth-throttle').allow(s, req, b.email || 'signup')) {
+      res.setHeader('Retry-After', '900');
+      return res.status(429).json({ error: 'too_many_attempts' });
+    }
     switch (String(b.action || '')) {
 
       // Public, so the join page can say which course this is before signing up.
       // Returns nothing beyond the title and who teaches it.
       case 'course_lookup': {
         const code = String(b.joinCode || '').toUpperCase().trim();
-        const rows = !code && b.courseId && SESSION_SIMS.has(b.simId)
+        const rows = !code && b.courseId && await supportsSessions(s, String(b.simId || ''))
           ? await s`
               SELECT c.title, c.term, c.join_code, u.name AS faculty_name, u.institution
               FROM courses c JOIN users u ON u.id = c.faculty_id
@@ -49,26 +53,27 @@ module.exports = async (req, res) => {
 
         let user = (await s`SELECT * FROM users WHERE email = ${email}`)[0];
         if (user) {
+          if (user.disabled) return res.status(403).json({ error: 'account_disabled' });
           if (user.role !== 'student') {
             return res.status(409).json({ error: 'not_a_student',
               message: 'That email is already registered as a facilitator. Sign in first, then use the link.' });
           }
           if (!user.password_hash) {
-            await s`UPDATE users SET password_hash = ${A.hashPassword(pw)}, name = ${name} WHERE id = ${user.id}`;
-          } else if (!A.verifyPassword(pw, user.password_hash)) {
+            await s`UPDATE users SET password_hash = ${await A.hashPasswordAsync(pw)}, name = ${name} WHERE id = ${user.id}`;
+          } else if (!await A.verifyPasswordAsync(pw, user.password_hash)) {
             return res.status(401).json({ error: 'account_exists',
               message: 'You already have an account with that email. Use your existing password.' });
           }
         } else {
           const uid = id('usr');
           await s`INSERT INTO users (id, email, name, role, password_hash)
-                  VALUES (${uid}, ${email}, ${name}, 'student', ${A.hashPassword(pw)})`;
+                  VALUES (${uid}, ${email}, ${name}, 'student', ${await A.hashPasswordAsync(pw)})`;
           user = (await s`SELECT * FROM users WHERE id = ${uid}`)[0];
         }
 
-        const already = (await s`SELECT id FROM enrolments WHERE course_id = ${course.id} AND student_id = ${user.id}`)[0];
+        const already = (await s`SELECT id, dropped FROM enrolments WHERE course_id = ${course.id} AND student_id = ${user.id}`)[0];
         if (already) {
-          await s`UPDATE enrolments SET dropped = false WHERE id = ${already.id}`;
+          if (already.dropped) return res.status(403).json({ error: 'instructor_approval_required' });
         } else {
           await s`INSERT INTO enrolments (id, course_id, student_id)
                   VALUES (${id('enr')}, ${course.id}, ${user.id})`;
@@ -86,9 +91,9 @@ module.exports = async (req, res) => {
         const code = String(b.joinCode || '').toUpperCase().trim();
         const course = (await s`SELECT * FROM courses WHERE join_code = ${code} AND archived = false`)[0];
         if (!course) return res.status(404).json({ error: 'no_such_course' });
-        const already = (await s`SELECT id FROM enrolments WHERE course_id = ${course.id} AND student_id = ${me.id}`)[0];
-        if (already) await s`UPDATE enrolments SET dropped = false WHERE id = ${already.id}`;
-        else await s`INSERT INTO enrolments (id, course_id, student_id) VALUES (${id('enr')}, ${course.id}, ${me.id})`;
+        const already = (await s`SELECT id, dropped FROM enrolments WHERE course_id = ${course.id} AND student_id = ${me.id}`)[0];
+        if (already?.dropped) return res.status(403).json({ error: 'instructor_approval_required' });
+        if (!already) await s`INSERT INTO enrolments (id, course_id, student_id) VALUES (${id('enr')}, ${course.id}, ${me.id})`;
         return res.status(200).json({ ok: true, course: { title: course.title } });
       }
 
@@ -125,8 +130,10 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: 'unknown_action' });
     }
   } catch (e) {
+    if (e.status === 400 || e.status === 429) return res.status(e.status).json({ error: e.message });
     if (e.code === 'NO_DB') return res.status(503).json({ error: 'no_db' });
     console.error('student failure', e.message);
     return res.status(500).json({ error: 'server_error', message: e.message });
   }
 };
+

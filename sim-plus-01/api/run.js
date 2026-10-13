@@ -164,6 +164,11 @@ module.exports = async (req, res) => {
     if (!runId) return res.status(404).json({ error: 'no_such_run' });
     const s = await load(runId);
     if (!s) return res.status(404).json({ error: 'no_such_run' });
+    if (s.launch && (!req.launch || req.launch.sub !== s.launch.sub ||
+        (req.launch.course || null) !== (s.launch.course || null))) {
+      return res.status(403).json({ error: 'not_your_run' });
+    }
+    if (!s.launch && req.launch) return res.status(403).json({ error: 'standalone_run' });
 
     if (b.action === 'resume') return res.status(200).json({ runId, state: publicState(s), submitted: !!s.submission });
 
@@ -209,8 +214,11 @@ module.exports = async (req, res) => {
           cohortId: who.course || null,
           completedAt: new Date().toISOString()
         });
-        await reportTranscript({ launch: who, envelope });
-        await reportCompletion({ launch: who, summary: result.harmFired ? 'Recommendation caused harm' : 'Report completed', metrics: { harmFired: result.harmFired, evidenceHeld: result.evidence.held.length, loopAvailable: result.evidence.loopAvailable } });
+        const transcript = await reportTranscript({ launch: who, runId, envelope });
+        const completion = await reportCompletion({ launch: who, runId, summary: result.harmFired ? 'Recommendation caused harm' : 'Report completed', metrics: { harmFired: result.harmFired, evidenceHeld: result.evidence.held.length, loopAvailable: result.evidence.loopAvailable } });
+        if ((!transcript.ok && !transcript.queued) || (!completion.ok && !completion.queued)) {
+          return res.status(503).json({ error: 'report_not_queued', message: 'Your work is saved. Please retry submission so the instructor receives it.' });
+        }
       }
       return res.status(200).json({ outcome: participantOutcome(s, result) });
     }
@@ -228,3 +236,4 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: e.code === 'NO_STORE' ? 'no_store' : 'server_error', message: e.message });
   }
 };
+
