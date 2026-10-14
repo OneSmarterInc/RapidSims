@@ -4,6 +4,11 @@ const { courseEnrolments } = require('./course-enrolments.js');
 const store = require('./store.js');
 
 async function syncCourseRoster(req, body, session) {
+  if (session && session.practice) {
+    const people = Object.values(await store.getParticipants(session.code) || {}).filter(Boolean);
+    return { available: true, practice: true, added: 0,
+      students: people.map(p => ({ participantId: p.id, name: p.name, accessReleased: true })) };
+  }
   const roster = await courseEnrolments(req, body, session);
   if (!roster.available || session.mode !== 'team' || session.state === 'closed') return roster;
   const seen = new Set();

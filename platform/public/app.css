@@ -441,6 +441,11 @@ body.sheet-open{overflow:hidden}
 .faculty-sim-kpi span{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-top:2px}
 .faculty-run-progress{height:3px;background:var(--line);margin-top:13px;max-width:470px;overflow:hidden}
 .faculty-run-progress i{display:block;height:3px;background:var(--green)}
+.faculty-practice{margin-top:14px;min-width:min(560px,100%);border:1px solid var(--line);border-radius:4px;padding:14px;background:var(--sunk,#F7F6F3);display:flex;flex-direction:column;gap:12px;max-width:640px}.faculty-practice[hidden]{display:none}
+.faculty-practice-head{display:flex;flex-direction:column;gap:4px;font-size:14px}.faculty-practice-head span{color:var(--ink2)}
+.faculty-practice-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}@media(max-width:700px){.faculty-practice-grid{grid-template-columns:1fr}}
+.faculty-practice-card{background:#fff;border:1px solid var(--line);border-radius:3px;padding:12px;display:flex;flex-direction:column;gap:6px;font-size:13px}.faculty-practice-card span{color:var(--ink2)}
+.faculty-practice-actions{display:flex;gap:8px;flex-wrap:wrap}
 .faculty-sim-card .faculty-sim-side{display:flex;align-items:flex-start;white-space:normal}
 .faculty-sim-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:560px}
 .faculty-result-btn{background:var(--sunk)}
