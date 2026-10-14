@@ -473,12 +473,12 @@ function renderCourse() {
       <button class="btn pri" id="p_all" ${waiting.length?'':'disabled'}>${waiting.length?`Give access to all ${waiting.length}`:'Nobody waiting'}</button>
     </div>
 
-    <div class="panel"><div class="tablewrap"><table>
-      <thead><tr><th style="width:30px"></th><th style="width:26%">Student</th><th style="width:1%">Access</th><th>Note</th>
+    <div class="panel faculty-roster"><div class="tablewrap"><table>
+      <thead><tr><th></th><th>Student</th><th>Access</th><th>Note</th>
         <th class="num">Joined</th><th>Run activity</th><th class="act"></th></tr></thead>
       <tbody>
       ${shown.length ? shown.map(r => `<tr style="${r.dropped?'opacity:.5':''}">
-        <td data-l="" style="width:1%">${r.dropped ? '' : `<input type="checkbox" data-en="${esc(r.enrolment_id)}" ${F.sel.has(r.enrolment_id)?'checked':''}>`}</td>
+        <td data-l="">${r.dropped ? '' : `<input type="checkbox" aria-label="Select ${esc(r.name)}" data-en="${esc(r.enrolment_id)}" ${F.sel.has(r.enrolment_id)?'checked':''}>`}</td>
         <td data-l="Student"><div class="nm">${esc(r.name)}</div><div class="sub">${esc(r.email)}</div></td>
         <td data-l="Access">${r.dropped ? dot('off','removed') : dot(r.paid?'ok':'warn', r.paid?'released':'waiting')}</td>
         <td data-l="Note" class="meta">${r.paid_note ? esc(r.paid_note) : '<span class="dim">—</span>'}</td>

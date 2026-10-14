@@ -479,7 +479,34 @@ body.sheet-open{overflow:hidden}
 }
 
 
-/* admin/student console polish — same Flexee theme */
+/* Course roster: fit the card without clipping details or action buttons. */
+.faculty-roster table{table-layout:fixed}
+.faculty-roster th:nth-child(1){width:44px}
+.faculty-roster th:nth-child(2){width:24%}
+.faculty-roster th:nth-child(3){width:100px}
+.faculty-roster th:nth-child(5){width:85px}
+.faculty-roster th:nth-child(6){width:164px}
+.faculty-roster th:nth-child(7){width:24%}
+.faculty-roster td,.faculty-roster th{white-space:normal;overflow-wrap:anywhere}
+.faculty-roster td:first-child{min-width:0}
+.faculty-roster td.act{white-space:normal}
+.faculty-roster td.act .btn{margin:3px 0 3px 5px;white-space:normal}
+@media(max-width:1100px){
+  .faculty-roster table,.faculty-roster tbody,.faculty-roster tr{display:block;width:100%}
+  .faculty-roster thead{display:none}
+  .faculty-roster tbody tr{padding:12px 14px;border-bottom:1px solid var(--line)}
+  .faculty-roster td,.faculty-roster td.num,.faculty-roster td.act{
+    display:block;width:auto;padding:6px 0;border:0;white-space:normal;text-align:left;
+  }
+  .faculty-roster td[data-l]:before{
+    content:attr(data-l);display:block;margin-bottom:4px;
+    font:9px var(--mono);letter-spacing:.11em;text-transform:uppercase;color:var(--ink3);
+  }
+  .faculty-roster td[data-l=""]:before{display:none}
+  .faculty-roster td.act .btn{margin:3px 5px 3px 0}
+}
+
+/* admin/student console polish - same Flexee theme */
 .admin-detail-toolbar{margin-bottom:12px}
 .admin-detail-course{margin-bottom:14px}
 .admin-detail-course .chead{background:var(--sunk);padding:14px 16px}
