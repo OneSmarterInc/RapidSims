@@ -21,7 +21,7 @@ for (const [id, app] of Object.entries(apps)) {
   if (!/^[a-z0-9-]+$/.test(app.dir) || !Number.isInteger(app.port) || app.port < 1024 || app.port > 65535) throw new Error('Invalid app manifest');
   for (const prefix of [app.prefix, ...(app.aliases || [])]) {
     if (!/^\/[a-z0-9-]+$/.test(prefix)) throw new Error('Invalid route prefix');
-    lines.push(`    location = ${prefix} { return 308 ${prefix}/; }`);
+    lines.push(`    location = ${prefix} { return 308 ${prefix}/$is_args$args; }`);
     location('^~ '+prefix+'/',app);
     // Add path context and cookie isolation to the generated location.
     lines.splice(lines.length-1,0,`        proxy_cookie_path / ${prefix}/;`,`        proxy_set_header X-Forwarded-Prefix ${prefix};`);
