@@ -3,7 +3,11 @@ const { syncCourseRoster, approvedIds } = require('../lib/session-roster.js');
 const store = require('../lib/store.js');
 const { verifyLaunch } = require('../lib/launch.js');
 const S = require('../lib/scenario.js');
-const { accountJoinUrl, participantLaunch, participantError } = require('../lib/session-entry.js');
+const { accountJoinUrl, participantLaunch, participantError, openTeamSessionFor } = require('../lib/session-entry.js');
+
+async function pointCourse(fn) {
+  try { await fn(); } catch (e) { console.error('course session pointer update failed', e.code || e.message); }
+}
 const { leadOf, runnerOf, revisionOf, screenOf } = require('../lib/team-runner.js');
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -149,6 +153,13 @@ module.exports = async (req, res) => {
     }
     for (let attempt = 0; attempt < 5; attempt++) {
     switch (action) {
+      case 'course_session': {
+        const launched = participantLaunch(req, b);
+        if (!launched) return res.status(401).json({ error: 'platform_signin_required' });
+        const open = await openTeamSessionFor(launched);
+        return res.status(200).json({ code: open ? open.code : null });
+      }
+
       case 'create': {
         const who = whoIsFaculty(req, b);
         if (!who) return res.status(401).json({ error: 'faculty_authorization_required' });
@@ -173,6 +184,7 @@ module.exports = async (req, res) => {
           createdAt: Date.now()
         };
         await store.putSession(c, sess);
+        if (sess.mode === 'team' && sess.courseId) await pointCourse(() => store.setCourseTeamSession(sess.courseId, c));
         return res.status(200).json({ session: sess, you: who.name });
       }
 
@@ -183,6 +195,10 @@ module.exports = async (req, res) => {
         if (!sess) return res.status(404).json({ error: 'no_such_session' });
         if (!ownsSession(who, sess)) {
           return res.status(403).json({ error: 'not_your_session', message: `That session belongs to ${sess.owner}.` });
+        }
+        // Sessions created before course routing existed get their pointer here.
+        if (sess.mode === 'team' && sess.courseId && sess.state !== 'closed') {
+          await pointCourse(() => store.setCourseTeamSession(sess.courseId, code, true));
         }
         const [participants, runs] = await Promise.all([
           store.getParticipants(code),
@@ -416,6 +432,7 @@ module.exports = async (req, res) => {
         if (b.set === 'resume') sess.paused = false;
         if (b.set === 'close') sess.state = 'closed';
         if (!await store.compareAndSetSession(code, previousSession, sess)) continue;
+        if (sess.state === 'closed' && sess.courseId) await pointCourse(() => store.clearCourseTeamSession(sess.courseId, code));
         return res.status(200).json({ session: sess });
       }
 

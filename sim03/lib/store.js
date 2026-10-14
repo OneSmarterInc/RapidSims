@@ -127,6 +127,16 @@ module.exports = {
     return Number(result) === 1;
   },
 
+  // One pointer per course to its open team session, so a student's direct
+  // launch joins the team session instead of starting a solo run.
+  async setCourseTeamSession(courseId, code, onlyIfMissing = false) {
+    await cmd(['SET', `m03:course:${courseId}`, code, 'EX', String(TTL), ...(onlyIfMissing ? ['NX'] : [])]);
+  },
+  async getCourseTeamSession(courseId) { return (await cmd(['GET', `m03:course:${courseId}`])) || null; },
+  async clearCourseTeamSession(courseId, code) {
+    if ((await cmd(['GET', `m03:course:${courseId}`])) === code) await cmd(['DEL', `m03:course:${courseId}`]);
+  },
+
   async wipe(code) {
     await cmd(['DEL', `m03:sess:${code}`, `m03:sess:${code}:p`, `m03:sess:${code}:run`]);
   }

@@ -2,7 +2,7 @@ const { checkAccess, body } = require('../lib/guard.js');
 const S = require('../lib/scenario.js');
 const store = require('../lib/store.js');
 const { runnerOf } = require('../lib/team-runner.js');
-const { participantError } = require('../lib/session-entry.js');
+const { participantError, participantLaunch, openTeamSessionFor } = require('../lib/session-entry.js');
 
 function evaluate(stage, y1, y2, thresholds) {
   if (stage === 'year1') return { outcome: S.evaluateYear1(y1, thresholds) };
@@ -52,6 +52,9 @@ module.exports = async (req, res) => {
   } catch (e) {
     console.error('session outcome lookup failed', e.message);
     return res.status(500).json({ error: 'server_error' });
+  }
+  if (await openTeamSessionFor(participantLaunch(req, b))) {
+    return res.status(409).json({ error: 'team_session_open' });
   }
   if (!checkAccess(req, res)) return;
   const stage = String(b.stage || '');

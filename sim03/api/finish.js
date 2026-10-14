@@ -4,7 +4,7 @@ const S = require('../lib/scenario.js');
 const { buildClosingLesson } = require('../lib/closingLesson.js');
 const store = require('../lib/store.js');
 const submitSession = require('./session.js');
-const { participantError } = require('../lib/session-entry.js');
+const { participantError, participantLaunch, openTeamSessionFor } = require('../lib/session-entry.js');
 
 async function sessionRun(req, b) {
   const code = String(b.sessionCode || '').toUpperCase().trim();
@@ -99,6 +99,9 @@ module.exports = async (req, res) => {
         year3Band: outcomes.year3.band
       };
     } else {
+      if (await openTeamSessionFor(participantLaunch(req, b))) {
+        return res.status(409).json({ error: 'team_session_open' });
+      }
       if (!checkAccess(req, res)) return;
       const standalone = S.standaloneThresholds(b.calibrationId);
       const v1 = S.validateAllocation(b.year1, standalone);
