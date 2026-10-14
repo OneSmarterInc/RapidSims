@@ -102,6 +102,8 @@ async function invoke(endpoint, body, lt) {
     [memberPid.slice(9), 2, 'Member review one', 'Member review two', forRunner.runId], 'Revision 2 updates the member row with their own review');
   memberState = (await invoke(handler, { action: 'state', code, participantId: memberPid }, member)).body;
   check([memberState.myReview.reflection1, memberState.myReview.reflection2], ['Member review one', 'Member review two'], 'The member sees their saved review');
+  check(memberState.closingLesson?.title, 'What this RapidSim teaches', 'A reopened final page still carries the lesson');
+  check((await invoke(handler, { action: 'state', code, participantId: runnerPid }, runner)).body.closingLesson?.teaches?.length, 4, 'The runner\'s reopened page carries the four lessons');
 
   reports.length = 0;
   check((await invoke(finish, { sessionCode: code, participantId: memberPid, reflection1: 'Changed', reflection2: 'Changed' }, member)).status, 200, 'A repeat request succeeds');

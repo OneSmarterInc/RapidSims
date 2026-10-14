@@ -285,7 +285,7 @@ async function pollSession(redraw){
     if(C.room?.intro)C.room.intro=C.room.intro.replace(/(?:nine|\d+) million dollars/,`${C.annualBudget} million dollars`);
     for(const key of ['intro','whatHappens'])if(C.briefing?.[key])C.briefing[key]=C.briefing[key].map(text=>text.replace(/two annual \$\d+ million allocations/g,`two annual $${C.annualBudget} million allocations`));
   }
-  S.runnerId=d.runnerId||null;S.runnerRevision=d.runnerRevision||0;S.canAssignRunner=!!d.canAssignRunner;S.hasSessionState=true;S.myReview=d.myReview||null;
+  S.runnerId=d.runnerId||null;S.runnerRevision=d.runnerRevision||0;S.canAssignRunner=!!d.canAssignRunner;S.hasSessionState=true;S.myReview=d.myReview||null;if(d.closingLesson&&!S.closingLesson)S.closingLesson=d.closingLesson;
   if(controlChanged)S.runnerChoice='';
   if(groupChanged){S.reflectionDirty=false;S.reflection1='';S.reflection2=''}
   const r=S.teamRun;
