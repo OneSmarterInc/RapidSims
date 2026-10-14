@@ -45,8 +45,19 @@ async function practiceStart(me, course, sim, startOver = false) {
     return { name: x.name, entersDecisions: i === 0,
       url: `${base}/?session=${encodeURIComponent(code)}#lt=${encodeURIComponent(token)}` };
   });
-  return { status: 200, data: { code, resumed: !!r.data.resumed, students: links,
+  const progress = new Map((r.data.students || []).map(x => [x.name, x]));
+  for (const link of links) { const p = progress.get(link.name); if (p) { link.status = p.status || ''; link.finished = !!p.finished; } }
+  return { status: 200, data: { code, resumed: !!r.data.resumed, complete: !!r.data.complete, students: links,
     classUrl: `/api/launch?sim=${SIM}&course=${encodeURIComponent(course.id)}&mode=session&session=${encodeURIComponent(code)}` } };
+}
+
+async function practiceStatus(me, course, sim) {
+  const r = await ask(me, course, sim, { action: 'practice_status' });
+  if (!r.ok) return { status: r.status, data: { error: r.data.error || 'practice_unavailable' } };
+  const d = r.data || {};
+  return { status: 200, data: { code: d.code || null, complete: !!d.complete,
+    students: Array.isArray(d.students) ? d.students.slice(0, 6).map(x => ({ name: String(x.name || '').slice(0, 60),
+      status: String(x.status || '').slice(0, 80), finished: !!x.finished })) : [] } };
 }
 
 async function practiceFinish(me, course, sim) {
@@ -54,4 +65,4 @@ async function practiceFinish(me, course, sim) {
   return { status: r.ok ? 200 : r.status, data: r.ok ? { ok: true } : { error: r.data.error || 'practice_unavailable' } };
 }
 
-module.exports = { SIM, ask, practiceStart, practiceFinish, sessionUrl };
+module.exports = { SIM, ask, practiceStart, practiceStatus, practiceFinish, sessionUrl };

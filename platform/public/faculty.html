@@ -73,22 +73,43 @@ function practicePanel(courseId, d) {
   const box = app.querySelector('[data-midland-practice]');
   if (!box) return;
   box.hidden = false;
-  box.innerHTML = `<div class="faculty-practice-head"><b>Practice class · ${d.resumed ? 'running, picked up where you left off' : 'running'}</b>
+  box.innerHTML = `<div class="faculty-practice-head"><b data-practice-title>${d.complete ? 'Practice class · complete: every practice student has finished' : `Practice class · ${d.resumed ? 'running, picked up where you left off' : 'running'}`}</b>
       <span>Open each practice student in its own tab. Practice students stay out of your roster, counts and results.</span></div>
     <div class="faculty-practice-grid">${d.students.map(x => `<div class="faculty-practice-card">
-      <b>${esc(x.name)}</b><span>${x.entersDecisions ? 'Enters the decisions' : 'Follows and reviews'}</span>
-      <a class="btn sm ${x.entersDecisions ? 'pri' : ''}" href="${esc(x.url)}" target="_blank" rel="noopener">Open</a></div>`).join('')}</div>
+      <b>${esc(x.name)}</b><span>${x.entersDecisions ? 'Enters the decisions' : 'Follows and reviews'}</span><span class="faculty-practice-status${x.finished ? ' done' : ''}" data-practice-status="${esc(x.name)}" aria-live="polite">${esc(x.status || '')}</span>
+      <a class="btn sm ${x.finished ? 'faculty-practice-done' : x.entersDecisions ? 'pri' : ''}" data-practice-open="${esc(x.name)}" href="${esc(x.url)}" target="_blank" rel="noopener">${x.finished ? 'Completed' : 'Open'}</a></div>`).join('')}</div>
     <div class="faculty-practice-actions"><a class="btn sm" href="${esc(d.classUrl)}" target="_blank" rel="noopener">Open practice class page</a>
       <button class="btn sm" data-practice-over>Start over</button>
       <button class="btn sm" data-practice-finish>Finish practice</button></div>`;
   box.querySelector('[data-practice-over]').onclick = e => {
     if (confirm('Start the practice class over? The practice students begin again from the first screen.')) startMidlandPractice(courseId, e.currentTarget, true);
   };
+  watchPractice(courseId);
   box.querySelector('[data-practice-finish]').onclick = async e => {
     const done = acting(e.currentTarget, 'Finishing…');
     try { await api('/api/faculty', { action:'midland_practice_finish', courseId }); box.hidden = true; box.innerHTML = ''; }
     catch (err) { if (err.stale) return; done(); alert('Practice is still running. ' + (err.message || 'Try again.')); }
   };
+}
+// While the practice panel is showing, refresh each practice student's progress.
+let practiceTimer = null;
+function watchPractice(courseId) {
+  clearInterval(practiceTimer);
+  async function refresh() {
+    const box = app.querySelector('[data-midland-practice]');
+    if (!box || box.hidden || !box.isConnected) { clearInterval(practiceTimer); return; }
+    let d; try { d = await api('/api/faculty', { action:'midland_practice_status', courseId }); } catch { return; }
+    if (!d.code) return;
+    for (const x of d.students) {
+      const el = [...box.querySelectorAll('[data-practice-status]')].find(n => n.dataset.practiceStatus === x.name);
+      if (el) { el.textContent = x.status; el.classList.toggle('done', !!x.finished); }
+      const link = [...box.querySelectorAll('[data-practice-open]')].find(n => n.dataset.practiceOpen === x.name);
+      if (link && x.finished) { link.textContent = 'Completed'; link.classList.remove('pri'); link.classList.add('faculty-practice-done'); }
+    }
+    const title = box.querySelector('[data-practice-title]');
+    if (title && d.complete) title.textContent = 'Practice class · complete: every practice student has finished';
+  }
+  practiceTimer = setInterval(refresh, 4000);
 }
 async function startMidlandPractice(courseId, btn, startOver = false) {
   const done = acting(btn, 'Preparing…');

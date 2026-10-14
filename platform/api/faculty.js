@@ -50,6 +50,7 @@ module.exports = async (req, res) => {
       // teaching routes unchanged; do not grant this new action to another role.
       // Rehearse Midland with practice students, outside the course's real classes.
       case 'midland_practice_start':
+      case 'midland_practice_status':
       case 'midland_practice_finish': {
         if (me.role !== 'faculty') return res.status(403).json({ error:'wrong_role' });
         const course = await ownCourse(s, me.id, String(b.courseId || ''));
@@ -59,6 +60,7 @@ module.exports = async (req, res) => {
           JOIN sims si ON si.id=cs.sim_id WHERE cs.course_id=${course.id} AND cs.sim_id=${M.SIM}`)[0];
         if (!sim) return res.status(404).json({ error:'no_such_simulation' });
         const r = b.action === 'midland_practice_start' ? await M.practiceStart(me, course, sim, b.startOver === true)
+          : b.action === 'midland_practice_status' ? await M.practiceStatus(me, course, sim)
           : await M.practiceFinish(me, course, sim);
         return res.status(r.status).json(r.data);
       }

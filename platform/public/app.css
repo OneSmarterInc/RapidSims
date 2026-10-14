@@ -446,6 +446,7 @@ body.sheet-open{overflow:hidden}
 .faculty-practice-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}@media(max-width:700px){.faculty-practice-grid{grid-template-columns:1fr}}
 .faculty-practice-card{background:#fff;border:1px solid var(--line);border-radius:3px;padding:12px;display:flex;flex-direction:column;gap:6px;font-size:13px}.faculty-practice-card span{color:var(--ink2)}
 .faculty-practice-actions{display:flex;gap:8px;flex-wrap:wrap}
+.faculty-practice-status{font:12px/1.4 var(--mono);color:#7A4300}.faculty-practice-status.done{color:var(--green)}.faculty-practice-status:empty{display:none}.faculty-practice-done{background:var(--green-soft,#E4F0E7);color:var(--green,#22573A);border-color:#BFD8C6}
 .faculty-sim-card .faculty-sim-side{display:flex;align-items:flex-start;white-space:normal}
 .faculty-sim-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:560px}
 .faculty-result-btn{background:var(--sunk)}
