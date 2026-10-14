@@ -160,6 +160,33 @@ module.exports = async (req, res) => {
         return res.status(200).json({ code: open ? open.code : null });
       }
 
+      case 'course_sessions': {
+        // The course's sessions, newest first, with what faculty need to open or close each one.
+        const who = whoIsFaculty(req, b);
+        if (!who) return res.status(401).json({ error: 'faculty_authorization_required' });
+        if (!who.platformAuth || !who.courseId) return res.status(200).json({ sessions: [] });
+        let codes = [];
+        try {
+          codes = await store.listCourseSessions(who.courseId);
+          const open = await store.getCourseTeamSession(who.courseId);
+          if (open && !codes.includes(open)) codes.unshift(open);
+        } catch (e) { console.error('course session list failed', e.code || e.message); }
+        const sessions = [];
+        for (const c of codes.slice(0, 20)) {
+          const sess = await store.getSession(c);
+          if (!sess || !ownsSession(who, sess)) continue;
+          const [people, teamRuns] = await Promise.all([store.getParticipants(c), store.getRuns(c)]);
+          const list = Object.values(people || {}).filter(Boolean);
+          const runs = Object.values(teamRuns || {}).filter(Boolean);
+          sessions.push({ code: c, name: sess.name, mode: sess.mode, state: sess.state, paused: !!sess.paused,
+            createdAt: sess.createdAt || null, students: list.length,
+            teams: sess.mode === 'team' ? new Set(list.map(p => p.groupId).filter(Boolean)).size : 0,
+            submitted: runs.filter(r => r.done || Number(r.phase || 0) >= 3).length });
+        }
+        sessions.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        return res.status(200).json({ sessions });
+      }
+
       case 'create': {
         const who = whoIsFaculty(req, b);
         if (!who) return res.status(401).json({ error: 'faculty_authorization_required' });
@@ -184,6 +211,7 @@ module.exports = async (req, res) => {
           createdAt: Date.now()
         };
         await store.putSession(c, sess);
+        if (sess.courseId) await pointCourse(() => store.addCourseSession(sess.courseId, c, sess.createdAt));
         if (sess.mode === 'team' && sess.courseId) await pointCourse(() => store.setCourseTeamSession(sess.courseId, c));
         return res.status(200).json({ session: sess, you: who.name });
       }
@@ -200,6 +228,7 @@ module.exports = async (req, res) => {
         if (sess.mode === 'team' && sess.courseId && sess.state !== 'closed') {
           await pointCourse(() => store.setCourseTeamSession(sess.courseId, code, true));
         }
+        if (sess.courseId) await pointCourse(() => store.addCourseSession(sess.courseId, code, sess.createdAt));
         const [participants, runs] = await Promise.all([
           store.getParticipants(code),
           store.getRuns(code)

@@ -31,6 +31,9 @@ store.getRuns = async () => ({});
 store.setCourseTeamSession = async (course, code, onlyIfMissing) => { if (!onlyIfMissing || !pointers.has(course)) pointers.set(course, code); };
 store.getCourseTeamSession = async course => pointers.get(course) || null;
 store.clearCourseTeamSession = async (course, code) => { if (pointers.get(course) === code) pointers.delete(course); };
+const indexes = new Map();
+store.addCourseSession = async (course, code, at) => { const m = indexes.get(course) || new Map(); m.set(code, at); indexes.set(course, m); };
+store.listCourseSessions = async course => [...(indexes.get(course) || new Map()).entries()].sort((a, b) => b[1] - a[1]).map(([c]) => c);
 
 async function invoke(endpoint, body, lt) {
   const req = { method: 'POST', headers: lt ? { 'x-launch-token': lt } : {}, body };
@@ -74,6 +77,14 @@ async function invoke(endpoint, body, lt) {
   check(pointers.has('crs_A'), false, 'Closing clears the course pointer');
   check((await invoke(handler, { action: 'course_session' }, student)).body, { code: null }, 'Closed session no longer captures launches');
   check((await invoke(outcome, { stage: 'year1', year1: alloc }, student)).body.error === 'team_session_open', false, 'Solo play returns after close');
+
+  const listed = (await invoke(handler, { action: 'course_sessions' }, faculty)).body.sessions;
+  check(listed.map(x => [x.code, x.mode, x.state]).sort(), [[code, 'team', 'closed'], [individual.body.session.code, 'individual', 'lobby']].sort(), 'Faculty see every session for the course');
+  const otherFaculty = token({ sub: 'fac-2', name: 'Other', role: 'faculty', course: 'crs_A', mode: 'session' });
+  check((await invoke(handler, { action: 'course_sessions' }, otherFaculty)).body.sessions, [], 'Another faculty member sees only their own sessions');
+  check((await invoke(handler, { action: 'course_sessions' }, student)).status, 401, 'Students cannot list sessions');
+  check((await invoke(handler, { action: 'control', code: individual.body.session.code, set: 'close' }, faculty)).status, 200, 'A session in setup closes');
+  check((await invoke(handler, { action: 'course_sessions' }, faculty)).body.sessions.every(x => x.state === 'closed'), true, 'The list shows both sessions closed');
 
   console.log(`RapidSim 03 course team-session routing checks passed (${n} assertions).`);
 })().catch(e => { console.error(e); process.exit(1); });
