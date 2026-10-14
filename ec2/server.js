@@ -32,10 +32,7 @@ const trafficBuckets = new Map();
 let trafficInFlight = 0;
 
 function trafficBucket(timestamp = Date.now()) {
-<<<<<<< HEAD
-=======
   pruneTraffic();
->>>>>>> 74becb9d8281af52023789f3f4192777f881acb2
   const second = Math.floor(timestamp / 1000) * 1000;
   let bucket = trafficBuckets.get(second);
   if (!bucket) {
@@ -71,11 +68,7 @@ function finishTraffic(metric, statusCode) {
   const duration = Math.max(0, Date.now() - metric.startedAt);
   metric.bucket.completed += 1;
   if (statusCode >= 400) metric.bucket.errors += 1;
-<<<<<<< HEAD
-  metric.bucket.latencies.push(duration);
-=======
   if (metric.bucket.latencies.length < 2048) metric.bucket.latencies.push(duration);
->>>>>>> 74becb9d8281af52023789f3f4192777f881acb2
   trafficInFlight = Math.max(0, trafficInFlight - 1);
 }
 
@@ -300,7 +293,7 @@ async function handle(req, res) {
   }
   if (req.method === 'GET' && /^sim0[3-9]$/.test(id) && url.pathname === '/') {
     res.statusCode = 302;
-    res.setHeader('Location', config.prefix + '/launch.html');
+    res.setHeader('Location', config.prefix + '/launch.html' + url.search);
     return res.end();
   }
 
@@ -309,8 +302,6 @@ async function handle(req, res) {
     return res.status(200).json(trafficSnapshot());
   }
 
-<<<<<<< HEAD
-=======
   if (req.method === 'GET' && url.pathname === '/_ops/ready') {
     if (!hasTrafficAccess(req)) return res.status(401).json({ error: 'Unauthorized' });
     try { return res.status(200).json(await require('./readiness').check(id)); }
@@ -320,7 +311,6 @@ async function handle(req, res) {
     }
   }
 
->>>>>>> 74becb9d8281af52023789f3f4192777f881acb2
   if (url.pathname === '/api' || url.pathname.startsWith('/api/')) {
     const route = url.pathname === '/api' ? 'index' : url.pathname.slice('/api/'.length);
     // RapidSim 10 uses a Vercel rewrite to one catch-all entry (api/index.js).
