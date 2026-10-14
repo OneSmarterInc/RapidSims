@@ -32,10 +32,10 @@ async function ask(me, course, sim, body) {
 // Three practice students on one team. Each gets a signed student launch for
 // the practice session only; the first enters the team's decisions.
 const PRACTICE = [['ana', 'Practice Ana'], ['ben', 'Practice Ben'], ['cal', 'Practice Cal']];
-async function practiceStart(me, course, sim) {
+async function practiceStart(me, course, sim, startOver = false) {
   const run = crypto.randomBytes(4).toString('hex');
   const students = PRACTICE.map(([key, name]) => ({ sub: `practice-${me.id}-${key}`, name }));
-  const r = await ask(me, course, sim, { action: 'practice_start', students });
+  const r = await ask(me, course, sim, { action: 'practice_start', students, startOver: startOver === true });
   if (!r.ok || !r.data.code) return { status: r.ok ? 502 : r.status, data: { error: r.data.error || 'practice_unavailable' } };
   const code = r.data.code;
   const base = String(sim.launch_url || '').replace(/\/+$/, '');
@@ -45,7 +45,7 @@ async function practiceStart(me, course, sim) {
     return { name: x.name, entersDecisions: i === 0,
       url: `${base}/?session=${encodeURIComponent(code)}#lt=${encodeURIComponent(token)}` };
   });
-  return { status: 200, data: { code, students: links,
+  return { status: 200, data: { code, resumed: !!r.data.resumed, students: links,
     classUrl: `/api/launch?sim=${SIM}&course=${encodeURIComponent(course.id)}&mode=session&session=${encodeURIComponent(code)}` } };
 }
 

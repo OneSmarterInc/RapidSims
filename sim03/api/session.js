@@ -198,7 +198,18 @@ module.exports = async (req, res) => {
           typeof x.sub === 'string' && x.sub.startsWith(prefix) && /^[A-Za-z0-9_-]{1,160}$/.test(x.sub) &&
           typeof x.name === 'string' && x.name.trim());
         if (people.length < 2) return res.status(400).json({ error: 'practice_students_required' });
+        // Rehearse returns to the practice class already running; Start over replaces it.
         const earlier = await store.getPracticeSession(who.courseId, who.userId);
+        if (earlier && b.startOver !== true) {
+          const existing = await store.getSession(earlier);
+          const roster = existing && existing.practice ? Object.values(await store.getParticipants(earlier) || {}).filter(Boolean) : [];
+          if (existing && existing.practice && existing.state !== 'closed' && ownsSession(who, existing) &&
+              people.every(x => roster.some(p => p.id === `platform:${x.sub}`))) {
+            return res.status(200).json({ code: earlier, resumed: true, students: roster
+              .sort((a, b) => Number(b.isCaptain) - Number(a.isCaptain) || a.name.localeCompare(b.name))
+              .map(p => ({ participantId: p.id, name: p.name, entersDecisions: !!p.isCaptain })) });
+          }
+        }
         if (earlier) await store.wipe(earlier);
         const c = newCode(), now = Date.now();
         const sess = { code: c, owner: who.name, ownerId: who.userId, platformAuth: true, courseId: who.courseId,

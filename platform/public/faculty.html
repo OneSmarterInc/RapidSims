@@ -70,22 +70,26 @@ function practicePanel(courseId, d) {
   const box = app.querySelector('[data-midland-practice]');
   if (!box) return;
   box.hidden = false;
-  box.innerHTML = `<div class="faculty-practice-head"><b>Practice class · running</b>
+  box.innerHTML = `<div class="faculty-practice-head"><b>Practice class · ${d.resumed ? 'running, picked up where you left off' : 'running'}</b>
       <span>Open each practice student in its own tab. Practice students stay out of your roster, counts and results.</span></div>
     <div class="faculty-practice-grid">${d.students.map(x => `<div class="faculty-practice-card">
       <b>${esc(x.name)}</b><span>${x.entersDecisions ? 'Enters the decisions' : 'Follows and reviews'}</span>
       <a class="btn sm ${x.entersDecisions ? 'pri' : ''}" href="${esc(x.url)}" target="_blank" rel="noopener">Open</a></div>`).join('')}</div>
     <div class="faculty-practice-actions"><a class="btn sm" href="${esc(d.classUrl)}" target="_blank" rel="noopener">Open practice class page</a>
+      <button class="btn sm" data-practice-over>Start over</button>
       <button class="btn sm" data-practice-finish>Finish practice</button></div>`;
+  box.querySelector('[data-practice-over]').onclick = e => {
+    if (confirm('Start the practice class over? The practice students begin again from the first screen.')) startMidlandPractice(courseId, e.currentTarget, true);
+  };
   box.querySelector('[data-practice-finish]').onclick = async e => {
     const done = acting(e.currentTarget, 'Finishing…');
     try { await api('/api/faculty', { action:'midland_practice_finish', courseId }); box.hidden = true; box.innerHTML = ''; }
     catch (err) { if (err.stale) return; done(); alert('Practice is still running. ' + (err.message || 'Try again.')); }
   };
 }
-async function startMidlandPractice(courseId, btn) {
+async function startMidlandPractice(courseId, btn, startOver = false) {
   const done = acting(btn, 'Preparing…');
-  try { const d = await api('/api/faculty', { action:'midland_practice_start', courseId }); done(); practicePanel(courseId, d); }
+  try { const d = await api('/api/faculty', { action:'midland_practice_start', courseId, startOver }); done(); practicePanel(courseId, d); }
   catch (err) { if (err.stale) return; done(); alert('Practice could not start. ' + (err.message || 'Try again.')); }
 }
 
