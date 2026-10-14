@@ -58,7 +58,7 @@ function sign(payload) {
         id + ': access gate reports registration outcome without exposing secrets');
       check(requests.length === 1, id + ': failed attempt is not restarted within the same request');
 
-      const launch = sign({ sim: id, sub: 'test-student', role: 'student', exp: Date.now() + 60000 });
+      const launch = sign({ kind: 'launch', run: 'lch-test', sim: id, sub: 'test-student', role: 'student', exp: Date.now() + 60000 });
       const second = call(handler, { 'x-launch-token': launch });
       await tick();
       check(requests.length === (failFirst ? 2 : 1), id + ': failure retries; success is cached');
