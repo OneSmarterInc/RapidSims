@@ -10,7 +10,7 @@ function access(req, b) {
   if (lt) {
     const p = verifyLaunch(String(lt));
     return p && p.sub && ['student', 'faculty', 'faculty_preview'].includes(p.role)
-      ? { platform: true, id: `platform:${p.sub}`, name: p.name || 'Participant', email: p.email || null, courseId: p.course || null, role: p.role, mode: p.mode }
+      ? { platform: true, id: `platform:${p.sub}`, launchId: p.run, name: p.name || 'Participant', email: p.email || null, courseId: p.course || null, role: p.role, mode: p.mode }
       : null;
   }
   return process.env.ACCESS_CODE && req.headers?.['x-access-code'] === process.env.ACCESS_CODE
@@ -56,3 +56,4 @@ function participant(req, b, session) {
   return id && session.participants[id] ? { ...p, id } : { ...p, id: null };
 }
 module.exports = { body, access, faculty, owns, participant, facultyCodes };
+

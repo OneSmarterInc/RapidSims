@@ -10,15 +10,16 @@ const src = require('fs').readFileSync(require('path').join(__dirname,'../api/se
 // pull whoIsFaculty out and run it directly
 const { verifyLaunch } = require(require('path').join(__dirname,'../lib/launch.js'));
 const body = src.slice(src.indexOf('function facultyRoster'), src.indexOf('// A session belongs'));
-const fn = new Function('verifyLaunch', 'process', body + '\n; return { whoIsFaculty };')(verifyLaunch, process);
+const fn = new Function('verifyLaunch', 'process', 'S', 'crypto', body + '\n; return { whoIsFaculty };')(verifyLaunch, process, require('../lib/scenario'), require('node:crypto'));
 
-const facTok = P.launchToken({ userId:'u1', name:'Chuck Rivera', role:'faculty', simId:'rapid-01' });
-const stuTok = P.launchToken({ userId:'u2', name:'Ana Ruiz', role:'student', simId:'rapid-01' });
+const facTok = P.launchToken({ userId:'u1', name:'Chuck Rivera', role:'faculty', simId:'rapid-01-disaster' });
+const stuTok = P.launchToken({ userId:'u2', name:'Ana Ruiz', role:'student', simId:'rapid-01-disaster' });
 
 const t = (label, req, b, expect) => {
   const who = fn.whoIsFaculty(req, b);
   const got = who ? who.name : null;
   const ok = expect === null ? got === null : got === expect;
+  require('node:assert/strict').equal(ok, true, label);
   console.log(`  ${ok?'ok  ':'FAIL'} ${label.padEnd(46)} ${got === null ? 'refused' : 'accepted as ' + got}`);
 };
 t('faculty arriving with a launch token', { headers:{ 'x-launch-token': facTok } }, {}, 'Chuck Rivera');
@@ -29,3 +30,4 @@ t('a wrong code is refused', { headers:{} }, { facultyCode:'nope' }, null);
 t('nothing at all is refused', { headers:{} }, {}, null);
 
 process.exit(0);
+

@@ -1,3 +1,4 @@
+require('../../tools/security/report-fixture.cjs');
 'use strict';
 process.env.DEV_OPEN = '';
 const assert = require('assert');
@@ -273,7 +274,7 @@ test('pair matching is one-to-one per line', () => {
 
 // ---------- platform contract (matches platform/lib/launch.js and sim08) ----------
 const SECRET = 'test-secret';
-const tok = (o) => { process.env.LAUNCH_SECRET = SECRET; return L.signBack({ sim: config.simId, iat: T0, exp: T0 + 3600e3, ...o }); };
+const tok = (o) => { process.env.LAUNCH_SECRET = SECRET; return L.signBack({ kind: 'launch', run: 'fixture-launch', sim: config.simId, iat: T0, exp: T0 + 3600e3, ...o }); };
 
 test('launch tokens: this sim only, known roles, not expired, correct signature', () => {
   process.env.LAUNCH_SECRET = SECRET;
@@ -306,7 +307,8 @@ async function withPlatform(fn) {
   const got = [];
   const srv = http.createServer(async (req, res) => {
     let raw = ''; for await (const c of req) raw += c;
-    const p = L.verifyLaunch(JSON.parse(raw).token);
+    const token = JSON.parse(raw).token;
+    const p = req.url === '/api/register' ? require('../../platform/lib/launch').verify(token) : require('../../shared/report-contract').verifyReport(token, 'complete');
     got.push({ path: req.url, payload: p });
     res.writeHead(p ? 200 : 401, { 'Content-Type': 'application/json' }); res.end('{"ok":true}');
   });
@@ -635,3 +637,4 @@ test('UI regressions: queued saves, retries, concurrent teams, review conflicts 
   console.log(`\n${tests.length - failed}/${tests.length} passed`);
   process.exit(failed ? 1 : 0);
 })();
+

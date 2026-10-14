@@ -3,17 +3,7 @@
 const crypto = require('crypto');
 
 function verifyLaunch(token) {
-  const secret = process.env.LAUNCH_SECRET;
-  if (!secret || typeof token !== 'string' || !token.includes('.')) return null;
-  const [bodyPart, mac] = token.split('.');
-  const expect = crypto.createHmac('sha256', secret).update(bodyPart).digest('base64url');
-  const a = Buffer.from(mac || ''), b = Buffer.from(expect);
-  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
-  let p;
-  try { p = JSON.parse(Buffer.from(bodyPart, 'base64url').toString('utf8')); }
-  catch { return null; }
-  if (!p.exp || Date.now() > p.exp) return null;
-  return p;
+  return require('../../shared/launch-contract').verifyLaunch(token);
 }
 
 function signBack(payload) {
@@ -24,39 +14,8 @@ function signBack(payload) {
   return bodyPart + '.' + mac;
 }
 
-async function reportCompletion({ launch, summary, metrics }) {
-  const base = (process.env.PLATFORM_URL || '').replace(/\/$/, '');
-  if (!base || !launch || !launch.sub) return { ok: false, skipped: true };
-  const token = signBack({
-    sub: launch.sub,
-    sim: launch.sim,
-    course: launch.course || null,
-    duration: launch.iat ? Math.round((Date.now() - launch.iat) / 1000) : null,
-    summary: summary || null,
-    metrics: metrics || null,
-    iat: Date.now(),
-    exp: Date.now() + 5 * 60000
-  });
-  if (!token) return { ok: false, skipped: true };
-  try {
-    const r = await fetch(base + '/api/complete', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ token }),
-      signal: AbortSignal.timeout(6000)
-    });
-    if (!r.ok) {
-      let why = '';
-      try { why = JSON.stringify(await r.json()); } catch {}
-      console.error('completion refused', r.status, why);
-      return { ok: false, status: r.status };
-    }
-    return { ok: true };
-  } catch (e) {
-    // The student has already completed the simulation. Reporting is best effort.
-    console.error('completion report failed', e.message);
-    return { ok: false };
-  }
+async function reportCompletion(options) {
+  return require('../../shared/report-delivery').reportCompletion(options);
 }
 
 // One catalogue announcement per cold start. A failed announcement is reset so a
@@ -68,7 +27,7 @@ function announce(meta, selfUrl) {
   if (!base || !meta) return Promise.resolve({ ok: false, reason: 'not_configured' });
 
   const token = signBack({
-    kind: 'register',
+    kind: 'register', protocolVersion: 2,
     sim: meta.id,
     number: 9,
     title: meta.title,
@@ -102,3 +61,4 @@ function announce(meta, selfUrl) {
 }
 
 module.exports = { verifyLaunch, signBack, reportCompletion, announce };
+

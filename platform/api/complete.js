@@ -1,12 +1,11 @@
-// Sims report completions here. The message is signed with the same shared
-// secret used for launches, so this is the same contract running the other way.
+// Only simulation servers can sign v2 completion reports with REPORT_SECRET.
+// Launch credentials are never accepted as proof of completed work.
 //
 // The platform learns that a person finished, roughly how long it took, and
 // whatever summary the sim chose to send. It learns nothing about the scenario,
 // and the sim keeps no record of the person.
-const crypto = require('crypto');
 const { sql, id } = require('../lib/db.js');
-const { verify } = require('../lib/launch.js');
+const { verifyReport } = require('../../shared/report-contract.js');
 
 function body(req) {
   let b = req.body;
@@ -25,7 +24,7 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
   const b = body(req);
-  const payload = verify(String(b.token || ''));
+  const payload = verifyReport(String(b.token || ''), 'complete');
   if (!payload) return res.status(401).json({ error: 'bad_signature' });
   if (!payload.sub || !payload.sim) return res.status(400).json({ error: 'incomplete_token' });
 
@@ -35,16 +34,9 @@ module.exports = async (req, res) => {
     // Bind the completion to a launch the platform actually issued. Do not
     // trust a stale/null course carried by a resumed simulation run: that
     // stores a valid completion globally but makes it invisible to faculty.
-    const known = payload.course
-      ? await s`
-          SELECT course_id, as_role FROM launches
-          WHERE user_id = ${payload.sub} AND sim_id = ${payload.sim}
-            AND course_id = ${payload.course}
-          ORDER BY created_at DESC LIMIT 1`
-      : await s`
-          SELECT course_id, as_role FROM launches
-          WHERE user_id = ${payload.sub} AND sim_id = ${payload.sim}
-          ORDER BY created_at DESC LIMIT 1`;
+    const known = await s`SELECT id, course_id, as_role FROM launches
+          WHERE id = ${payload.launchId} AND user_id = ${payload.sub} AND sim_id = ${payload.sim}
+            AND course_id IS NOT DISTINCT FROM ${payload.course || null}`;
     if (!known.length) return res.status(404).json({ error: 'no_matching_launch' });
     const courseId = known[0].course_id || null;
 
@@ -77,9 +69,10 @@ module.exports = async (req, res) => {
       summary = summary.slice(0, 6000);
     }
 
-    await s`INSERT INTO completions (id, user_id, sim_id, course_id, duration_seconds, summary, metrics)
+    await s`INSERT INTO completions (id, user_id, sim_id, course_id, duration_seconds, summary, metrics, report_id, launch_id)
             VALUES (${id('cmp')}, ${payload.sub}, ${payload.sim}, ${courseId},
-                    ${dur}, ${summary}, ${metrics ? JSON.stringify(metrics) : null})`;
+                    ${dur}, ${summary}, ${metrics ? JSON.stringify(metrics) : null}, ${payload.reportId}, ${known[0].id})
+            ON CONFLICT (report_id) DO NOTHING`;
 
     return res.status(200).json({ ok: true });
   } catch (e) {
@@ -89,3 +82,4 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'server_error' });
   }
 };
+

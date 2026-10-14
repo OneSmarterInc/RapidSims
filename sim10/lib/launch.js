@@ -9,16 +9,7 @@ const config = require('../data/config');
 const ROLES = ['student', 'faculty', 'faculty_preview'];
 
 function verifyLaunch(token, now = Date.now()) {
-  const secret = process.env.LAUNCH_SECRET;
-  if (!secret || typeof token !== 'string' || !token.includes('.')) return null;
-  const [bodyPart, mac] = token.split('.');
-  const expect = crypto.createHmac('sha256', secret).update(bodyPart).digest('base64url');
-  const a = Buffer.from(mac || ''), b = Buffer.from(expect);
-  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
-  let p;
-  try { p = JSON.parse(Buffer.from(bodyPart, 'base64url').toString('utf8')); } catch { return null; }
-  if (!p.exp || now > p.exp) return null;
-  return p;
+  return require('../../shared/launch-contract').verifyLaunch(token, undefined, now);
 }
 
 // A valid token for THIS sim, with a person and a known role. Tokens for other
@@ -45,16 +36,8 @@ async function post(path, token) {
 }
 
 // Best effort: the student has already finished when this runs.
-async function reportCompletion({ launch, summary, metrics }) {
-  if (!launch || !launch.sub) return { ok: false, skipped: true };
-  try {
-    return await post('/api/complete', signBack({
-      sub: launch.sub, sim: launch.sim, course: launch.course || null,
-      duration: launch.iat ? Math.round((Date.now() - launch.iat) / 1000) : null,
-      summary: summary || null, metrics: metrics || null,
-      iat: Date.now(), exp: Date.now() + 5 * 60000,
-    }));
-  } catch (e) { console.error('completion report failed', e.message); return { ok: false }; }
+async function reportCompletion(options) {
+  return require('../../shared/report-delivery').reportCompletion(options);
 }
 
 // One catalogue announcement per cold start; a failure resets so a later request retries.
@@ -64,7 +47,7 @@ function announce() {
   const selfUrl = (process.env.SIM_URL || '').replace(/\/+$/, '');
   if (!process.env.PLATFORM_URL || !selfUrl) return Promise.resolve();
   announced = post('/api/register', signBack({
-    kind: 'register', sim: config.simId, number: 10, title: config.title, tagline: config.tagline,
+    kind: 'register', protocolVersion: 2, sim: config.simId, number: 10, title: config.title, tagline: config.tagline,
     description: config.description, minutes: config.minutes, detail: config.detail,
     catalogueRevision: config.catalogueRevision, launchUrl: selfUrl,
     iat: Date.now(), exp: Date.now() + 5 * 60000,
@@ -75,3 +58,4 @@ function announce() {
 function resetAnnounce() { announced = null; }
 
 module.exports = { verifyLaunch, launchFor, isFaculty, signBack, reportCompletion, announce, resetAnnounce, ROLES };
+

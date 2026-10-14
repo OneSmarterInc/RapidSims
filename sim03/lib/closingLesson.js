@@ -15,7 +15,7 @@ function year3Sentence(c,band){
   if(band==='strong') return `By Year 3, your $${c.connect}M in Connect and $${c.capacity}M in Capacity worked together: Midland had both field history and room to turn predictive service into something it could actually sell.`;
   if(band==='data_no_room') return `By Year 3, your $${c.connect}M in Connect had created the field history, but $${c.capacity}M in Capacity left too little room to run the model reliably at scale.`;
   if(band==='pilot') return `By Year 3, your $${c.connect}M in Connect and $${c.capacity}M in Capacity got Midland to a promising pilot, but not yet to a predictive-service business.`;
-  if(band==='weak') return `By Year 3, your $${c.connect}M in Connect had not created enough usable field history for prediction to become a real capability.`;
+  if(band==='weak') return `By Year 3, your $${c.connect}M in Connect had built too little usable field history for prediction to become a real capability.`;
   return '';
 }
 function heatSentence(c,band){
@@ -34,8 +34,8 @@ function buyerSentence(buyers){
   const ridge=buyers&&buyers.ridge_hollow&&buyers.ridge_hollow.interest;
   const corven=buyers&&buyers.corven&&buyers.corven.interest;
   if(!ridge||!corven)return '';
-  if(ridge===corven)return `Ridge Hollow and Corven both showed ${ridge} interest, but for different reasons: Ridge Hollow was asking Dale’s question about the spending base while Corven was asking Sam’s question about the connected-data asset.`;
-  return `Ridge Hollow showed ${ridge} interest while Corven showed ${corven} interest. Ridge Hollow was asking Dale’s question about the cost base; Corven was asking Sam’s question about the connected-data asset. The portfolio did not change between those judgments; what each buyer valued did.`;
+  if(ridge===corven)return `Ridge Hollow and Corven both showed ${({high:'strong',qualified:'some',low:'low'})[ridge]||ridge} interest, but for different reasons: Ridge Hollow was asking Dale’s question about the spending base while Corven was asking Sam’s question about the connected-data asset.`;
+  return `Ridge Hollow showed ${({high:'strong',qualified:'some',low:'low'})[ridge]||ridge} interest while Corven showed ${({high:'strong',qualified:'some',low:'low'})[corven]||corven} interest. Ridge Hollow was asking Dale’s question about the cost base; Corven was asking Sam’s question about the connected-data asset. The budget was the same for both; what each buyer valued was different.`;
 }
 
 function primaryNearMiss(c,y3,heat,competitor,t){
@@ -69,21 +69,42 @@ function tradeSentence(c,t){
   if(c.features>=4&&c.connect<=2){
     return `Tom’s Features line received $${c.features}M while Sam’s Connect line received $${c.connect}M. Midland bought more that people could point at and less of the field visibility needed to respond later.`;
   }
-  if(c.run>=8){
-    return `Dale’s Run line received $${c.run}M of the two-year $${2 * Number(t.budgetPerYear ?? 9)}M total. Keeping today’s systems funded that heavily left correspondingly less room for capabilities that only paid off when later events arrived.`;
+  const runFloor2=2*Number(t.runFloor ?? 4);
+  if(Number.isFinite(runFloor2)&&c.run>runFloor2){
+    return `Dale’s Run line received $${c.run}M, which is $${c.run-runFloor2}M above the two-year minimum of $${runFloor2}M. That extra money kept today’s systems comfortable, and the capabilities that paid off in later years had that much less to work with.`;
   }
-  const hi=ORDER.reduce((a,k)=>c[k]>c[a]?k:a,ORDER[0]);
-  const lo=ORDER.reduce((a,k)=>c[k]<c[a]?k:a,ORDER[0]);
+  const FOUR=['uptime','capacity','connect','features'];
+  const hi=FOUR.reduce((a,k)=>c[k]>c[a]?k:a,FOUR[0]);
+  const lo=FOUR.reduce((a,k)=>c[k]<c[a]?k:a,FOUR[0]);
   if(c[hi]-c[lo]>=3){
     const hip=PEOPLE[hi]?`${PEOPLE[hi]}’s ${LABELS[hi]} line`:`${LABELS[hi]}`;
-    const lop=PEOPLE[lo]?`${PEOPLE[lo]}’s ${LABELS[lo]} line`:`${LABELS[lo]} — the line with no advocate`;
-    return `${hip} received $${c[hi]}M while ${lop} received $${c[lo]}M. That spread is the opportunity cost the room’s arguments were competing to create.`;
+    const lop=PEOPLE[lo]?`${PEOPLE[lo]}’s ${LABELS[lo]} line`:`${LABELS[lo]}, the line only you spoke for,`;
+    return `${hip} received $${c[hi]}M while ${lop} received $${c[lo]}M. That gap shows which of the four arguments your budget favoured.`;
   }
-  return 'Your cumulative portfolio stayed relatively balanced. That kept several options alive, but it also meant no single argument from the room dominated the two-year spend.';
+  return 'Your two-year budget stayed balanced across the four lines. That kept several options open and gave each argument a share of the money.';
 }
 
+function voiceLines(c,y3,heat,competitor,t){
+  const floor2=2*Number((t&&t.runFloor)??4);
+  const dale=c.run<=floor2
+    ? 'You held Run at the minimum both years and freed money for the rest of the company.'
+    : `You kept $${c.run-floor2}M more in Run than the minimum. The current systems were safe, and that money went to keeping them that way.`;
+  const renata={strong:'Dispatch held through the heat wave. My technicians kept moving.',
+    middle:'Dispatch went down for six hours on the worst day. We got through it on paper.',
+    weak:'Dispatch was down for four days in the hottest week. That is the week my customers remember.'}[heat]||'';
+  const tom={strong:'I took a real service to the board, one customers can buy.',
+    pilot:'I showed the board a pilot. Next year it needs to become a business.',
+    data_no_room:'I had three years of data and a demo that ran some mornings.',
+    weak:'I went to the board with little to show customers.'}[y3]||'';
+  const sam=c.connect>=5?'The machines finally have somewhere to send what they know.'
+    : c.connect>=3?'We can hear part of the fleet now. The rest is still a drive away.'
+    : 'My technicians are still driving out to ask the machines what is wrong.';
+  return [{name:'Dale Brenner',role:'Chief Financial Officer',line:dale},{name:'Renata Oyelaran',role:'VP, Service',line:renata},
+    {name:'Tom Vasquez',role:'Chief Executive',line:tom},{name:'Sam Achterberg',role:'Field technician',line:sam}].filter(v=>v.line);
+}
+function largestNonRun(c){ let key='uptime'; for(const k of ['capacity','connect','features']) if(c[k]>c[key]) key=k; return {key,label:LABELS[key],amount:c[key]}; }
 function buildClosingLesson(y1,y2,outcomes,thresholds){
-  const c=cumulative(y1,y2), top=largestLine(c);
+  const c=cumulative(y1,y2), top=largestNonRun(c);
   const y3=outcomes&&outcomes.year3&&outcomes.year3.band;
   const heat=outcomes&&outcomes.year2&&outcomes.year2.heat&&outcomes.year2.heat.band;
   const competitor=outcomes&&outcomes.year2&&outcomes.year2.competitor&&outcomes.year2.competitor.band;
@@ -92,20 +113,27 @@ function buildClosingLesson(y1,y2,outcomes,thresholds){
   const trade=tradeSentence(c,thresholds);
   const yourRun=[
     [year3Sentence(c,y3), near?`Closest counterfactual: ${near}`:''].filter(Boolean).join(' '),
-    [`Your largest cumulative commitment was ${top.label} at $${top.amount}M.`,trade].filter(Boolean).join(' '),
+    [`Outside Run, your largest two-year commitment was ${top.label} at $${top.amount}M.`,trade].filter(Boolean).join(' '),
     [heatSentence(c,heat),competitorSentence(c,competitor)].filter(Boolean).join(' '),
     buyerSentence(buyers)
   ].filter(Boolean);
   return {
-    title:'What this run was teaching you',
+    title:'What this RapidSim teaches',
+    teaches:[
+      {head:'Technology spending takes time to pay off.',text:'What you fund this year decides what the company can do two or three years from now.'},
+      {head:'Some capabilities take years to build.',text:`The $${Number((thresholds&&thresholds.perLineCap)??3)}M yearly limit on each line stands for that time. Money arriving later buys less of it.`},
+      {head:'Each executive is right about one part of the company.',text:'The technology leader’s job is to fund the whole company.'},
+      {head:'The quietest line can matter most.',text:'Capacity had only you to speak for it, and in Year 3 it decided whether the data could become a service.'}
+    ],
     paragraphs:[
-      'You spent two years making choices before you knew which consequences would matter. That is the work of architecture. It is not predicting the future. It is deciding which capabilities Midland will already have when the future arrives.',
-      'Every million you put into Run, Uptime, Capacity, Connect, or Features was also a million you did not put somewhere else. Dale was right that Run consumed money without producing something new. Renata was right that her trucks and technicians were stretched. Tom was right that the board needed something visible. Sam was right that the machines already knew more than Midland could hear. The hard part was seeing the whole company while each person was correctly defending only one part of it.',
-      'Capacity had no advocate. Connect did. Features were visible. Run and Uptime had immediate operational arguments. Foundations get starved precisely because nobody is asking for them yet, while the visible and urgent work arrives with a person attached.',
-      'The three buyers were the final reminder that value depends on who is looking. You did not control which future arrived or what an eventual buyer would care about. You controlled whether Midland had built enough real capability that more than one future could still work.'
+      'You made two years of choices before you knew which tests would come. Good technology planning works that way: you decide which capabilities Midland will already have when the future arrives.',
+      'Every million you put into one line was a million that went to no other line. Dale was right that Run uses money without producing something new. Renata was right that her technicians were stretched. Tom was right that the board needed something real. Sam was right that the machines already knew more than Midland could hear. Your job was to see the whole company while each of them defended one part of it.',
+      'Features gave Midland something visible, and in this sim it mattered to one buyer: Ridge Hollow read Run and Features together as cost. Tom’s board win came from Connect.',
+      'The three buyers showed that value depends on who is looking. Your budget decided how many of them found something worth buying.'
     ],
     yourRun,
-    carryOut:'You never controlled which future arrived. You controlled what Midland was ready for when it did.'
+    voices:voiceLines(c,y3,heat,competitor,thresholds),
+    carryOut:'Your budget decided what Midland was ready for when the future arrived.'
   };
 }
 module.exports={buildClosingLesson};

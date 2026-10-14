@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+require('../../tools/security/report-fixture.cjs');
 // Exercises the real /api/session and /api/finish handlers against an in-memory
 // store that honours the same compare-and-set contract as the Redis scripts.
 const assert = require('node:assert/strict');
@@ -40,7 +41,7 @@ const session = require('../api/session.js');
 const finish = require('../api/finish.js');
 
 function token({ sub, name = 'Student', role = 'student', mode = 'play', course = null, sim = C.META.id }) {
-  const p = { sub, name, role, sim, mode, course, iat: Date.now(), exp: Date.now() + 3600e3 };
+  const p = { kind: 'launch', run: 'fixture-launch', sub, name, role, sim, mode, course, iat: Date.now(), exp: Date.now() + 3600e3 };
   const body = Buffer.from(JSON.stringify(p)).toString('base64url');
   return body + '.' + createHmac('sha256', process.env.LAUNCH_SECRET).update(body).digest('base64url');
 }
@@ -331,3 +332,4 @@ const leaks = (obj, text, m) => ok(!JSON.stringify(obj).includes(text), m);
 
   console.log(`PASS session-check: ${n} assertions`);
 })().catch(e => { console.error(e); process.exit(1); });
+

@@ -15,7 +15,7 @@
 // matching version. A copy of this table is therefore not a copy of any sim's
 // answer key.
 const { sql, id } = require('../lib/db.js');
-const { verify } = require('../lib/launch.js');
+const { verifyReport } = require('../../shared/report-contract.js');
 const { ensureTranscripts } = require('../lib/transcripts.js');
 
 const MAX_BYTES = 256 * 1024;
@@ -55,16 +55,16 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
   const b = body(req);
-  const payload = verify(String(b.token || ''));
+  const payload = verifyReport(String(b.token || ''), 'transcript');
   if (!payload) return res.status(401).json({ error: 'bad_signature' });
   if (!payload.sub || !payload.sim) return res.status(400).json({ error: 'incomplete_token' });
 
-  const env = b.envelope;
+  const env = payload.envelope;
   const wrong = renderable(env);
   if (wrong) return res.status(400).json({ error: wrong });
 
   const serialised = JSON.stringify(env);
-  if (serialised.length > MAX_BYTES) return res.status(413).json({ error: 'envelope_too_large' });
+  if (Buffer.byteLength(serialised, 'utf8') > MAX_BYTES) return res.status(413).json({ error: 'envelope_too_large' });
 
   // The sim is trusted to sign, not to say who this is about.
   if (env.simId !== payload.sim) return res.status(400).json({ error: 'sim_mismatch' });
@@ -73,17 +73,16 @@ module.exports = async (req, res) => {
   try {
     await ensureTranscripts(s);
     const known = await s`
-      SELECT 1 FROM launches
-      WHERE user_id = ${payload.sub} AND sim_id = ${payload.sim}
-      LIMIT 1`;
+      SELECT id FROM launches WHERE id = ${payload.launchId}
+      AND user_id = ${payload.sub} AND sim_id = ${payload.sim}
+      AND course_id IS NOT DISTINCT FROM ${payload.course || null}`;
     if (!known.length) return res.status(404).json({ error: 'no_matching_launch' });
 
-    // A resumed or replayed session posts again. Keeping every attempt is
-    // right: a participant who ran out of time on day one and came back has
-    // two transcripts, and both are worth reading.
-    await s`INSERT INTO transcripts (id, user_id, sim_id, course_id, sim_version, envelope)
+    // Retries of the same run are idempotent. A distinct run has a new report ID.
+    await s`INSERT INTO transcripts (id, user_id, sim_id, course_id, sim_version, envelope, report_id, launch_id)
             VALUES (${id('trs')}, ${payload.sub}, ${payload.sim}, ${payload.course || null},
-                    ${String(env.simVersion).slice(0, 40)}, ${serialised}::jsonb)`;
+                    ${String(env.simVersion).slice(0, 40)}, ${serialised}::jsonb, ${payload.reportId}, ${known[0].id})
+            ON CONFLICT (report_id) DO NOTHING`;
 
     return res.status(200).json({ ok: true });
   } catch (e) {
@@ -93,3 +92,4 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'server_error' });
   }
 };
+

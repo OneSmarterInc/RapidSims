@@ -9,21 +9,7 @@ const http = require('node:http');
 const crypto = require('node:crypto');
 
 const REPO = path.resolve(__dirname, '..');
-const APPS = {
-  platform: { dir: 'platform', port: 3100, prefix: '', title: 'flexee-platform' },
-  sim01: { dir: 'sim', port: 3101, prefix: '/sim01', title: 'rapid-sim-01' },
-  sim02: { dir: 'sim-02', port: 3102, prefix: '/sim02', title: 'rapid-sim-02' },
-  sim03: { dir: 'sim03', port: 3103, prefix: '/sim03', title: 'rapid-sim-03' },
-  sim04: { dir: 'sim04', port: 3104, prefix: '/sim04', title: 'rapid-sim-04' },
-  sim05: { dir: 'sim05', port: 3105, prefix: '/sim05', title: 'rapid-sim-05' },
-  sim06: { dir: 'sim06', port: 3106, prefix: '/sim06', title: 'rapid-sim-06' },
-  sim07: { dir: 'sim07', port: 3107, prefix: '/sim07', title: 'rapid-sim-07' },
-  sim08: { dir: 'sim08', port: 3108, prefix: '/sim08', title: 'rapid-sim-08' },
-  sim09: { dir: 'sim09', port: 3109, prefix: '/sim09', title: 'rapid-sim-09' },
-  sim10: { dir: 'sim10', port: 3110, prefix: '/sim10', title: 'rapid-sim-10' },
-  simplus01: { dir: 'sim-plus-01', port: 3111, prefix: '/sim-plus-01', title: 'rapid-sim-plus-01' },
-  simplus02: { dir: 'simplus02', port: 3112, prefix: '/simplus02', title: 'rapid-sim-plus-02' }
-};
+const APPS = require('./apps.json');
 
 const id = process.argv[2];
 const config = APPS[id];
@@ -46,6 +32,10 @@ const trafficBuckets = new Map();
 let trafficInFlight = 0;
 
 function trafficBucket(timestamp = Date.now()) {
+<<<<<<< HEAD
+=======
+  pruneTraffic();
+>>>>>>> 74becb9d8281af52023789f3f4192777f881acb2
   const second = Math.floor(timestamp / 1000) * 1000;
   let bucket = trafficBuckets.get(second);
   if (!bucket) {
@@ -81,7 +71,11 @@ function finishTraffic(metric, statusCode) {
   const duration = Math.max(0, Date.now() - metric.startedAt);
   metric.bucket.completed += 1;
   if (statusCode >= 400) metric.bucket.errors += 1;
+<<<<<<< HEAD
   metric.bucket.latencies.push(duration);
+=======
+  if (metric.bucket.latencies.length < 2048) metric.bucket.latencies.push(duration);
+>>>>>>> 74becb9d8281af52023789f3f4192777f881acb2
   trafficInFlight = Math.max(0, trafficInFlight - 1);
 }
 
@@ -288,6 +282,7 @@ async function handle(req, res) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Robots-Tag', 'noindex, nofollow');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Content-Security-Policy', "base-uri 'self'; object-src 'none'; frame-ancestors 'self'");
   res.setHeader('Cache-Control', 'no-store, max-age=0, must-revalidate');
 
   let url;
@@ -314,6 +309,18 @@ async function handle(req, res) {
     return res.status(200).json(trafficSnapshot());
   }
 
+<<<<<<< HEAD
+=======
+  if (req.method === 'GET' && url.pathname === '/_ops/ready') {
+    if (!hasTrafficAccess(req)) return res.status(401).json({ error: 'Unauthorized' });
+    try { return res.status(200).json(await require('./readiness').check(id)); }
+    catch (error) {
+      console.error('Readiness failed:', error.code || error.message);
+      return res.status(503).json({ ok: false, service: id });
+    }
+  }
+
+>>>>>>> 74becb9d8281af52023789f3f4192777f881acb2
   if (url.pathname === '/api' || url.pathname.startsWith('/api/')) {
     const route = url.pathname === '/api' ? 'index' : url.pathname.slice('/api/'.length);
     // RapidSim 10 uses a Vercel rewrite to one catch-all entry (api/index.js).
@@ -373,3 +380,4 @@ http.createServer((req, res) => {
 }).listen(config.port, '127.0.0.1', () => {
   console.log(config.title + ' listening on 127.0.0.1:' + config.port);
 });
+

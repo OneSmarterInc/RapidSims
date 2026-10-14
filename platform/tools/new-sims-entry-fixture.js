@@ -11,7 +11,7 @@ for(const n of ['07','08','09']){
  const handlers={};for(const file of ['session','config','join','finish','reveal'])if(fs.existsSync(base+'/api/'+file+'.js'))handlers[file]=require(base+'/api/'+file+'.js');
  fixtures[n]={base,store,sessions,people,runs,launch,handlers};
 }
-function tok(n,p={}){return fixtures[n].launch.signBack({sim:({'07':'rapid-07-bought','08':'rapid-08-later','09':'rapid-09-money-land'})[n],sub:'student-'+n,name:'Test Student',course:'course-'+n,role:'student',mode:'play',iat:clock,exp:clock+86400000,...p})}
+function tok(n,p={}){return fixtures[n].launch.signBack({kind:'launch',run:'fixture-run-'+n,sim:({'07':'rapid-07-bought','08':'rapid-08-later','09':'rapid-09-money-land'})[n],sub:'student-'+n,name:'Test Student',course:'course-'+n,role:'student',mode:'play',iat:clock,exp:clock+86400000,...p})}
 async function invoke(n,body,headers={}){let result={status:200};const res={setHeader(){},status(s){result.status=s;return this},json(v){result.body=v;return this},end(){}};await fixtures[n].handlers.session({method:'POST',headers,body},res);return result}
 
 global.fetch=async()=>{throw new Error('Unexpected network request in client fixture')};
@@ -22,3 +22,4 @@ async function api(n,name,req){
  await fixtures[n].handlers[name](req,res);return result;
 }
 module.exports={fixtures,reports,tok,invoke,api,advance:ms=>{clock+=ms},fail:()=>{failNext=true},failReveal:()=>{failReveal=true}};
+

@@ -7,9 +7,11 @@ Wants=network-online.target
 Type=simple
 User=rapidsims
 Group=rapidsims
-WorkingDirectory=/var/www/rapidsims
+WorkingDirectory=/var/www/rapidsims-services/%i
 EnvironmentFile=/etc/rapidsims.env
-ExecStart=/usr/bin/node /var/www/rapidsims/ec2/server.js %i
+EnvironmentFile=-/etc/rapidsims/%i.env
+EnvironmentFile=-/var/www/rapidsims-services/%i/release.env
+ExecStart=/usr/bin/node /var/www/rapidsims-services/%i/ec2/server.js %i
 Restart=always
 RestartSec=3
 TimeoutStopSec=20
@@ -22,3 +24,4 @@ UMask=0027
 
 [Install]
 WantedBy=multi-user.target
+

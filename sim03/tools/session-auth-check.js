@@ -1,3 +1,4 @@
+require('../../tools/security/report-fixture.cjs');
 const assert = require('assert');
 const store = require('../lib/store.js');
 const handler = require('../api/session.js');
@@ -8,7 +9,7 @@ const { createHmac } = require('node:crypto');
 // passing fixture. The real platform integration checks remain in platform/.
 function launchToken({ userId, name, role, simId, mode, minutes = 60 }) {
   const now = Date.now();
-  const payload = { sub: userId, name, role, sim: simId, mode: mode || 'play',
+  const payload = { kind: 'launch', run: 'fixture-launch', sub: userId, name, role, sim: simId, mode: mode || 'play',
     course: null, iat: now, exp: now + minutes * 60000 };
   const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
   const mac = createHmac('sha256', process.env.LAUNCH_SECRET).update(body).digest('base64url');
@@ -119,3 +120,4 @@ async function invoke(body, headers = {}) {
   console.error(e);
   process.exit(1);
 });
+

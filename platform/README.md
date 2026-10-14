@@ -1,48 +1,24 @@
-# Flexee RapidSims — platform
+# Flexee RapidSims platform
 
-Catalogue, faculty accounts, courses, student enrolment and entitlement for the
-RapidSims. Payment is handled outside this system: a faculty member marks a
-student or a whole section as paid, and that flag is what unlocks a launch.
+The platform implements accounts, admin/faculty/student interfaces, catalogue editing, courses, enrolment, access release, launch history, completions, transcripts and faculty results. It is a working API and UI, not a foundation-only scaffold.
 
-## How it fits together
+## Service contract
 
-The platform never hosts a sim. Each sim is its own small deployment. When
-someone launches one, the platform signs a short-lived token saying who they are
-and in what capacity, and the sim verifies that signature with a shared secret.
-That's the entire contract — no shared database, no API between them — which is
-what lets each sim stay independent and lets older sims be brought in later by
-teaching them the same check.
+Simulations are independent AWS services. The platform signs a purpose-scoped launch containing the user, role, course and persisted launch ID. Sims verify the launch and maintain their own run state.
 
-## Environment
+A simulation signs completion/transcript reports with a separate server-only report credential. The signature covers the full report. The receiver checks the exact issued launch and deduplicates stable report IDs. Pending callbacks are stored in Redis and retried by the AWS report worker.
 
-`DATABASE_URL` — Postgres. Add Neon from the Vercel marketplace and it's set for you.
+Registration uses the shared registration/launch key, declares protocol version 2, and creates a draft catalogue entry. Admin overrides persist until reset. Registered service copy takes precedence over older bundled snapshots; bundled copy remains a fallback for legacy rows. Account-bound classroom sessions are an explicitly approved catalogue capability, with a compatibility fallback for existing supported sims.
 
-`LAUNCH_SECRET` — a long random string. The same value must be set on every sim
-deployment, or launches will be rejected.
+## Storage and configuration
 
-`PUBLIC_BASE_URL` — used to build invite and enrolment links.
+The runtime uses native `pg` against PostgreSQL, not a Vercel-specific database driver. See [operations](../OPERATIONS.md) and [AWS rollout](../docs/aws-security-rollout.md) for environment variables, migrations and secrets.
 
-## Schema
+There are 13 tables in `lib/schema.sql`: users, auth_attempts, tokens, sessions, sims, previews, courses, course_sims, enrolments, launches, completions, sim_access and transcripts. Regenerate the runtime schema with `node platform/lib/build-schema.js` from the repository root.
 
-`lib/schema.sql` is the source of truth. Nine tables: users, tokens, sessions,
-sims, previews, courses, course_sims, enrolments, launches.
+Access release lives on `enrolments.paid`; payment processing is external. Instructor removal cannot be undone by student self-enrolment. Invitation and reset credentials are replaced/consumed atomically.
 
-What actually ships is `lib/schema.js`, a generated module holding the same
-statements — Vercel only bundles files it can see being required, so a plain
-`.sql` file never reaches the function. After editing the SQL, run
-`node lib/build-schema.js` to regenerate it.
+## Verification
 
-Entitlement lives on `enrolments.paid`, along with who marked it, when, and a
-free-text note for reconciling against a purchase order. There are no payment
-tables — when Stripe arrives it becomes another thing that sets the same flag.
+From the repository root, run `npm ci --ignore-scripts --no-audit --no-fund` then `npm test`. The security checks use isolated PostgreSQL; they do not migrate or seed your application database. Browser and production acceptance checks are described separately in the rollout guide.
 
-## Status
-
-Foundation only: schema, database access, password hashing, login sessions and
-the launch token. The API layer and the admin, faculty and student interfaces
-are not built yet.
-
-
-## Adding a new RapidSim deployment
-
-Each simulation remains an independent Vercel project and self-registers with the platform using the shared `LAUNCH_SECRET`. The platform owns the public catalogue, course assignment, launch tokens, and completion records. RapidSim 03 (Midland Equipment) uses the canonical route `/sim03`, proxied to `https://sim-03-midland.vercel.app`. Registration remains unpublished by default; publish from the admin console only after authored content and classroom calibration are approved.

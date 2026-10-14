@@ -1,3 +1,4 @@
+require('../../tools/security/report-fixture.cjs');
 'use strict';
 // Exercises api/session.js end to end: auth, mode rule, room clock, first-press-wins,
 // no leakage to students, reveal gating, completion reporting, projector privacy.
@@ -54,7 +55,7 @@ function call(h, bodyObj, headers = {}) {
   });
 }
 const post = (b, h) => call(handler, b, h);
-const tok = (payload) => launchMod.signBack({ exp: Date.now() + 3600e3, iat: Date.now(), ...payload });
+const tok = (payload) => launchMod.signBack({ kind: 'launch', run: 'fixture-launch', exp: Date.now() + 3600e3, iat: Date.now(), ...payload });
 
 let pass = 0, fail = 0;
 async function t(name, fn) { try { await fn(); pass++; } catch (e) { fail++; console.error(`FAIL ${name}\n  ${e.stack.split('\n').slice(0, 3).join('\n  ')}`); } }
@@ -331,3 +332,4 @@ async function t(name, fn) { try { await fn(); pass++; } catch (e) { fail++; con
   console.log(`${pass} passed, ${fail} failed`);
   process.exit(fail ? 1 : 0);
 })();
+

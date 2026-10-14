@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+require('../../tools/security/report-fixture.cjs');
 // Dependency-free checks for RapidSim 07. They drive the real API handlers with
 // an in-memory store and a controllable clock.
 process.env.W07_MEMORY_STORE = '1';
@@ -34,7 +35,7 @@ async function call(handler, b, headers = {}, method = 'POST', query = {}) {
 const S = (b, h) => call(session, b, h);
 const fac = (b) => S({ ...b, facultyCode: 'fac-123' });
 function token(p) {
-  const body = Buffer.from(JSON.stringify({ iat: clock, exp: clock + 3600e3, ...p })).toString('base64url');
+  const body = Buffer.from(JSON.stringify({ kind: 'launch', run: 'fixture-launch', iat: clock, exp: clock + 3600e3, ...p })).toString('base64url');
   return body + '.' + crypto.createHmac('sha256', process.env.LAUNCH_SECRET).update(body).digest('base64url');
 }
 
@@ -290,7 +291,7 @@ async function check(name, fn) {
     let reports = 0, callback = null;
     global.fetch = async (url, options) => {
       assert.strictEqual(url, 'https://platform.test/api/complete');
-      reports++; callback = require('../lib/launch.js').verifyLaunch(JSON.parse(options.body).token);
+      reports++; callback = require('../../shared/report-contract').verifyReport(JSON.parse(options.body).token, 'complete');
       return { ok: reports > 1, status: reports > 1 ? 200 : 503, json: async () => ({}) };
     };
     try {
@@ -374,3 +375,4 @@ async function check(name, fn) {
   console.log(`\n${results.length - failed}/${results.length} checks passed.`);
   process.exit(failed ? 1 : 0);
 })();
+

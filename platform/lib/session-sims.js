@@ -12,4 +12,13 @@ const SESSION_SIMS = new Set([
   'rapidsimplus-02'
 ]);
 
-module.exports = { SESSION_SIMS };
+function sessionSupported(sim) {
+  return typeof sim?.detail?._sessionSupported === 'boolean'
+    ? sim.detail._sessionSupported : SESSION_SIMS.has(sim?.id);
+}
+async function supportsSessions(s, id) {
+  const sim = (await s`SELECT id, detail FROM sims WHERE id = ${id}`)[0];
+  return sessionSupported(sim);
+}
+module.exports = { SESSION_SIMS, sessionSupported, supportsSessions };
+

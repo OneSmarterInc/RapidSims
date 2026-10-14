@@ -20,7 +20,7 @@ module.exports = async (req, res) => {
   const code = String(b.sessionCode || '').trim().toUpperCase();
   const pid = String(b.participantId || '');
   const now = Date.now();
-  const report = (choice, lapsed) => reportCompletion({ launch,
+  const report = (choice, lapsed) => reportCompletion({ launch, runId: code || launch.run,
     summary: lapsed ? 'Offer lapsed (declined)' : choice === 'buy' ? 'Bought' : 'Declined',
     metrics: { choice, lapsed }
   });
@@ -59,3 +59,4 @@ module.exports = async (req, res) => {
     return res.status(503).json({ error: 'finish_unavailable' });
   }
 };
+

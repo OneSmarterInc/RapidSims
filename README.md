@@ -1,70 +1,28 @@
 # Flexee RapidSims
 
-Two deployments in one repository.
+An AWS-hosted learning portal with **12 independent simulation services**. The repository's deployment adapter runs the platform and simulations as 13 Node processes on EC2, with Nginx in front, PostgreSQL for platform records and Redis for simulation state and queued results. No framework migration or Vercel hosting is required.
 
-## sim/
+## Components
 
-RapidSim 01 — Disaster or Breach? A twenty-minute simulation where students run
-an IT incident and take advice from four AI characters whose professional
-exposure runs in opposite directions.
+- `platform/`: admin, faculty and student interfaces; accounts, catalogue, courses, enrolment, access release, launch records, completions and transcripts.
+- `sim/`, `sim-02/`, `sim03/` through `sim10/`, `sim-plus-01/`, `simplus02/`: each simulation's authored content, engine, API and interface.
+- `shared/`: scoped launch verification and signed, idempotent server reports with a persistent delivery outbox.
+- `ec2/`: HTTP adapter, app/route manifest, systemd services, generated Nginx routing and exact-commit release scripts.
+- `tools/`: isolated security, integration and simulation regression checks.
 
-The scenario lives server-side in `lib/scenario.js` and never reaches the
-browser: the ground truth, every character's knowledge and prohibitions, and the
-debrief. A student who reads the page source learns nothing about how it ends.
+Each sim owns its scenario; the platform owns accounts, access and academic records. A signed launch identifies the account/course and issued run. A separate server credential signs a completed report, including transcript content. The platform verifies the exact launch and deduplicates retries. Payment happens outside the application; faculty/admin access release is represented by the enrolment's paid flag.
 
-Runs standalone, or as a facilitated session with join codes, grouping, a shared
-clock the instructor can freeze, and a side-by-side comparison of every group's
-positions.
+## Development and verification
 
-Needs `ANTHROPIC_API_KEY`, `ACCESS_CODE`, `FACULTY_CODES`, and an Upstash Redis
-store for session state.
+Use Node 24. Install locked dependencies with `npm ci --ignore-scripts --no-audit --no-fund`, then run `npm test`. Tests use isolated databases and temporary local HTTP servers; the security suite does not read production credentials. `npm run test:security` runs the targeted regression suite alone.
 
-## sim-02/
+Application startup also requires explicit local PostgreSQL, Redis and signing configuration. Never point development tests at production databases. See the existing `tools/local/` utilities for local setup and [operations](OPERATIONS.md) for configuration.
 
-RapidSim 02 — What Did It Tell Them? A customer-facing AI assistant gave a
-customer a specification figure from a superseded datasheet, and the parts are
-in service. Either the document library is carrying stale revisions, or a
-routing change stopped the question reaching an engineer. Both are true.
+## AWS releases
 
-The first sim to branch: the third moment differs depending on whether the
-student stopped an overnight re-index before it overwrote the evidence. The
-hold can be recorded as an action or simply instructed in conversation, which a
-classifier adjudicates at the close of each earlier moment.
+Start with [the AWS security rollout](docs/aws-security-rollout.md) before deploying these changes. It covers the coordinated protocol upgrade, required report key/outbox, database migration, maintenance window, staging checks and rollback.
 
-Same environment variables as `sim/`, its own Vercel project with Root
-Directory `sim-02`.
+[EC2 setup](ec2/README.md) describes provisioning. `ec2/apps.json` is the service/route source of truth; a new external service can use its own approved HTTPS URL without a new EC2 manifest entry. New catalogue entries remain drafts until approved. The admin editor controls account-bound classroom-session capability.
 
-## platform/
+Historical Vercel manifests remain in the repository for older tooling; they are not the production deployment configuration. Nothing in a local test run pushes to GitHub or deploys AWS.
 
-Catalogue, faculty accounts, courses, student enrolment and entitlement.
-
-The platform never hosts a sim. It signs a short-lived launch token saying who
-someone is and in what capacity; the sim verifies it with a shared secret. That's
-the whole contract between them, which is what lets each sim stay a small
-independent deployment.
-
-Payment is handled outside the system. A faculty member marks a student or a
-whole section as paid, and that flag is what unlocks a launch.
-
-Needs Postgres, `LAUNCH_SECRET`, and `PUBLIC_BASE_URL`.
-
-## docs/
-
-Design and specification documents: the RapidSim 02 scenario, the engine
-changes it needed, the platform pre-publication access spec, and the handoff
-notes.
-
-## Deploying
-
-One Vercel project per folder, each with its Root Directory set — `sim`,
-`sim-02`, `platform`. Each redeploys only when its own folder changes.
-
-Every sim shares `LAUNCH_SECRET` with the platform. Operator diagnostics use a
-separate `HEALTH_SECRET`, shared by the platform and all ten sims. Public
-`/api/health` responses report liveness only. Send the diagnostic key in the
-`x-health-key` header; never put it in a URL. See
-[the integration fixes and rollout notes](docs/integration-fixes-2026-09-28.md).
-
-## Deploying the full repository on EC2
-
-For a single-instance deployment of the platform and all simulation folders using one shared environment file, systemd, and Nginx (without Docker, RDS, or S3), follow [the EC2 deployment guide](ec2/README.md). The existing Neon Postgres and Upstash Redis application connections remain required.

@@ -447,13 +447,13 @@ function catTab() {
     ${D.addSim ? `<div class="cbox"><div style="padding:15px 16px">
       <div class="mini" style="margin-bottom:10px">A new simulation ${helpBtn('add')}</div>
       ${explain('add', 'Bringing a new simulation in', `<ol>
-        <li>Push it to the repository as its own folder, and give it a Vercel project with that folder as the Root Directory.</li>
+        <li>Deploy its folder as an independent AWS service. For this EC2 installation, add it to ec2/apps.json and use the tested release workflow.</li>
         <li>Set its environment variables — the API key, an access code, the shared launch secret, this platform's address, and a session store.</li>
         <li>Paste its address below. It will tell us its id and whether it is configured properly.</li>
         <li>It arrives as a draft. Nobody sees it until you publish it or give somebody review access.</li>
       </ol>`)}
       <div class="field" style="margin-bottom:0">
-        <div><label class="f">Where is it deployed?</label><input id="s_url" type="text" placeholder="https://…vercel.app"></div>
+        <div><label class="f">Where is it deployed?</label><input id="s_url" type="text" placeholder="https://your-domain/sim-path"></div>
         <div style="flex:0 0 auto;align-self:flex-end"><button class="btn pri" id="s_probe">Look it up</button></div>
       </div>
       <div id="s_probeout"></div>
@@ -488,13 +488,14 @@ function catTab() {
           <div class="id">${plus ? 'RapidSim+' : 'RapidSim'} · ${esc(si.id)} · ${si.minutes || '?'} min · ${esc(si.launch_url || '')}</div>
 
           ${D.simEdit === si.id ? `<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">
-            <div class="field">
-              <div style="flex:0 0 90px;min-width:90px"><label class="f">Catalogue order</label><input type="number" min="1" data-sf="number" value="${si.number||''}"></div>
+            <div class="field catalogue-fields">
+              <div><label class="f">Catalogue order</label><input type="number" min="1" data-sf="number" value="${si.number||''}"></div>
               <div><label class="f">Title</label><input data-sf="title" value="${esc(si.title||'')}"></div>
-              <div style="flex:0 0 100px;min-width:100px"><label class="f">Minutes</label><input type="number" data-sf="minutes" value="${si.minutes||''}"></div>
+              <div><label class="f">Minutes</label><input type="number" data-sf="minutes" value="${si.minutes||''}"></div>
             </div>
             <div class="field"><div><label class="f">Tagline</label><input data-sf="tagline" value="${esc(si.tagline||'')}"></div></div>
             <div class="field"><div><label class="f">Description</label><textarea rows="3" data-sf="description">${esc(si.description||'')}</textarea></div></div>
+            <div class="field"><div><label class="f" for="session-capability-${esc(si.id)}">Account-bound classroom sessions</label><select id="session-capability-${esc(si.id)}" data-sf="sessionSupported"><option value="no" ${si.sessionSupported?'':'selected'}>Not supported</option><option value="yes" ${si.sessionSupported?'selected':''}>Supported (protocol v1)</option></select><div class="hint">Enable only after testing class invitations and roster integration.</div></div></div>
             <div class="field"><div><label class="f">Address</label><input data-sf="launchUrl" value="${esc(si.launch_url||'')}"></div></div>
             <div class="hint">The id comes from the deployment and cannot change. The address is what students are sent to — the simulation reports its own, but if that is a deployment-specific URL rather than the project's stable one, correct it here and set <span class="mono">SIM_URL</span> on that project so it stops re-registering the wrong address. Everything else you write is yours; the simulation will not overwrite it.</div>
             <button class="btn pri sm" data-simsave="${esc(si.id)}">Save changes</button>
@@ -597,8 +598,7 @@ function catTab() {
       Nothing in that file may reach the browser; <span class="mono">node build.js</span> refuses to write a bundle
       that contains any of it.</p>
 
-      <p style="margin:0 0 10px"><b>3 · Give it a place to run.</b> Push the folder, then create a Vercel project
-      from the same repository with Root Directory <span class="mono">sim-03</span>. Set these:</p>
+      <p style="margin:0 0 10px"><b>3 · Give it a place to run.</b> Deploy on AWS as a separate service from its own simulation folder. Add the service to the AWS app manifest, configure its stable URL, and set:</p>
       <ul style="margin:0 0 10px 18px;padding:0">
         <li><span class="mono">ANTHROPIC_API_KEY</span> — generates the characters. Nobody answers without it.</li>
         <li><span class="mono">LAUNCH_SECRET</span> — must match this platform's exactly, or every student we send is refused.</li>
@@ -607,7 +607,7 @@ function catTab() {
           deployment-specific one that freezes students on an old build.</li>
         <li><span class="mono">ACCESS_CODE</span> — optional, for playing it outside a course.</li>
         <li><span class="mono">FACULTY_CODES</span> — optional, for the live console outside a course.</li>
-        <li>A Redis store from the Storage tab — only needed for live classroom sessions.</li>
+        <li><span class="mono">REDIS_URL</span> — session storage and durable result delivery. Enable Redis persistence and backups.</li><li><span class="mono">REPORT_SECRET</span> — server-report signing key, distinct from LAUNCH_SECRET; the platform and retry worker must know it.</li>
       </ul>
 
       <p style="margin:0 0 10px"><b>4 · Bring it in.</b> Press <b>Add a simulation</b> above and paste its address.
@@ -698,7 +698,7 @@ function wireCat() {
     try {
       await api('/api/admin', { action:'save_sim', id, number:v('number'), title:v('title'),
         tagline:v('tagline'), description:v('description'), minutes:v('minutes'),
-        launchUrl: v('launchUrl') || si.launch_url, published: !!si.published });
+        launchUrl: v('launchUrl') || si.launch_url, sessionSupported: v('sessionSupported') === 'yes', published: !!si.published });
       done('Saved'); D.simEdit = null; load();
     } catch (e) { if (e.stale) return; if (out) out.innerHTML = `<div class="hint" style="color:var(--rose)">${esc(e.message)}</div>`; done('Not saved','bad'); }
   });
@@ -1035,3 +1035,4 @@ async function restoreAdmin(params, current) {
 </script>
 </body>
 </html>
+

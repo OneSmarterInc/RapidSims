@@ -75,6 +75,7 @@ function effective(detail) {
 }
 
 function present(sim) {
+  sim = { ...sim, sessionSupported: require('./session-sims').sessionSupported(sim) };
   const stored = sim.detail || {};
   const edited = Array.isArray(stored._edited) ? stored._edited : [];
   let key = sim.id;
@@ -84,14 +85,17 @@ function present(sim) {
       /Why Don[’']t They Have Any Patience\?/i.test(sim.title || '')) key = 'rapidsimplus-01';
   const current = Object.hasOwn(source, key) ? source[key] : null;
   if (!current) return { ...sim, detail: effective(stored) };
-  const detail = { ...stored, ...current.detail };
+  // Independently deployed sims own their registered copy. Bundled copy is a
+  // fallback for older rows, not authority over a newer service announcement.
+  const registered = stored._registered === true;
+  const detail = registered ? { ...current.detail, ...stored } : { ...stored, ...current.detail };
   for (const field of edited) {
     if (Object.hasOwn(stored, field)) detail[field] = stored[field];
   }
   return {
     ...sim,
-    tagline: edited.includes('tagline') ? sim.tagline : current.tagline,
-    description: edited.includes('description') ? sim.description : current.description,
+    tagline: edited.includes('tagline') || registered ? sim.tagline : current.tagline,
+    description: edited.includes('description') || registered ? sim.description : current.description,
     detail: effective(detail)
   };
 }
@@ -115,3 +119,4 @@ function statesOutcome(text) {
 
 module.exports.OUTCOME_TELLS = OUTCOME_TELLS;
 module.exports.statesOutcome = statesOutcome;
+

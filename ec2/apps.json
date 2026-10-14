@@ -1,0 +1,84 @@
+{
+  "platform": {
+    "dir": "platform",
+    "port": 3100,
+    "prefix": "",
+    "title": "flexee-platform"
+  },
+  "sim01": {
+    "dir": "sim",
+    "port": 3101,
+    "prefix": "/sim01",
+    "title": "rapid-sim-01"
+  },
+  "sim02": {
+    "dir": "sim-02",
+    "port": 3102,
+    "prefix": "/sim02",
+    "title": "rapid-sim-02"
+  },
+  "sim03": {
+    "dir": "sim03",
+    "port": 3103,
+    "prefix": "/sim03",
+    "title": "rapid-sim-03",
+    "aliases": [
+      "/rapidsims01",
+      "/simplus01"
+    ]
+  },
+  "sim04": {
+    "dir": "sim04",
+    "port": 3104,
+    "prefix": "/sim04",
+    "title": "rapid-sim-04"
+  },
+  "sim05": {
+    "dir": "sim05",
+    "port": 3105,
+    "prefix": "/sim05",
+    "title": "rapid-sim-05"
+  },
+  "sim06": {
+    "dir": "sim06",
+    "port": 3106,
+    "prefix": "/sim06",
+    "title": "rapid-sim-06"
+  },
+  "sim07": {
+    "dir": "sim07",
+    "port": 3107,
+    "prefix": "/sim07",
+    "title": "rapid-sim-07"
+  },
+  "sim08": {
+    "dir": "sim08",
+    "port": 3108,
+    "prefix": "/sim08",
+    "title": "rapid-sim-08"
+  },
+  "sim09": {
+    "dir": "sim09",
+    "port": 3109,
+    "prefix": "/sim09",
+    "title": "rapid-sim-09"
+  },
+  "sim10": {
+    "dir": "sim10",
+    "port": 3110,
+    "prefix": "/sim10",
+    "title": "rapid-sim-10"
+  },
+  "simplus01": {
+    "dir": "sim-plus-01",
+    "port": 3111,
+    "prefix": "/sim-plus-01",
+    "title": "rapid-sim-plus-01"
+  },
+  "simplus02": {
+    "dir": "simplus02",
+    "port": 3112,
+    "prefix": "/simplus02",
+    "title": "rapid-sim-plus-02"
+  }
+}

@@ -147,7 +147,7 @@ function createApp({ store: injectedStore, clock = () => Date.now() } = {}) {
           if (!s.platformAuth) return send(res, 200, { ok: true, reported: false, reason: 'standalone' });
           const done = await engine.completionFor(store, s.code, pid, now);
           if (!done) throw new engine.SimError('conflict', 'Not finished yet.');
-          const r = await engine.markReported(store, s.code, pid, () => L.reportCompletion({ launch, ...done }), now);
+          const r = await engine.markReported(store, s.code, pid, () => L.reportCompletion({ launch, runId: s.code, ...done }), now);
           return send(res, 200, { ok: true, ...r });
         }
         case 'GET /api/state': return send(res, 200, await engine.studentState(store, q('code'), pid, now));
@@ -170,3 +170,4 @@ function createApp({ store: injectedStore, clock = () => Date.now() } = {}) {
 }
 
 module.exports = { createApp };
+

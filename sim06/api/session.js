@@ -305,7 +305,7 @@ async function handler(req, res) {
             const next = { ...me, completedAt: me.completedAt || t, reportingAt: t };
             if (!await store.compareAndSetParticipant(code, me.id, me, next)) continue;
             const openedBoth = cfg.documents.every(d => out.reading[d.id]);
-            const result = await reportCompletion({ launch: launched, summary: summaryOf(run),
+            const result = await reportCompletion({ launch: launched, runId: code, summary: summaryOf(run),
               metrics: { choice: run.decision?.choice || 'none', atReport: run.decision?.atReport || null, openedBoth } });
             const saved = { ...next, reportingAt: null, ...(result.ok ? { reportedAt: t } : {}) };
             reported = result.ok && await store.compareAndSetParticipant(code, me.id, next, saved);
@@ -327,3 +327,4 @@ async function handler(req, res) {
 
 module.exports = handler;
 module.exports._now = null; // tests may replace with a controllable clock
+

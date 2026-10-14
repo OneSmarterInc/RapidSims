@@ -1,5 +1,6 @@
 // Everything to do with a facilitated session. One endpoint, action-switched,
 // so the deployment stays small.
+const crypto = require('node:crypto');
 const { body } = require('../lib/guard.js');
 const store = require('../lib/store.js');
 const { verifyLaunch } = require('../lib/launch.js');
@@ -33,23 +34,23 @@ function whoIsFaculty(req, b) {
   const lt = req.headers['x-launch-token'] || (b && b.launchToken);
   if (lt) {
     const p = verifyLaunch(String(lt));
-    if (p && (p.role === 'faculty' || p.role === 'faculty_preview')) {
-      return { name: p.name || 'Facilitator' };
+    if (p && p.sim === S.META.id && (p.role === 'faculty' || p.role === 'faculty_preview')) {
+      return { name: p.name || 'Facilitator', ownerId: p.sub, courseId: p.course || null };
     }
   }
   const roster = facultyRoster();
-  if (!roster.length) return { name: 'Facilitator' };   // nothing configured — open
+  if (!roster.length) return null;
   const given = String((b && b.facultyCode) || req.headers['x-faculty-code'] || '').trim();
   if (!given) return null;
   const hit = roster.find(r => r.code === given);
-  return hit ? { name: hit.name } : null;
+  return hit ? { name: hit.name, ownerKey: crypto.createHash('sha256').update(hit.code).digest('hex') } : null;
 }
 
 // A session belongs to whoever created it. Others can't drive it.
 function ownsSession(who, sess) {
   if (!who) return false;
-  if (!sess.owner) return true;              // sessions made before ownership existed
-  return sess.owner === who.name;
+  if (sess.ownerId) return who.ownerId === sess.ownerId && who.courseId === (sess.courseId || null);
+  return !!sess.ownerKey && who.ownerKey === sess.ownerKey;
 }
 
 // What the student's browser is allowed to know about the session.
@@ -81,7 +82,7 @@ module.exports = async (req, res) => {
         if (!who) return res.status(401).json({ error: 'faculty_code_required' });
         const c = newCode();
         const sess = {
-          code: c, owner: who.name,
+          code: c, owner: who.name, ownerId: who.ownerId || null, ownerKey: who.ownerKey || null, courseId: who.courseId || null,
           name: String(b.name || 'RapidSim 01').slice(0, 80),
           state: 'lobby', paused: false, revealed: false,
           holdReveal: b.holdReveal !== false,
@@ -196,3 +197,4 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'server_error' });
   }
 };
+

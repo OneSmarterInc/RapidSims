@@ -1,6 +1,8 @@
 const crypto = require('crypto');
 const { sql, id } = require('../lib/db.js');
 const A = require('../lib/auth.js');
+const credentials = require('../lib/credential-tokens');
+const throttle = require('../lib/auth-throttle');
 const { present } = require('../lib/catalogue.js');
 
 function body(req) {
@@ -15,6 +17,16 @@ module.exports = async (req, res) => {
   const s = sql();
 
   try {
+    const changingUser = b.action === 'change_password' ? await A.currentUser(req) : null;
+    if (b.action === 'change_password' && !changingUser) return res.status(401).json({ error: 'not_signed_in' });
+    const throttleIdentity = b.action === 'signin' ? 'signin:' + String(b.email || '').trim().toLowerCase()
+      : b.action === 'change_password' ? 'password:' + changingUser.id
+      : String(b.action) + ':' + String(b.token || '');
+    if (['signin', 'invite_accept', 'reset_accept', 'change_password'].includes(b.action) &&
+        !await throttle.allow(s, req, throttleIdentity)) {
+      res.setHeader('Retry-After', '900');
+      return res.status(429).json({ error: 'too_many_attempts' });
+    }
     switch (String(b.action || '')) {
 
       case 'me': {
@@ -28,7 +40,7 @@ module.exports = async (req, res) => {
         const rows = await s`SELECT * FROM users WHERE email = ${email} AND disabled = false`;
         const u = rows[0];
         // Same message either way, so this can't be used to discover who has an account.
-        if (!u || !u.password_hash || !A.verifyPassword(String(b.password || ''), u.password_hash)) {
+        if (!u || !u.password_hash || !await A.verifyPasswordAsync(String(b.password || ''), u.password_hash)) {
           return res.status(401).json({ error: 'bad_credentials', message: 'That email and password don\'t match.' });
         }
         await A.startSession(res, u.id);
@@ -55,26 +67,15 @@ module.exports = async (req, res) => {
       }
 
       case 'invite_accept': {
-        const t = String(b.token || '');
         const pw = String(b.password || '');
-        if (pw.length < 8) return res.status(400).json({ error: 'weak_password', message: 'Use at least 8 characters.' });
-        const rows = await s`
-          SELECT t.token, t.user_id, t.expires_at, t.used_at
-          FROM tokens t WHERE t.token = ${t} AND t.purpose = 'invite'`;
-        const r = rows[0];
-        if (!r) return res.status(404).json({ error: 'unknown_invite' });
-        if (r.used_at) return res.status(410).json({ error: 'already_used' });
-        if (new Date(r.expires_at) < new Date()) return res.status(410).json({ error: 'expired' });
-
-        const name = String(b.name || '').trim();
-        await s`UPDATE users SET password_hash = ${A.hashPassword(pw)} WHERE id = ${r.user_id}`;
-        if (name) await s`UPDATE users SET name = ${name} WHERE id = ${r.user_id}`;
-        await s`UPDATE tokens SET used_at = now() WHERE token = ${t}`;
-        const u = (await s`SELECT * FROM users WHERE id = ${r.user_id}`)[0];
+        if (pw.length < 8 || Buffer.byteLength(pw) > 1024) return res.status(400).json({ error: 'weak_password' });
+        const hash = await A.hashPasswordAsync(pw);
+        const u = await credentials.consume(s, String(b.token || ''), 'invite', hash,
+          String(b.name || '').trim().slice(0, 200));
+        if (!u) return res.status(410).json({ error: 'invalid_or_used_token' });
         await A.startSession(res, u.id);
         return res.status(200).json({ user: A.publicUser(u) });
       }
-
       case 'update_profile': {
         const u = await A.currentUser(req);
         if (!u) return res.status(401).json({ error: 'not_signed_in' });
@@ -89,17 +90,24 @@ module.exports = async (req, res) => {
 
       // ---------- password management ----------
       case 'change_password': {
-        const u = await A.currentUser(req);
+        const u = changingUser;
         if (!u) return res.status(401).json({ error: 'not_signed_in' });
         const current = String(b.currentPassword || '');
         const next = String(b.newPassword || '');
-        if (next.length < 8) return res.status(400).json({ error: 'weak_password', message: 'Use at least 8 characters.' });
-        if (!u.password_hash || !A.verifyPassword(current, u.password_hash)) {
+        if (next.length < 8 || Buffer.byteLength(next) > 1024) return res.status(400).json({ error: 'weak_password', message: 'Use at least 8 characters, within 1024 bytes.' });
+        if (!u.password_hash || !await A.verifyPasswordAsync(current, u.password_hash)) {
           return res.status(401).json({ error: 'bad_password', message: 'That current password isn\'t right.' });
         }
-        await s`UPDATE users SET password_hash = ${A.hashPassword(next)} WHERE id = ${u.id}`;
-        // Everything else signed in as them stops working.
-        await s`DELETE FROM sessions WHERE user_id = ${u.id}`;
+        const hash = await A.hashPasswordAsync(next);
+        const changed = await s.transaction(async tx => {
+          const locked = (await tx`SELECT password_hash FROM users WHERE id = ${u.id} FOR UPDATE`)[0];
+          if (!locked || locked.password_hash !== u.password_hash) return false;
+          await tx`UPDATE users SET password_hash = ${hash} WHERE id = ${u.id}`;
+          await tx`UPDATE tokens SET used_at = now() WHERE user_id = ${u.id} AND used_at IS NULL`;
+          await tx`DELETE FROM sessions WHERE user_id = ${u.id}`;
+          return true;
+        });
+        if (!changed) return res.status(409).json({error:'password_changed_retry'});
         await A.startSession(res, u.id);
         return res.status(200).json({ ok: true });
       }
@@ -118,22 +126,15 @@ module.exports = async (req, res) => {
       }
 
       case 'reset_accept': {
-        const t = String(b.token || '');
         const pw = String(b.password || '');
-        if (pw.length < 8) return res.status(400).json({ error: 'weak_password', message: 'Use at least 8 characters.' });
-        const rows = await s`SELECT user_id, expires_at, used_at FROM tokens WHERE token = ${t} AND purpose = 'reset'`;
-        const r = rows[0];
-        if (!r) return res.status(404).json({ error: 'unknown_reset' });
-        if (r.used_at) return res.status(410).json({ error: 'already_used' });
-        if (new Date(r.expires_at) < new Date()) return res.status(410).json({ error: 'expired' });
-        await s`UPDATE users SET password_hash = ${A.hashPassword(pw)} WHERE id = ${r.user_id}`;
-        await s`UPDATE tokens SET used_at = now() WHERE token = ${t}`;
-        await s`DELETE FROM sessions WHERE user_id = ${r.user_id}`;
-        const u = (await s`SELECT * FROM users WHERE id = ${r.user_id}`)[0];
+        if (pw.length < 8 || Buffer.byteLength(pw) > 1024) return res.status(400).json({ error: 'weak_password' });
+        const hash = await A.hashPasswordAsync(pw);
+        const u = await credentials.consume(s, String(b.token || ''), 'reset', hash,
+          null);
+        if (!u) return res.status(410).json({ error: 'invalid_or_used_token' });
         await A.startSession(res, u.id);
         return res.status(200).json({ user: A.publicUser(u) });
       }
-
       // The public catalogue — what the landing page shows before anyone signs in.
       case 'catalogue': {
         const rows = await s`SELECT id, number, title, tagline, description, minutes, detail
@@ -148,8 +149,10 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: 'unknown_action' });
     }
   } catch (e) {
+    if (e.status === 400 || e.status === 429) return res.status(e.status).json({ error: e.message });
     if (e.code === 'NO_DB') return res.status(503).json({ error: 'no_db', message: 'The database isn\'t configured on this deployment.' });
     console.error('auth failure', e.message);
     return res.status(500).json({ error: 'server_error' });
   }
 };
+

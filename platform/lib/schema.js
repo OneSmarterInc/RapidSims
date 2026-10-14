@@ -16,6 +16,14 @@ module.exports = [
 
 `CREATE INDEX IF NOT EXISTS users_role_idx ON users(role)`,
 
+`CREATE TABLE IF NOT EXISTS auth_attempts (
+  key TEXT PRIMARY KEY,
+  window_start TIMESTAMPTZ NOT NULL,
+  attempts INTEGER NOT NULL
+)`,
+
+`CREATE INDEX IF NOT EXISTS auth_attempts_window_idx ON auth_attempts(window_start)`,
+
 `CREATE TABLE IF NOT EXISTS tokens (
   token       TEXT PRIMARY KEY,
   user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -155,4 +163,16 @@ module.exports = [
 `CREATE INDEX IF NOT EXISTS transcripts_course_idx ON transcripts(course_id)`,
 
 `CREATE INDEX IF NOT EXISTS transcripts_user_sim_idx ON transcripts(user_id, sim_id)`,
+
+`ALTER TABLE completions ADD COLUMN IF NOT EXISTS report_id TEXT`,
+
+`ALTER TABLE completions ADD COLUMN IF NOT EXISTS launch_id TEXT REFERENCES launches(id) ON DELETE SET NULL`,
+
+`CREATE UNIQUE INDEX IF NOT EXISTS completions_report_id_idx ON completions(report_id)`,
+
+`ALTER TABLE transcripts ADD COLUMN IF NOT EXISTS report_id TEXT`,
+
+`ALTER TABLE transcripts ADD COLUMN IF NOT EXISTS launch_id TEXT REFERENCES launches(id) ON DELETE SET NULL`,
+
+`CREATE UNIQUE INDEX IF NOT EXISTS transcripts_report_id_idx ON transcripts(report_id)`,
 ];

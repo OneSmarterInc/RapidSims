@@ -2,7 +2,7 @@
 // visibility is not permission to play; /api/launch still enforces access release.
 const { sql } = require('../lib/db.js');
 const { verify } = require('../lib/launch.js');
-const { SESSION_SIMS } = require('../lib/session-sims.js');
+const { supportsSessions } = require('../lib/session-sims.js');
 
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
@@ -11,7 +11,7 @@ module.exports = async (req, res) => {
   if (typeof b === 'string') { try { b = JSON.parse(b); } catch { b = null; } }
   const courseId = String(b?.courseId || '');
   const p = verify(String(req.headers?.['x-launch-token'] || ''));
-  if (!p || !SESSION_SIMS.has(p.sim) || p.role !== 'faculty' || !p.sub || p.mode !== 'session') {
+  if (!p || p.kind !== 'launch' || p.role !== 'faculty' || !p.sub || p.mode !== 'session') {
     return res.status(401).json({ error: 'faculty_authorization_required' });
   }
   if (!courseId || courseId.length > 200 || p.course !== courseId) {
@@ -19,6 +19,7 @@ module.exports = async (req, res) => {
   }
   try {
     const s = sql();
+    if (!await supportsSessions(s, p.sim)) return res.status(403).json({ error: 'session_roster_not_supported' });
     // Recheck ownership and account status in the database: a valid signature
     // alone is insufficient to disclose another instructor's students.
     const user = (await s`SELECT id, role, disabled FROM users WHERE id = ${p.sub}`)[0];
@@ -43,3 +44,4 @@ module.exports = async (req, res) => {
     return res.status(503).json({ error: 'course_roster_unavailable' });
   }
 };
+

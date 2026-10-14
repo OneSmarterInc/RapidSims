@@ -152,7 +152,8 @@ module.exports = async (req, res) => {
     const reports = [];
     for (const sub of [...new Set(subjects)]) {
       reports.push(await reportCompletion({
-        launch: { ...launch, sub },
+        launch: { ...launch, sub, run: sub === launch.sub ? launch.run : sr?.participants?.[`platform:${sub}`]?.launchId },
+        runId: sr ? `${sr.code}:${sr.rid}` : launch.run,
         summary: sr && sr.sess.mode === 'team' ? { ...summary, completedFor: sub } : summary,
         metrics
       }));
@@ -161,3 +162,4 @@ module.exports = async (req, res) => {
   }
   return res.status(200).json({ ok: true, completionReported: !!report.ok, outcomes, closingLesson });
 };
+

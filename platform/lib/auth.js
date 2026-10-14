@@ -1,6 +1,36 @@
 const crypto = require('crypto');
 const { sql, id } = require('./db.js');
 
+// Bound expensive work and use libuv workers rather than blocking the HTTP event loop.
+let hashing = 0;
+const waiting = [];
+async function derive(pw, salt, length) {
+  if (Buffer.byteLength(String(pw)) > 1024) throw Object.assign(new Error('Password too long'), { status: 400 });
+  if (hashing >= 4) {
+    if (waiting.length >= 64) throw Object.assign(new Error('Authentication busy'), { status: 429 });
+    await new Promise(resolve => waiting.push(resolve));
+  } else hashing++;
+  try {
+    return await new Promise((resolve, reject) => crypto.scrypt(String(pw), salt, length,
+      { N: 16384, r: 8, p: 1 }, (error, value) => error ? reject(error) : resolve(value)));
+  } finally {
+    const next = waiting.shift();
+    if (next) next(); else hashing--;
+  }
+}
+async function hashPasswordAsync(pw) {
+  const salt = crypto.randomBytes(16);
+  const key = await derive(pw, salt, 64);
+  return 's2$' + salt.toString('base64url') + '$' + key.toString('base64url');
+}
+async function verifyPasswordAsync(pw, stored) {
+  if (!stored || !stored.startsWith('s2$') || Buffer.byteLength(String(pw)) > 1024) return false;
+  const [, s, k] = stored.split('$');
+  const salt = Buffer.from(s || '', 'base64url'), expected = Buffer.from(k || '', 'base64url');
+  if (salt.length !== 16 || expected.length !== 64) return false;
+  return crypto.timingSafeEqual(expected, await derive(pw, salt, 64));
+}
+
 // ---------- passwords ----------
 function hashPassword(pw) {
   const salt = crypto.randomBytes(16);
@@ -81,8 +111,10 @@ async function requireRole(req, res, ...roles) {
 const publicUser = (u) => u && ({ id: u.id, email: u.email, name: u.name, role: u.role, institution: u.institution });
 
 module.exports = {
+  hashPasswordAsync, verifyPasswordAsync,
   hashPassword, verifyPassword,
   startSession, currentUser, endSession,
   requireUser, requireRole, publicUser,
   readCookie, clearSessionCookie
 };
+

@@ -459,6 +459,7 @@ module.exports = async (req, res) => {
 
         const participant = {
           ...existing,
+          launchId: launched?.run || existing?.launchId || null,
           id,
           name,
           groupId,
@@ -586,7 +587,6 @@ module.exports = async (req, res) => {
 
         if (b.screen !== undefined) {
           if (!Number.isInteger(b.screen) || b.screen < 0 || b.screen > 10) return res.status(400).json({ error: 'invalid_screen' });
-          if (b.screen >= 4 && !next.strategicView && !next.year1) return res.status(409).json({ error: 'strategic_view_required' });
           if (b.screen >= 5 && !next.year1) return res.status(409).json({ error: 'year1_required' });
           if (b.screen >= 7 && !next.year2) return res.status(409).json({ error: 'year2_required' });
           next.screen = b.screen;
@@ -640,3 +640,4 @@ module.exports = async (req, res) => {
     return res.status(500).json({ error: 'server_error' });
   }
 };
+

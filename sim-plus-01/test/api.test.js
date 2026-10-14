@@ -1,7 +1,9 @@
+require('../../tools/security/report-fixture.cjs');
 'use strict';
 
 const assert = require('assert');
-process.env.ACCESS_CODE = '';
+process.env.ACCESS_CODE = 'standalone-fixture';
+process.env.LAUNCH_SECRET = 'fixture-launch-key';
 process.env.KV_REST_API_URL = 'memory://test';
 process.env.KV_REST_API_TOKEN = 'test';
 
@@ -12,9 +14,10 @@ store.getRaw = async (key) => memory.get(key) || null;
 store.putRaw = async (key, value) => { memory.set(key, value); return value; };
 const run = require('../api/run');
 
-async function call(action, extra = {}, launch = null, headers = {}) {
-  const req = { method: 'POST', headers, body: { action, ...extra } };
-  if (launch) req.launch = launch;
+let activeLaunch = null;
+async function call(action, extra = {}, launch = activeLaunch, headers = {}) {
+  const req = { method: 'POST', headers: { 'x-access-code': 'standalone-fixture', ...headers }, body: { action, ...extra } };
+  if (launch) req.headers['x-launch-token'] = require('../lib/launch').signBack(launch);
   let status = 200, payload;
   const res = { status(n) { status = n; return this; }, json(v) { payload = v; return this; }, end() { return this; } };
   await run(req, res);
@@ -37,7 +40,7 @@ async function call(action, extra = {}, launch = null, headers = {}) {
   assert.match(r.payload.observation.instruction, /when it is done/i);
   assert.doesNotMatch(r.payload.observation.instruction, /per-claim timing/i);
 
-  const launch = { sub: 'participant-1', name: 'Split Session Tester', course: 'course-1', role: 'student' };
+  const launch = activeLaunch = { kind:'launch', run:'issued-run', sim:'rapidsimplus-01', exp:Date.now()+3600000, sub: 'participant-1', name: 'Split Session Tester', course: 'course-1', role: 'student' };
   r = await call('start', { order: ['terry', 'ray', 'ruth'], observationSeconds: 30 }, launch);
   assert.equal(r.status, 200);
   const runId = r.payload.runId;
@@ -112,7 +115,7 @@ async function call(action, extra = {}, launch = null, headers = {}) {
 
   process.env.LAUNCH_SECRET='faculty-capability-test';
   const { signBack }=require('../lib/launch');
-  const token=(role,extra={})=>signBack({sub:'test-user',sim:'rapidsimplus-01',role,exp:Date.now()+60000,...extra});
+  const token=(role,extra={})=>signBack({kind:'launch',run:'fixture-launch',sub:'test-user',sim:'rapidsimplus-01',role,exp:Date.now()+60000,...extra});
   r=await call('brief',{faculty:true,role:'faculty'},null,{'x-launch-token':token('student')});
   assert.equal(r.payload.faculty,false,'student input cannot grant playback controls');
   for(const role of ['faculty','faculty_preview']){
@@ -130,3 +133,4 @@ async function call(action, extra = {}, launch = null, headers = {}) {
   assert.equal((await call('brief',{},null,{'x-faculty-code':process.env.FACULTY_CODE})).payload.faculty,true);
   console.log('api integration: passed');
 })().catch((e) => { console.error(e); process.exit(1); });
+

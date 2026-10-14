@@ -42,7 +42,7 @@ function checkAccess(req, res) {
     return false;
   }
   const required = process.env.ACCESS_CODE;
-  if (!required || req.headers['x-access-code'] === required) return true;
+  if (required && req.headers['x-access-code'] === required) return true;
   res.status(401).json({ error: 'access_code_required' });
   return false;
 }
@@ -53,3 +53,4 @@ function body(req) {
 }
 
 module.exports = { checkAccess, body, canonicalUrl, facultyAccess };
+
