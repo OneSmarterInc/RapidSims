@@ -65,6 +65,9 @@ function wirePager() {
   });
 }
 
+let practiceReopened = false;
+// Read before the page tidies its address: a practice tab sends ?practice=1.
+const practiceAsked = new URLSearchParams(location.search).get('practice') === '1';
 // Rehearse Midland: three practice students on one team, each in its own tab.
 function practicePanel(courseId, d) {
   const box = app.querySelector('[data-midland-practice]');
@@ -89,8 +92,8 @@ function practicePanel(courseId, d) {
 }
 async function startMidlandPractice(courseId, btn, startOver = false) {
   const done = acting(btn, 'Preparing…');
-  try { const d = await api('/api/faculty', { action:'midland_practice_start', courseId, startOver }); done(); practicePanel(courseId, d); }
-  catch (err) { if (err.stale) return; done(); alert('Practice could not start. ' + (err.message || 'Try again.')); }
+  try { const d = await api('/api/faculty', { action:'midland_practice_start', courseId, startOver }); done(); practicePanel(courseId, d); return true; }
+  catch (err) { if (err.stale) return false; done(); alert('Practice could not start. ' + (err.message || 'Try again.')); return true; }
 }
 
 async function api(path, payload) {
@@ -580,6 +583,11 @@ function renderCourse() {
   app.querySelectorAll('[data-prog]').forEach(b => b.onclick = () => openProgress(course.id, b.dataset.prog));
   app.querySelectorAll('[data-sim-results]').forEach(b => b.onclick = () => openSimResults(course.id,b.dataset.simResults));
   app.querySelectorAll('[data-midland-rehearse]').forEach(b => b.onclick = () => startMidlandPractice(course.id, b));
+  // A practice tab's final page links back here with ?practice=1: reopen the practice panel once.
+  if (!practiceReopened && practiceAsked) {
+    const rb = app.querySelector('[data-midland-rehearse]');
+    if (rb) { practiceReopened = true; startMidlandPractice(course.id, rb).then(ok => { if (!ok) practiceReopened = false; }); }
+  }
   app.querySelectorAll('[data-student-results]').forEach(b => b.onclick = () => openStudentResults(course.id, b.dataset.studentResults));
   app.querySelectorAll('[data-seats]').forEach(b => b.onclick = async () => {
     const v = prompt('How many students do you expect for this simulation?\n\nA forecast, not a limit — nobody is turned away if more enrol.', b.dataset.cur || '');

@@ -713,7 +713,7 @@ function renderClose(){
       <div class="card" style="margin-top:12px"><h3>${esc(C.reflectionPrompts[1])}</h3><p style="white-space:pre-wrap">${esc(S.reflection2||'—')}</p></div>
     </div>`}
     <div class="notice run-complete">Run complete. Print or save this page as a PDF to keep it.</div>
-    <div class="actions"><button class="btn pri" id="printBtn">Print / save PDF</button><a class="btn" id="studentHomeBtn" href="${esc((C.platformUrl||location.origin).replace(/\/$/,'')+'/student.html')}">Back to student home</a></div>`);
+    <div class="actions"><button class="btn pri" id="printBtn">Print / save PDF</button>${String(LAUNCH?.sub||'').startsWith('practice-')&&LAUNCH?.course?`<a class="btn" id="studentHomeBtn" href="${esc((C.platformUrl||location.origin).replace(/\/$/,'')+'/faculty.html?view=course&course='+encodeURIComponent(LAUNCH.course)+'&practice=1')}">Back to the practice class</a>`:`<a class="btn" id="studentHomeBtn" href="${esc((C.platformUrl||location.origin).replace(/\/$/,'')+'/student.html')}">Back to student home</a>`}</div>`);
     document.getElementById('printBtn').onclick=()=>window.print();
     return;
   }
