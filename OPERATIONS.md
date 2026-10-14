@@ -38,7 +38,6 @@ A new colocated service requires a reviewed `ec2/apps.json` entry and generated 
 
 See [the coordinated rollout and recovery procedure](docs/aws-security-rollout.md) for required manual infrastructure setup and remaining validation. Existing legacy sessions are not silently migrated into the strengthened ownership model.
 
-<<<<<<< HEAD
 `sim/public/index.html` is generated. Edit `sim/src/` and run `node build.js`, which refuses to write a bundle containing scenario content.
 
 ## Temporary traffic monitor
@@ -54,5 +53,3 @@ This telemetry is per Node process and is retained for two minutes. It stores
 aggregate counts and latency values only; it does not store request bodies or
 client IP addresses. Remove the dashboard route, page, and telemetry block in
 `ec2/server.js` after the load-test work is complete.
-=======
->>>>>>> 74becb9d8281af52023789f3f4192777f881acb2
