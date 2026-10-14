@@ -107,6 +107,12 @@ process.env.SIM03_SESSION_URL = 'http://midland.internal/api/session';
   check((await invoke(finish, { sessionCode: code, participantId: anaId }, ana)).status, 200, 'Ana completes the practice run');
   check((await invoke(finish, { sessionCode: code, participantId: benId, reflection1: 'Ben one', reflection2: 'Ben two' }, ben)).status, 200, 'Ben sends his practice review');
   check(reports.length, 0, 'Practice runs stay out of course results');
+  let status = (await call({ action: 'midland_practice_status', courseId: 'c1' })).body;
+  check([status.complete, status.students.map(x => x.status)], [false, ['Submitted for the team', 'Review sent', 'Writing the review']], 'The panel shows each practice student\'s progress');
+  const calId = (await invoke(midland, { action: 'join', code }, tokenOf(students[2].url))).body.participantId;
+  await invoke(finish, { sessionCode: code, participantId: calId, reflection1: 'Cal one', reflection2: 'Cal two' }, tokenOf(students[2].url));
+  status = (await call({ action: 'midland_practice_status', courseId: 'c1' })).body;
+  check([status.complete, status.students.every(x => x.finished)], [true, true], 'The panel says when the practice class is complete');
 
   check((await call({ action: 'midland_practice_finish', courseId: 'c1' }, 'f2')).statusCode, 404, 'Another faculty member cannot reach this course');
   r = await call({ action: 'midland_practice_start', courseId: 'c1' });

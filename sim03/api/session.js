@@ -128,6 +128,29 @@ function sameAllocation(a, b) {
   return !!a && !!b && S.LINES.every(k => Number(a[k]) === Number(b[k]));
 }
 
+// Where each practice student is, for the course page's practice panel.
+const STEP_NAMES = ['Brief', 'People', 'Position', 'Year 1', 'Year 1', 'Year 1 outcome', 'Year 2', 'Events', 'Year 3', 'Buyers', 'Close'];
+async function practiceProgress(code) {
+  const people = Object.values(await store.getParticipants(code) || {}).filter(Boolean)
+    .sort((a, b) => Number(b.isCaptain) - Number(a.isCaptain) || a.name.localeCompare(b.name));
+  const run = (await store.getRuns(code) || {})['team:practice'] || null;
+  const done = !!run && (!!run.done || Number(run.phase || 0) >= 3);
+  const runner = runOwner(people, run);
+  const step = STEP_NAMES[Math.max(0, Math.min(10, screenOf(run)))];
+  const students = people.map(p => {
+    const isRunner = runner && p.id === runner.id;
+    const reviewed = !!(run && run.reflections && run.reflections[p.id]);
+    const status = done ? (isRunner || reviewed ? (isRunner ? 'Submitted for the team' : 'Review sent') : 'Writing the review')
+      : !run ? (isRunner ? 'Ready to start' : `Waiting for ${runner ? runner.name.replace(/^Practice /, '') : 'the team'}`) : (isRunner ? `Playing · ${step}` : `Following · ${step}`);
+    return { participantId: p.id, name: p.name, entersDecisions: !!p.isCaptain, status, finished: done && (isRunner || reviewed) };
+  });
+  return { students, complete: done && students.every(x => x.finished) };
+}
+function runOwner(people, run) {
+  const chosen = run && run.runnerId && people.find(p => p.id === run.runnerId);
+  return chosen || people.find(p => p.isCaptain) || null;
+}
+
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
@@ -205,9 +228,7 @@ module.exports = async (req, res) => {
           const roster = existing && existing.practice ? Object.values(await store.getParticipants(earlier) || {}).filter(Boolean) : [];
           if (existing && existing.practice && existing.state !== 'closed' && ownsSession(who, existing) &&
               people.every(x => roster.some(p => p.id === `platform:${x.sub}`))) {
-            return res.status(200).json({ code: earlier, resumed: true, students: roster
-              .sort((a, b) => Number(b.isCaptain) - Number(a.isCaptain) || a.name.localeCompare(b.name))
-              .map(p => ({ participantId: p.id, name: p.name, entersDecisions: !!p.isCaptain })) });
+            return res.status(200).json({ code: earlier, resumed: true, ...(await practiceProgress(earlier)) });
           }
         }
         if (earlier) await store.wipe(earlier);
@@ -222,6 +243,16 @@ module.exports = async (req, res) => {
         if (await store.ensureParticipants(c, records, sess) < 0) return res.status(409).json({ error: 'practice_busy' });
         await store.setPracticeSession(who.courseId, who.userId, c);
         return res.status(200).json({ code: c, students: records.map(p => ({ participantId: p.id, name: p.name, entersDecisions: p.isCaptain })) });
+      }
+
+      case 'practice_status': {
+        const who = whoIsFaculty(req, b);
+        if (!who) return res.status(401).json({ error: 'faculty_authorization_required' });
+        if (!who.courseId || !who.userId) return res.status(403).json({ error: 'course_launch_required' });
+        const current = await store.getPracticeSession(who.courseId, who.userId);
+        const sess = current ? await store.getSession(current) : null;
+        if (!sess || !sess.practice || !ownsSession(who, sess)) return res.status(200).json({ code: null });
+        return res.status(200).json({ code: current, ...(await practiceProgress(current)) });
       }
 
       case 'practice_finish': {
