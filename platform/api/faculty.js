@@ -48,6 +48,22 @@ module.exports = async (req, res) => {
 
       // Simulation-centric results are a faculty-only screen. Keep existing admin
       // teaching routes unchanged; do not grant this new action to another role.
+      // Midland's sessions for this course, read from Midland on the faculty
+      // member's behalf, so the course row shows state and opens a session in one click.
+      case 'midland_sessions':
+      case 'midland_session_close': {
+        if (me.role !== 'faculty') return res.status(403).json({ error:'wrong_role' });
+        const course = await ownCourse(s, me.id, String(b.courseId || ''));
+        if (!course) return res.status(404).json({ error:'no_such_course' });
+        const M = require('../lib/midland-sessions.js');
+        const sim = (await s`SELECT si.id, si.launch_url FROM course_sims cs
+          JOIN sims si ON si.id=cs.sim_id WHERE cs.course_id=${course.id} AND cs.sim_id=${M.SIM}`)[0];
+        if (!sim) return res.status(404).json({ error:'no_such_simulation' });
+        if (b.action === 'midland_sessions') return res.status(200).json(await M.list(me, course, sim));
+        const r = await M.close(me, course, sim, String(b.code || '').toUpperCase());
+        return res.status(r.status).json(r.data);
+      }
+
       case 'sim_results':
       case 'sim_result_history': {
         if (me.role !== 'faculty') return res.status(403).json({ error:'wrong_role' });

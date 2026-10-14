@@ -441,6 +441,8 @@ body.sheet-open{overflow:hidden}
 .faculty-sim-kpi span{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-top:2px}
 .faculty-run-progress{height:3px;background:var(--line);margin-top:13px;max-width:470px;overflow:hidden}
 .faculty-run-progress i{display:block;height:3px;background:var(--green)}
+.faculty-midland-state{margin-top:12px;font:12px/1.5 var(--mono);color:var(--ink2,#555)}.faculty-midland-state:empty{display:none}.faculty-midland-state b{color:var(--ink);font-weight:600}
+.faculty-midland-actions{display:contents}
 .faculty-sim-card .faculty-sim-side{display:flex;align-items:flex-start;white-space:normal}
 .faculty-sim-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:560px}
 .faculty-result-btn{background:var(--sunk)}

@@ -65,6 +65,41 @@ function wirePager() {
   });
 }
 
+// Midland's course row: the session's state, and Open and Close in one click.
+const midlandLink = (courseId, code) => '/api/launch?sim=rapid-03-midland&course=' + encodeURIComponent(courseId) +
+  '&mode=session' + (code ? '&session=' + encodeURIComponent(code) : '');
+function midlandStateText(x) {
+  const kind = x.mode === 'team' ? 'Groups' : 'Individual';
+  if (x.state === 'lobby') return `${kind} · setting up · ${x.mode === 'team' ? `${x.teams} team${x.teams === 1 ? '' : 's'} · ` : ''}${x.students} student${x.students === 1 ? '' : 's'}`;
+  if (x.state === 'running') return `${kind} · ${x.paused ? 'paused' : 'running'} · ${x.mode === 'team' ? `${x.submitted} of ${x.teams} teams submitted` : `${x.submitted} of ${x.students} finished`}`;
+  return `${kind} · closed`;
+}
+async function loadMidlandSessions(courseId) {
+  const stateBox = app.querySelector('[data-midland-state]'), actions = app.querySelector('[data-midland-actions]');
+  if (!stateBox || !actions) return;
+  let d;
+  try { d = await api('/api/faculty', { action:'midland_sessions', courseId }); }
+  catch (e) { if (e.stale) return; stateBox.textContent = ''; return; }
+  if (!d.available) { stateBox.textContent = ''; return; }
+  const open = d.sessions.filter(x => x.state !== 'closed'), last = d.sessions.find(x => x.state === 'closed');
+  if (open.length) {
+    const x = open[0];
+    stateBox.innerHTML = `<b>${esc(x.name || 'Session')}</b> · ${esc(midlandStateText(x))}${open.length > 1 ? ` · ${open.length} open sessions` : ''}`;
+    actions.innerHTML = `<a class="btn pri sm" href="${midlandLink(courseId, x.code)}">Open session</a>
+      <button class="btn sm" data-midland-close="${esc(x.code)}">Close session</button>
+      <a class="btn sm" href="${midlandLink(courseId)}">All sessions</a>`;
+    actions.querySelector('[data-midland-close]').onclick = async e => {
+      if (!confirm('Close this session? Submitted teams keep their results. Unfinished teams keep their saved decisions.')) return;
+      const done = acting(e.currentTarget, 'Closing…');
+      try { await api('/api/faculty', { action:'midland_session_close', courseId, code: x.code }); done(); loadMidlandSessions(courseId); }
+      catch (err) { if (err.stale) return; done(); alert('The session stays open. ' + (err.message || 'Try again.')); }
+    };
+  } else {
+    stateBox.innerHTML = last ? `Ready to run · last session <b>${esc(last.name || last.code)}</b> closed${last.mode === 'team' && last.teams ? ` · ${last.submitted} of ${last.teams} teams submitted` : ''}` : 'Ready to run';
+    actions.innerHTML = `<a class="btn pri sm" href="${midlandLink(courseId)}">New session</a>`;
+  }
+}
+
 async function api(path, payload) {
   const version = navigation?.version;
   const r = await fetch(path, { method:'POST', cache:'no-store', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
@@ -431,11 +466,12 @@ function renderCourse() {
               ${x.expected_seats ? `<div class="faculty-sim-kpi"><b>${x.expected_seats}</b><span>Expected</span></div>` : ''}
             </div>
             <div class="faculty-run-progress" title="${x.finished_runs||0} of ${x.started_runs||0} started runs completed"><i style="width:${runPct}%"></i></div>
+            ${x.sim_id === 'rapid-03-midland' ? '<div class="faculty-midland-state" data-midland-state aria-live="polite">Checking sessions…</div>' : ''}
           </div>
           <div class="side faculty-sim-side">
             <div class="faculty-sim-actions">
               ${x.sim_id === 'rapid-03-midland'
-                ? `<a class="btn pri sm" href="/api/launch?sim=${encodeURIComponent(x.sim_id)}&course=${encodeURIComponent(course.id)}&mode=session">Sessions</a>`
+                ? `<span class="faculty-midland-actions" data-midland-actions><a class="btn pri sm" href="${midlandLink(course.id)}">Sessions</a></span>`
                 : x.sim_id === 'rapid-05-approve'
                 ? `<a class="btn pri sm" href="/api/launch?sim=${encodeURIComponent(x.sim_id)}&course=${encodeURIComponent(course.id)}&mode=session&play=team">Run groups</a>
                    <a class="btn sm" href="/api/launch?sim=${encodeURIComponent(x.sim_id)}&course=${encodeURIComponent(course.id)}&mode=session&play=individual">Run individual</a>`
@@ -549,6 +585,7 @@ function renderCourse() {
   };
   app.querySelectorAll('[data-prog]').forEach(b => b.onclick = () => openProgress(course.id, b.dataset.prog));
   app.querySelectorAll('[data-sim-results]').forEach(b => b.onclick = () => openSimResults(course.id,b.dataset.simResults));
+  if (app.querySelector('[data-midland-state]')) loadMidlandSessions(course.id);
   app.querySelectorAll('[data-student-results]').forEach(b => b.onclick = () => openStudentResults(course.id, b.dataset.studentResults));
   app.querySelectorAll('[data-seats]').forEach(b => b.onclick = async () => {
     const v = prompt('How many students do you expect for this simulation?\n\nA forecast, not a limit — nobody is turned away if more enrol.', b.dataset.cur || '');
