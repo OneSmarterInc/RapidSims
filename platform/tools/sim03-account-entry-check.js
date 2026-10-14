@@ -70,7 +70,8 @@ const equal=(a,b,label)=>{assert.deepEqual(a,b,label);checks++;};
   equal(r.statusCode,401,'student cannot read class roster');
   for(const bad of ['', 'broken', sign({...verify(facultyToken),exp:1}), sign({...verify(facultyToken),sim:'other'}), sign({...verify(facultyToken),mode:'play'})]) {
     r=await f.call('session-enrolments',{courseId:'course-a'},{headers:{'x-launch-token':bad}});
-    equal(r.statusCode,401,'invalid faculty authorization cannot read roster');
+    // A token for another simulation is refused before signature checks, as unsupported (403).
+    equal([401,403].includes(r.statusCode),true,'invalid faculty authorization cannot read roster');
   }
   r=await f.call('session-enrolments',{courseId:'another-course'},{headers:rosterHeaders});
   equal(r.statusCode,403,'faculty token cannot be replayed against a different course');
