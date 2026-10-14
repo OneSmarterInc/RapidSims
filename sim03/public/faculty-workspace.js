@@ -187,7 +187,7 @@ function renderManage(){
 }
 function renderStart(){
  const s=cfg.state.session,ready=setupStatus();$('fw-startbar').hidden=page!=='manage';
- const buttons=s.state==='lobby'?`<button class="btn btn-primary" id="start-session" data-session-control="start" ${!ready.ready||actionBusy?'disabled':''}>${actionBusy?'Saving…':'Start session →'}</button>`:s.state==='running'?`<button class="btn btn-primary" data-session-control="${s.paused?'resume':'pause'}" ${actionBusy?'disabled':''}>${s.paused?'Resume session':'Pause session'}</button><button class="btn" data-view="results">View all team results</button><button class="btn fw-close" data-session-control="close" ${actionBusy?'disabled':''}>Close session</button>`:'<button class="btn btn-primary" data-view="results">View all team results</button>';
+ const buttons=s.state==='lobby'?`<button class="btn btn-primary" id="start-session" data-session-control="start" ${!ready.ready||actionBusy?'disabled':''}>${actionBusy?'Saving…':'Start session →'}</button><button class="btn fw-close" data-session-control="close" ${actionBusy?'disabled':''}>Close session</button>`:s.state==='running'?`<button class="btn btn-primary" data-session-control="${s.paused?'resume':'pause'}" ${actionBusy?'disabled':''}>${s.paused?'Resume session':'Pause session'}</button><button class="btn" data-view="results">View all team results</button><button class="btn fw-close" data-session-control="close" ${actionBusy?'disabled':''}>Close session</button>`:'<button class="btn btn-primary" data-view="results">View all team results</button>';
  $('fw-startbar').innerHTML=`<div class="fw-start-inner"><div><strong>${esc(s.state==='lobby'?ready.message:s.state==='closed'?'Session closed':s.paused?'Session paused':'Session running')}</strong><p>${esc(s.state==='lobby'?ready.detail:s.state==='closed'?'All saved responses and outcomes are available in Team results.':'Each team has one runner. All members share the same result.')}</p></div><div class="fw-start-actions">${buttons}</div></div>`;
 }
 function paintPage(){
@@ -223,7 +223,7 @@ root.addEventListener('click',event=>{
  }
  if(b.classList.contains('fw-rename')){const label=window.prompt('Team name',b.dataset.label);if(!label?.trim())return;perform(()=>cfg.api({action:'rename_team',code:cfg.state.session.code,groupId:b.dataset.gid,teamLabel:label.trim()}),'Team renamed.');return;}
  if(b.dataset.sessionControl){
-  const set=b.dataset.sessionControl;if(set==='close'&&!window.confirm('Close this session? Students will no longer be able to play. Saved results will remain available.'))return;
+  const set=b.dataset.sessionControl;if(set==='close'&&!window.confirm('Close this session? Submitted teams keep their results. Unfinished teams keep their saved decisions.'))return;
   perform(async()=>{await cfg.api({action:'control',code:cfg.state.session.code,set});if(set==='start'||set==='close')page='results';},set==='start'?'Session started—team runners can now begin.':set==='close'?'Session closed. All saved team results are available.':set==='pause'?'Session paused.':'Session resumed.');return;
  }
  if(b.id==='fw-refresh')perform(()=>cfg.refreshRoster(),'Approved student list refreshed.');
