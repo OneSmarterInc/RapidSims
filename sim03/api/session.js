@@ -3,6 +3,7 @@ const { syncCourseRoster, approvedIds } = require('../lib/session-roster.js');
 const store = require('../lib/store.js');
 const { verifyLaunch } = require('../lib/launch.js');
 const S = require('../lib/scenario.js');
+const { buildClosingLesson } = require('../lib/closingLesson.js');
 const { accountJoinUrl, participantLaunch, participantError, openTeamSessionFor, isPracticeSub } = require('../lib/session-entry.js');
 
 async function pointCourse(fn) {
@@ -627,7 +628,18 @@ module.exports = async (req, res) => {
           run.done = !!rawRun.done || Number(rawRun.phase || 0) >= 3;
         }
         const own = rawRun?.reflections?.[pid];
+        // A finished run's final page always carries the lesson, including after a reload.
+        let closingLesson = null;
+        const finished = rawRun && (rawRun.done || (sess.mode === 'team' && Number(rawRun.phase || 0) >= 3));
+        if (finished && rawRun.year1 && rawRun.year2) {
+          try {
+            const thresholds = S.sessionThresholds(sess);
+            closingLesson = buildClosingLesson(rawRun.year1, rawRun.year2,
+              rawRun.outcomes && rawRun.outcomes.year3 ? rawRun.outcomes : S.evaluateAll(rawRun.year1, rawRun.year2, thresholds), thresholds);
+          } catch (e) { console.error('closing lesson unavailable', e.message); }
+        }
         return res.status(200).json({
+          closingLesson,
           myReview: own ? { reflection1: own.reflection1 || '', reflection2: own.reflection2 || '', at: own.at || null } : null,
           session: publicSession(sess),
           me: { ...me, isRunner: canSubmit },
