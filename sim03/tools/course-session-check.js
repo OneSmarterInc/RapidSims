@@ -57,8 +57,12 @@ async function invoke(endpoint, body, lt) {
   check(individual.status, 200, 'Faculty creates an individual session');
   check((await invoke(handler, { action: 'course_session' }, student)).body, { code: null }, 'Individual sessions do not capture direct launches');
 
-  const team = await invoke(handler, { action: 'create', mode: 'team' }, faculty);
+  const refused = await invoke(handler, { action: 'create', mode: 'team' }, faculty);
+  check([refused.status, refused.body.error, refused.body.open.code], [409, 'open_session_exists', individual.body.session.code],
+    'One open session per course: a new session asks before closing the open one');
+  const team = await invoke(handler, { action: 'create', mode: 'team', replaceOpen: true }, faculty);
   const code = team.body.session.code;
+  check((await store.getSession(individual.body.session.code)).state, 'closed', 'Confirming closes the open session and starts the new one');
   check((await invoke(handler, { action: 'course_session' }, student)).body, { code }, 'Student is routed to the course team session');
   check((await invoke(handler, { action: 'course_session' }, otherCourse)).body, { code: null }, 'Another course is not routed');
   check((await invoke(handler, { action: 'course_session' })).status, 401, 'Course routing requires a signed launch');
@@ -79,11 +83,11 @@ async function invoke(endpoint, body, lt) {
   check((await invoke(outcome, { stage: 'year1', year1: alloc }, student)).body.error === 'team_session_open', false, 'Solo play returns after close');
 
   const listed = (await invoke(handler, { action: 'course_sessions' }, faculty)).body.sessions;
-  check(listed.map(x => [x.code, x.mode, x.state]).sort(), [[code, 'team', 'closed'], [individual.body.session.code, 'individual', 'lobby']].sort(), 'Faculty see every session for the course');
+  check(listed.map(x => [x.code, x.mode, x.state]).sort(), [[code, 'team', 'closed'], [individual.body.session.code, 'individual', 'closed']].sort(), 'Faculty see every session for the course');
   const otherFaculty = token({ sub: 'fac-2', name: 'Other', role: 'faculty', course: 'crs_A', mode: 'session' });
   check((await invoke(handler, { action: 'course_sessions' }, otherFaculty)).body.sessions, [], 'Another faculty member sees only their own sessions');
   check((await invoke(handler, { action: 'course_sessions' }, student)).status, 401, 'Students cannot list sessions');
-  check((await invoke(handler, { action: 'control', code: individual.body.session.code, set: 'close' }, faculty)).status, 200, 'A session in setup closes');
+  check((await invoke(handler, { action: 'control', code: individual.body.session.code, set: 'close' }, faculty)).status, 200, 'Closing again is harmless');
   check((await invoke(handler, { action: 'course_sessions' }, faculty)).body.sessions.every(x => x.state === 'closed'), true, 'The list shows both sessions closed');
 
   console.log(`RapidSim 03 course team-session routing checks passed (${n} assertions).`);

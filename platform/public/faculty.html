@@ -84,10 +84,10 @@ async function loadMidlandSessions(courseId) {
   const open = d.sessions.filter(x => x.state !== 'closed'), last = d.sessions.find(x => x.state === 'closed');
   if (open.length) {
     const x = open[0];
-    stateBox.innerHTML = `<b>${esc(x.name || 'Session')}</b> · ${esc(midlandStateText(x))}${open.length > 1 ? ` · ${open.length} open sessions` : ''}`;
+    stateBox.innerHTML = `<b>${esc(x.name || 'Session')}</b> · ${esc(midlandStateText(x))}`;
     actions.innerHTML = `<a class="btn pri sm" href="${midlandLink(courseId, x.code)}">Open session</a>
       <button class="btn sm" data-midland-close="${esc(x.code)}">Close session</button>
-      <a class="btn sm" href="${midlandLink(courseId)}">All sessions</a>`;
+      <a class="btn sm" href="${midlandLink(courseId)}">Past sessions</a>`;
     actions.querySelector('[data-midland-close]').onclick = async e => {
       if (!confirm('Close this session? Submitted teams keep their results. Unfinished teams keep their saved decisions.')) return;
       const done = acting(e.currentTarget, 'Closing…');

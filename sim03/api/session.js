@@ -196,6 +196,41 @@ module.exports = async (req, res) => {
         }
         const thresholdCheck = S.validateThresholds(b.thresholds);
         if (!thresholdCheck.ok) return res.status(400).json(thresholdCheck);
+        // One open session per course. Starting a new one closes the open one,
+        // once faculty confirm (replaceOpen).
+        if (who.courseId) {
+          let codes = [];
+          try {
+            codes = await store.listCourseSessions(who.courseId);
+            const pointer = await store.getCourseTeamSession(who.courseId);
+            if (pointer && !codes.includes(pointer)) codes.unshift(pointer);
+          } catch (e) { console.error('course session list failed', e.code || e.message); }
+          const open = [];
+          for (const oc of codes) {
+            const os = await store.getSession(oc);
+            if (os && os.courseId === who.courseId && os.state !== 'closed') open.push(os);
+          }
+          if (open.length && b.replaceOpen !== true) {
+            const x = open[0];
+            return res.status(409).json({ error: 'open_session_exists',
+              open: { code: x.code, name: x.name, mode: x.mode, state: x.state } });
+          }
+          for (const os of open) {
+            if (!ownsSession(who, os)) return res.status(409).json({ error: 'open_session_other_owner',
+              message: `${os.owner || 'Another instructor'} has a session open for this course.` });
+          }
+          for (const os of open) {
+            for (let tries = 0; tries < 5; tries++) {
+              const current = await store.getSession(os.code);
+              if (!current || current.state === 'closed') break;
+              const next = { ...current, state: 'closed', closedAt: Date.now() };
+              if (await store.compareAndSetSession(os.code, current, next)) {
+                await pointCourse(() => store.clearCourseTeamSession(who.courseId, os.code));
+                break;
+              }
+            }
+          }
+        }
         const c = newCode();
         const sess = {
           code: c,
