@@ -510,7 +510,9 @@ module.exports = async (req, res) => {
           run.reflection2 = rawRun.reflection2 || runnerReflection.reflection2 || '';
           run.done = !!rawRun.done || Number(rawRun.phase || 0) >= 3;
         }
+        const own = rawRun?.reflections?.[pid];
         return res.status(200).json({
+          myReview: own ? { reflection1: own.reflection1 || '', reflection2: own.reflection2 || '', at: own.at || null } : null,
           session: publicSession(sess),
           me: { ...me, isRunner: canSubmit },
           mates,

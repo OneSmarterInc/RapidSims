@@ -5,6 +5,7 @@ const { buildClosingLesson } = require('../lib/closingLesson.js');
 const store = require('../lib/store.js');
 const submitSession = require('./session.js');
 const { participantError, participantLaunch, openTeamSessionFor } = require('../lib/session-entry.js');
+const { runnerOf } = require('../lib/team-runner.js');
 
 async function sessionRun(req, b) {
   const code = String(b.sessionCode || '').toUpperCase().trim();
@@ -29,8 +30,28 @@ async function sessionRun(req, b) {
   // Repeated reports must not resubmit a completed individual run or overwrite
   // a previously saved reflection with an empty/missing request field.
   if (alreadySaved && beforeRun?.year1 && beforeRun?.year2) {
-    return { sess: beforeSession, run: beforeRun, participants: beforeParticipants,
-      me: beforeMe, rid: beforeRid, code, pid };
+    // After the team's run ends, each member who did not run it sends their own
+    // review once. It is saved on the run and reported on that member's row.
+    const isRunner = runnerOf(beforeParticipants, beforeRid, beforeRun)?.id === pid;
+    const wantsReview = beforeSession.mode === 'team' && !isRunner && !beforeRun.reflections?.[pid] &&
+      (b.reflection1 !== undefined || b.reflection2 !== undefined);
+    if (!wantsReview) {
+      return { sess: beforeSession, run: beforeRun, participants: beforeParticipants,
+        me: beforeMe, rid: beforeRid, code, pid };
+    }
+    const reviewSaved = {
+      statusCode: 200, payload: null,
+      status(n) { this.statusCode = n; return this; },
+      json(value) { this.payload = value; return this; },
+      end() { return this; }
+    };
+    await submitSession({ method: 'POST', headers: req.headers, body: {
+      action: 'submit', code, participantId: pid, reflection1: b.reflection1, reflection2: b.reflection2
+    } }, reviewSaved);
+    if (reviewSaved.statusCode !== 200) reject(reviewSaved.statusCode, reviewSaved.payload?.error || 'review_failed');
+    const run = (await store.getRuns(code))[beforeRid];
+    return { sess: beforeSession, run, participants: beforeParticipants,
+      me: beforeMe, rid: beforeRid, code, pid, memberReview: true };
   }
   // All facilitated completion writes use the same authorized, optimistic
   // transaction as /session. A second read-modify-write here would lose other
@@ -90,10 +111,15 @@ module.exports = async (req, res) => {
       const mine = sr.sess.mode === 'team'
         ? { reflection1: sr.run.reflection1 || '', reflection2: sr.run.reflection2 || '' }
         : (sr.run.reflections?.[sr.pid] || {});
+      const team = sr.sess.mode === 'team';
       summary = {
         strategicView: sr.run.strategicView || '', year1: y1, year2: y2,
         reflection1: mine.reflection1 || '', reflection2: mine.reflection2 || '',
-        teamRunId: sr.sess.mode === 'team' ? sr.rid : null,
+        sessionCode: sr.code,
+        sessionName: sr.sess.name || null,
+        sessionCreatedAt: sr.sess.createdAt || null,
+        teamMembers: team ? Object.values(sr.participants || {}).filter(p => p && p.groupId === sr.rid).map(p => p.name) : null,
+        teamRunId: team ? sr.rid : null,
         teamLabel: sr.sess.mode === 'team' ? (sr.me.teamLabel || sr.rid) : null,
         completedBy: sr.sess.mode === 'team' ? (sr.run.completedByName || sr.me.name) : null,
         year3Band: outcomes.year3.band
@@ -131,6 +157,8 @@ module.exports = async (req, res) => {
     buyers: outcomes.buyers || null
   };
   const metrics = {
+    revision: sr && sr.memberReview ? 2 : 1,
+    sessionCode: sr ? sr.code : null,
     openingView: summary.strategicView,
     year1Allocation: allocationLabel(y1),
     reflection1: summary.reflection1,
@@ -146,19 +174,30 @@ module.exports = async (req, res) => {
   let report = { ok: false, skipped: true };
   if (launch && (!launch.sim || launch.sim === S.META.id)) {
     let subjects = [launch.sub];
-    if (sr && sr.sess.mode === 'team') {
+    if (sr && sr.sess.mode === 'team' && !sr.memberReview) {
       const teamSubjects = Object.values(sr.participants || {})
         .filter(p => p && p.groupId === sr.rid && String(p.id || '').startsWith('platform:'))
         .map(p => String(p.id).slice('platform:'.length));
       if (teamSubjects.length) subjects = teamSubjects;
     }
+    // Each member's row carries that member's own review, once they send it.
+    const runnerPid = sr && sr.sess.mode === 'team' ? runnerOf(sr.participants, sr.rid, sr.run)?.id : null;
+    const reviewOf = sub => {
+      const pidOf = `platform:${sub}`;
+      const own = sr?.run?.reflections?.[pidOf];
+      if (own) return { reflection1: own.reflection1 || '', reflection2: own.reflection2 || '' };
+      if (pidOf === runnerPid) return { reflection1: sr.run.reflection1 || '', reflection2: sr.run.reflection2 || '' };
+      return { reflection1: '', reflection2: '' };
+    };
     const reports = [];
     for (const sub of [...new Set(subjects)]) {
+      const team = sr && sr.sess.mode === 'team';
+      const review = team ? reviewOf(sub) : null;
       reports.push(await reportCompletion({
         launch: { ...launch, sub, run: sub === launch.sub ? launch.run : sr?.participants?.[`platform:${sub}`]?.launchId },
         runId: sr ? `${sr.code}:${sr.rid}` : launch.run,
-        summary: sr && sr.sess.mode === 'team' ? { ...summary, completedFor: sub } : summary,
-        metrics
+        summary: team ? { ...summary, ...review, completedFor: sub } : summary,
+        metrics: team ? { ...metrics, ...review } : metrics
       }));
     }
     report = { ok: reports.some(r => r.ok), reports };

@@ -268,10 +268,16 @@ async function snapshot(name, page) {
   await ann.locator('#r2').fill('Ann would revisit the balance between uptime and connection.');
   await ann.locator('#finishBtn').click();
   await ann.waitForFunction(() => S.finished && !!S.closingLesson);
-  await ben.waitForFunction(() => S.finished && !!S.teamRun?.done && document.querySelector('.result-hero'));
-  await cal.waitForFunction(() => S.finished && !!S.teamRun?.done && document.querySelector('.result-hero'));
-  check(await ben.locator('#memberFinishBtn').count(), 0, 'Member is not asked for a separate final reflection');
-  check(await cal.locator('#memberFinishBtn').count(), 0, 'Other member is not asked for a separate final reflection');
+  // Each member writes their own review for Tom, then sees the team's result.
+  for (const [page, name] of [[ben, 'Ben'], [cal, 'Cal']]) {
+    await page.waitForSelector('#memberFinishBtn');
+    await page.locator('#r1').fill(`${name} saw how uptime carried the team.`);
+    await page.locator('#r2').fill(`${name} would fund the connection earlier.`);
+    await page.locator('#memberFinishBtn').click();
+    await page.waitForFunction(() => S.finished && !!S.myReview && document.querySelector('.result-hero'));
+    check(await page.locator('#memberFinishBtn').count(), 0, `${name} sends one review`);
+    check((await page.locator('body').textContent()).includes(`${name} saw how uptime carried the team.`), true, `${name} sees their own review on the final page`);
+  }
   const annOverall = await ann.locator('.result-hero p').textContent();
   check(await ben.locator('.result-hero p').textContent(), annOverall, 'All team members see the same overall result');
   check(await cal.locator('.result-hero p').textContent(), annOverall, 'Every teammate sees the same outcome cards');
@@ -281,6 +287,8 @@ async function snapshot(name, page) {
   check(run.done, true, 'Shared run completes when the runner submits');
   check(run.reflections[annId].reflection1, 'Ann learned why reliable service needs an information foundation.', 'Runner reflection is the team completion reflection');
   check(Object.keys(run.finishedBy).length, 3, 'Every student is recorded as finished by runner submission');
+  check([run.reflections[benId]?.reflection1, run.reflections[calId]?.reflection1],
+    ['Ben saw how uptime carried the team.', 'Cal saw how uptime carried the team.'], 'Each member review is saved on the team run');
   check(evalCalls > 15, true, 'Real Redis executed the production compare-and-set Lua');
   await snapshot('04-completed-team-result', ben);
   const instructor = await newPage('instructor');

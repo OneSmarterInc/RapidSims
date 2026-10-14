@@ -174,11 +174,13 @@ test('full lifecycle: invitation, draft review, enrolment, entitlement, launches
   const studentCookie=cookie(joined);
   assert.equal((await call('launch',{},studentCookie,{sim:simIds[0],course:courseId,format:'json'})).code,403);
   assert.equal((await call('faculty',{action:'set_paid',courseId,all:true,paid:true,note:'Test access'},facultyCookie)).code,200);
+  let firstLaunch=null;
   for(const simId of simIds) {
     const launched=await call('launch',{},studentCookie,{sim:simId,course:courseId,format:'json'});
     assert.equal(launched.code,200,JSON.stringify(launched.data));
     const launch=L.verify(new URLSearchParams(new URL(launched.data.url).hash.slice(1)).get('lt'));
     assert.equal(launch.kind,'launch');assert.equal(launch.role,'student');assert.equal(launch.course,courseId);
+    firstLaunch=firstLaunch||launch;
     const token=R.signReport({...R.makeReport('complete',{launch,summary:'Finished the test run',metrics:{result:'Complete'}}),iat:Date.now(),exp:Date.now()+60000});
     assert.equal((await call('complete',{token})).code,200);
   }
@@ -186,6 +188,25 @@ test('full lifecycle: invitation, draft review, enrolment, entitlement, launches
   const course=await call('faculty',{action:'sim_progress',courseId,simId:simIds[0]},facultyCookie);
   assert.equal(course.code,200,JSON.stringify(course.data));
   assert.match(JSON.stringify(course.data),/Finished the test run/);
+  // A group run reports revision 1 for every member; a member's own review arrives as revision 2.
+  // A later, lower revision (a retry) leaves the review in place. Results group rows by session.
+  const teamReport=(revision,review)=>R.signReport({...R.makeReport('complete',{launch:firstLaunch,runId:'ABCDE:team:alpha',
+    summary:{sessionCode:'ABCDE',sessionName:'Tuesday class',teamRunId:'team:alpha',teamLabel:'Alpha',teamMembers:['Test learner'],
+      completedBy:'Ann',reflection1:review,reflection2:'',result:{overall:'Team result'}},metrics:{revision}}),iat:Date.now(),exp:Date.now()+60000});
+  const saved=async()=>JSON.parse((await s`SELECT summary FROM completions WHERE report_id IS NOT NULL AND summary LIKE '%ABCDE%'`)[0].summary).reflection1;
+  assert.equal((await call('complete',{token:teamReport(1,'')})).code,200);
+  assert.equal(await saved(),'');
+  assert.equal((await call('complete',{token:teamReport(2,'My own review')})).code,200);
+  assert.equal(await saved(),'My own review');
+  assert.equal((await call('complete',{token:teamReport(1,'')})).code,200);
+  assert.equal(await saved(),'My own review');
+  assert.equal((await s`SELECT count(*)::int AS n FROM completions WHERE summary LIKE '%ABCDE%'`)[0].n,1);
+  const results=await call('faculty',{action:'sim_results',courseId,simId:simIds[0]},facultyCookie);
+  assert.equal(results.code,200,JSON.stringify(results.data));
+  assert.equal(results.data.sessions.length,1);
+  assert.equal(results.data.sessions[0].code,'ABCDE');
+  assert.equal(results.data.sessions[0].teams[0].label,'Alpha');
+  assert.deepEqual(results.data.sessions[0].teams[0].members.map(m=>m.reflection1),['My own review']);
   const unissued=reportToken('complete',{launch:{sub:'nobody',sim:simIds[0],course:courseId,run:'not-issued'},runId:'unissued'});
   assert.equal((await call('complete',{token:unissued})).code,404);
 });

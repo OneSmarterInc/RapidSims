@@ -32,6 +32,21 @@
         <div class="fr-meta">Record ${esc(attempt.id)}</div>
       </div></details></article>`;
   }
+  // Class sessions, newest first. Each team shows its shared result and each member's own review.
+  function reviewHTML(m) {
+    const answers=[m.reflection1,m.reflection2].filter(t=>typeof t==='string'&&t.trim());
+    return answers.length?answers.map((t,i)=>`<p class="fr-review"><span class="fr-meta">Answer ${i+1}</span>${esc(t)}</p>`).join(''):'<p class="fr-small">Review on its way.</p>';
+  }
+  function sessionsHTML(sessions) {
+    if(!Array.isArray(sessions)||!sessions.length)return '';
+    return `<div class="fr-section"><div><h2>Class sessions</h2><p>Newest first · each team’s result with every member’s own review</p></div></div>
+      ${sessions.map(s=>`<details class="fr-panel fr-session" ${s===sessions[0]?'open':''}><summary class="fr-session-head"><b>${esc(s.name||'Class session')}</b> · ${esc(date(s.createdAt||s.latestAt))} · Code ${esc(s.code)} · ${s.teams.length} ${s.teams.some(t=>t.team)?'team':'result'}${s.teams.length===1?'':'s'}</summary>
+        <table class="fr-table fr-session-table"><caption class="fr-sr">Session ${esc(s.code)} results</caption><thead><tr><th scope="col">Team</th><th scope="col">Result</th><th scope="col">Members and reviews</th></tr></thead><tbody>
+        ${s.teams.map(t=>`<tr><td data-label="Team"><div class="fr-name">${esc(t.team?'Team '+t.label:t.label)}</div>${t.completedBy?`<div class="fr-meta">Decisions entered by ${esc(t.completedBy)}</div>`:''}${t.roster?`<div class="fr-meta">${t.roster.length} member${t.roster.length===1?'':'s'}</div>`:''}</td>
+          <td data-label="Result">${t.year3?`<div class="fr-badge fr-ok">${esc(t.year3)}</div>`:''}<p class="fr-outcome">${esc(t.overall||'Result saved.')}</p></td>
+          <td data-label="Members and reviews">${t.members.map(m=>`<div class="fr-member"><b>${esc(m.name)}</b> <span class="fr-meta">${esc(date(m.completedAt))}</span>${reviewHTML(m)}</div>`).join('')}</td></tr>`).join('')}
+        </tbody></table></details>`).join('')}`;
+  }
   const statuses={'completed':'Completed','started':'Started','not-started':'Not started','not-released':'Not released','removed':'Removed'};
   const badge = status => `<span class="fr-badge ${status==='completed'?'fr-ok':status==='started'?'fr-warn':''}">${statuses[status] || 'Unknown'}</span>`;
   function mount(root, data, actions) {
@@ -42,6 +57,7 @@
       <header class="fr-heading"><div class="fr-meta">${esc(window.RapidSimsIdentity.label(sim))} · ${esc(course.title)}</div><h1>${esc(sim.title)} — Results</h1><p>Every student, every recorded completion. Newest results appear first.</p></header>
       <div class="fr-stats">${[['students','Active students'],['completed','Students completed'],['completions','Recorded completions'],['repeated','Repeat completers']].map(([key,text])=>`<div><b>${esc(stats[key])}</b><span>${text}</span></div>`).join('')}</div>
       ${data.ambiguous_legacy?'<p class="fr-notice">Some older records have no unambiguous course association and are excluded from these course results. Existing records have not been changed.</p>':''}
+      ${sessionsHTML(data.sessions)}
       <div class="fr-section"><div><h2>Student results</h2><p>One row per account · completions stay together</p></div><button class="btn sm" id="frExpand" aria-pressed="false">Expand loaded details</button></div>
       <div class="fr-panel"><form class="fr-toolbar" id="frSearch"><label>Find a student<input name="search" type="search" maxlength="200" placeholder="Search name or email" value="${esc(data.search)}"></label>
       <label>Progress<select name="filter">${[['all','All students'],['completed','Completed'],['started','Started'],['not-started','Not started'],['not-released','Not released'],['repeated','Repeat completers'],['removed','Removed enrolments']].map(([v,l])=>`<option value="${v}" ${data.filter===v?'selected':''}>${l}</option>`).join('')}</select></label>

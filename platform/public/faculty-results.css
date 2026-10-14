@@ -56,5 +56,13 @@
 .faculty-results .fr-empty{padding:40px 18px;text-align:center}.faculty-results .fr-empty p{margin:12px 0}
 .faculty-results .fr-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
 .faculty-results .fr-notes{margin-top:12px}
+.faculty-results .fr-session{margin-bottom:12px}
+.faculty-results .fr-session-head{padding:14px 18px;font-size:12px;color:var(--ink)}
+.faculty-results .fr-session-head b{font-weight:600}
+.faculty-results .fr-session-table th:nth-child(1){width:22%}.faculty-results .fr-session-table th:nth-child(2){width:33%}.faculty-results .fr-session-table th:nth-child(3){width:45%}
+.faculty-results .fr-member{padding:8px 0;border-top:1px solid var(--line)}
+.faculty-results .fr-member:first-child{padding-top:0;border-top:0}
+.faculty-results .fr-review{font-size:15px;line-height:1.5;margin:4px 0;white-space:pre-wrap}
+.faculty-results .fr-review .fr-meta{display:block}
 @media(max-width:900px){.faculty-results .fr-stats>div{padding:14px;gap:10px}.faculty-results .fr-stats span{font-size:9px}}
 @media(max-width:700px){.faculty-results h1{font-size:28px}.faculty-results .fr-stats{grid-template-columns:repeat(2,1fr)}.faculty-results .fr-stats>div{border-bottom:1px solid var(--line)}.faculty-results .fr-stats>div:nth-child(2){border-right:0}.faculty-results .fr-stats>div:nth-child(n+3){border-bottom:0}.faculty-results .fr-section button{max-width:125px;white-space:normal}.faculty-results .fr-toolbar{padding:14px;gap:12px}.faculty-results .fr-toolbar label:first-child{min-width:100%}.faculty-results .fr-toolbar label{flex:1;min-width:110px}.faculty-results .fr-table,.faculty-results tbody,.faculty-results tr,.faculty-results td{display:block;width:100%}.faculty-results .fr-table thead{display:none}.faculty-results .fr-table tr{padding:18px 15px;border-bottom:1px solid var(--line)}.faculty-results .fr-table td{padding:0 0 14px;border:0}.faculty-results .fr-table td:last-child{padding:0}.faculty-results .fr-table td:before{content:attr(data-label);display:block;font:9px var(--mono);text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px;color:var(--fr-muted)}.faculty-results .fr-table td:first-child:before{display:none}.faculty-results .fr-fields{grid-template-columns:1fr;gap:3px}.faculty-results .fr-fields dd{margin-bottom:8px}.faculty-results .fr-footer{flex-wrap:wrap}}
