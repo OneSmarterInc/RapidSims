@@ -282,7 +282,7 @@ async function pollSession(redraw){
     if(C.room?.intro)C.room.intro=C.room.intro.replace(/(?:nine|\d+) million dollars/,`${C.annualBudget} million dollars`);
     for(const key of ['intro','whatHappens'])if(C.briefing?.[key])C.briefing[key]=C.briefing[key].map(text=>text.replace(/two annual \$\d+ million allocations/g,`two annual $${C.annualBudget} million allocations`));
   }
-  S.runnerId=d.runnerId||null;S.runnerRevision=d.runnerRevision||0;S.canAssignRunner=!!d.canAssignRunner;S.hasSessionState=true;
+  S.runnerId=d.runnerId||null;S.runnerRevision=d.runnerRevision||0;S.canAssignRunner=!!d.canAssignRunner;S.hasSessionState=true;S.myReview=d.myReview||null;
   if(controlChanged)S.runnerChoice='';
   if(groupChanged){S.reflectionDirty=false;S.reflection1='';S.reflection2=''}
   const r=S.teamRun;
@@ -301,7 +301,8 @@ async function pollSession(redraw){
     if(r.strategicView){S.strategicView=r.strategicView;S.viewCommitted=true}
     if(r.year1)S.year1={...r.year1};
     if(r.year2)S.year2={...r.year2};
-    if(!S.reflectionDirty){S.reflection1=r.reflection1||'';S.reflection2=r.reflection2||''}
+    if(S.session?.mode==='team'&&!d.canSubmit&&S.myReview){S.reflection1=S.myReview.reflection1||'';S.reflection2=S.myReview.reflection2||'';S.reflectionDirty=false}
+    else if(!S.reflectionDirty){const mine=S.session?.mode==='team'&&!d.canSubmit?{}:r;S.reflection1=mine.reflection1||'';S.reflection2=mine.reflection2||''}
     if(r.outcomes){S.allOutcomes=r.outcomes;S.year1Outcome=r.outcomes.year1||null;S.year2Outcome=r.outcomes.year2||null}
   }
   if(S.session?.mode==='team')S.finished=!!r?.done;
@@ -408,17 +409,18 @@ function renderTeamMemberWaiting(){
     ${sharedResultsHTML()}`);
 }
 function renderTeamMemberReflection(){
-  shell(`<div class="eyebrow">Your reflection</div><h2>The shared team run is complete.</h2>
-    <p class="lede">You worked through the decisions with your team on one runner's screen. Now answer these two questions in your own words.</p>
-    <div class="field"><label>${esc(C.reflectionPrompts[0])}</label>${C.reflectionFollowups?.[0]?`<div class="reflection-followup">${esc(C.reflectionFollowups[0])}</div>`:''}<textarea id="r1" maxlength="1500">${esc(S.reflection1)}</textarea></div>
-    <div class="field"><label>${esc(C.reflectionPrompts[1])}</label><textarea id="r2" maxlength="1500">${esc(S.reflection2)}</textarea><div class="hint reflection-note">${esc(C.reflectionDisclosure||'')}</div></div>
-    <div class="actions"><button class="btn pri" id="memberFinishBtn">Submit my reflection</button></div>`);
+  shell(`<div class="eyebrow">Before the sale · Your review</div><h2>Tom asks you to look back on your team's three years.</h2>
+    <p class="bridge">Your team's run is complete. Tom wants each member's own review of the budgets. ${esc(C.reflectionDisclosure||'')}</p>
+    <div class="field"><label>${esc(C.reflectionPrompts[0])}</label><textarea id="r1" maxlength="1500">${esc(S.reflection1)}</textarea></div>
+    <div class="field"><label>${esc(C.reflectionPrompts[1])}</label><textarea id="r2" maxlength="1500">${esc(S.reflection2)}</textarea></div>
+    <div class="actions"><button class="btn pri" id="memberFinishBtn">Send your review to Tom</button></div>`);
   document.getElementById('memberFinishBtn').onclick=finish;
 }
 function render(){
   if(!C)return;
   if(S.session?.mode==='team'){
     if(!S.me?.groupId)return renderUnassignedLobby();
+    if(S.finished&&!S.canSubmit&&!S.myReview)return renderTeamMemberReflection();
     if(S.finished)return renderClose();
     if(S.session.state==='lobby')return renderTeamLobby();
     if(!S.canSubmit){
@@ -703,7 +705,7 @@ function renderClose(){
     ${teamMode?`<div class="result-section"><div class="eyebrow">Team submission</div><div class="card"><p>The selected runner submitted this shared result for the whole team. Every team member sees the same outcome.</p></div></div>`:''}
     ${closingLessonHTML()}
     <div class="result-section"><div class="eyebrow">Your reason for the Year 1 budget</div><div class="card"><p>${esc(S.strategicView||'—')}</p></div></div>
-    ${teamMode?'':`<div class="result-section"><div class="eyebrow">Your review for Tom</div>
+    ${`<div class="result-section"><div class="eyebrow">Your review for Tom</div>
       <div class="card"><h3>${esc(C.reflectionPrompts[0])}</h3><p style="white-space:pre-wrap">${esc(S.reflection1||'—')}</p></div>
       <div class="card" style="margin-top:12px"><h3>${esc(C.reflectionPrompts[1])}</h3><p style="white-space:pre-wrap">${esc(S.reflection2||'—')}</p></div>
     </div>`}
@@ -754,9 +756,12 @@ function overallOutcomeText(){
 async function finish(){
   S.reflection1=document.getElementById('r1').value.trim();S.reflection2=document.getElementById('r2').value.trim();
   try{
-    if(S.session)await saveRun({reflection1:S.reflection1,reflection2:S.reflection2,done:true});
+    const member=S.session?.mode==='team'&&!S.canSubmit;
+    if(S.session&&!member)await saveRun({reflection1:S.reflection1,reflection2:S.reflection2,done:true});
     const done=await request('/api/finish',{runnerRevision:S.runnerRevision,year1:S.year1,year2:S.year2,strategicView:S.strategicView,reflection1:S.reflection1,reflection2:S.reflection2,sessionCode:S.sessionCode,participantId:S.participantId});
-    S.closingLesson=done.closingLesson||null;S.finished=true;S.reflectionDirty=false;render();
+    S.closingLesson=done.closingLesson||null;S.finished=true;S.reflectionDirty=false;
+    if(member)S.myReview={reflection1:S.reflection1,reflection2:S.reflection2};
+    render();
     requestAnimationFrame(()=>document.getElementById('closingLesson')?.scrollIntoView({behavior:'smooth',block:'start'}));
   }catch(e){alert(e.message)}
 }

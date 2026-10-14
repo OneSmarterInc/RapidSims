@@ -93,13 +93,19 @@ run("C={annualBudget:9,runMinimum:3,lineMaximum:3,lines:['run','uptime','capacit
   assert.equal(run('S.runnerId'), 'ben');
   assert.equal(run('S.runnerRevision'), 3);
 
-  // When the runner completes, members see the same result instead of a separate reflection form.
+  // When the runner completes, each member writes their own review for Tom, keeping any draft.
   run("S.reflectionDirty=true; S.reflection1='My unsaved draft'; S.participantId='ann'");
   response = data({ runner: 'ben', pid: 'ann', revision: 3, shared: { ...shared, phase: 3, screen: 10, done: true, reflection1: '' } });
   await run('pollSession(true)');
-  assert(html.includes('Team submission'));
-  assert(!html.includes('id="memberFinishBtn"'));
+  assert(html.includes('id="memberFinishBtn"'));
+  assert(html.includes('My unsaved draft'));
   assert(!html.includes('id="nextBtn"'));
+  // Once the member's review is saved, they see the team's result with their own review.
+  response.myReview = { reflection1: 'Ann review one', reflection2: 'Ann review two', at: 1 };
+  await run('pollSession(true)');
+  assert(html.includes('Team submission'));
+  assert(html.includes('Ann review one'));
+  assert(!html.includes('id="memberFinishBtn"'));
   assert.equal(alerts.length, 0);
   // An existing session supplies its rules, overriding newly deployed defaults.
   response=data({runner:'ben',pid:'ben',shared});

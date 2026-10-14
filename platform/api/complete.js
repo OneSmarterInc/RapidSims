@@ -66,13 +66,18 @@ module.exports = async (req, res) => {
       } catch {
         summary = String(payload.summary);
       }
-      summary = summary.slice(0, 6000);
+      // A full Midland team summary with two 1,500-character reviews is about 8,000 characters.
+      summary = summary.slice(0, 16000);
     }
 
     await s`INSERT INTO completions (id, user_id, sim_id, course_id, duration_seconds, summary, metrics, report_id, launch_id)
             VALUES (${id('cmp')}, ${payload.sub}, ${payload.sim}, ${courseId},
                     ${dur}, ${summary}, ${metrics ? JSON.stringify(metrics) : null}, ${payload.reportId}, ${known[0].id})
-            ON CONFLICT (report_id) DO NOTHING`;
+            ON CONFLICT (report_id) DO UPDATE SET summary = EXCLUDED.summary, metrics = EXCLUDED.metrics
+            WHERE (CASE WHEN EXCLUDED.metrics->>'revision' ~ '^[0-9]{1,6}$' THEN (EXCLUDED.metrics->>'revision')::int ELSE 0 END)
+                > (CASE WHEN completions.metrics->>'revision' ~ '^[0-9]{1,6}$' THEN (completions.metrics->>'revision')::int ELSE 0 END)`;
+    // A retry of the same report changes nothing. A later revision of the same
+    // run (a team member adding their own review) replaces the summary.
 
     return res.status(200).json({ ok: true });
   } catch (e) {

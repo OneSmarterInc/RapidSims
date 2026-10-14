@@ -1,7 +1,7 @@
 'use strict';
 // Read-only, course-scoped result histories. Never infer attempt identity from a name,
 // timestamp, or identical payload: repeat submissions and callback retries can coexist.
-const PAGE_SIZE = 20, PREVIEW_SIZE = 3, HISTORY_SIZE = 10;
+const PAGE_SIZE = 20, PREVIEW_SIZE = 3, HISTORY_SIZE = 10, SESSION_ROWS = 600, SESSION_LIMIT = 20;
 const error = (status, message) => Object.assign(new Error(message), {status});
 // Works with Neon tagged SQL and the laptop's pg-backed tagged adapter.
 function query(s, text, values) {
@@ -73,7 +73,44 @@ SELECT (SELECT total FROM totals) AS total, (SELECT pages FROM totals) AS pages,
  ) a),'[]'::json) AS attempts FROM paged pg
  ORDER BY CASE WHEN $5='attempts' THEN pg.completions END DESC,lower(pg.name),pg.student_id
  ) p),'[]'::json) AS rows FROM students`, [course.id,sim.id,filter,search,sort,PAGE_SIZE,page]);
-  return {...data, course:{id:course.id,title:course.title},sim,filter,sort,search,pageSize:PAGE_SIZE};
+  const sessionRows = await query(s, `SELECT c.id, c.user_id, c.completed_at::text AS completed_at, c.summary, u.name
+    FROM completions c JOIN enrolments e ON e.student_id=c.user_id AND e.course_id=$1
+    JOIN users u ON u.id=c.user_id
+    WHERE c.course_id=$1 AND c.sim_id=$2 AND c.summary LIKE '%"sessionCode"%'
+    ORDER BY c.completed_at DESC, c.id DESC LIMIT ${SESSION_ROWS}`, [course.id, sim.id]);
+  return {...data, sessions: groupSessions(sessionRows), course:{id:course.id,title:course.title},sim,filter,sort,search,pageSize:PAGE_SIZE};
+}
+// Completions that name a class session are grouped by session, then by team.
+// Each saved row is one member; the row carries that member's own review.
+function groupSessions(rows) {
+  const sessions = new Map();
+  for (const row of rows || []) {
+    let v; try { v = typeof row.summary === 'string' ? JSON.parse(row.summary) : row.summary; } catch { continue; }
+    if (!v || typeof v !== 'object' || typeof v.sessionCode !== 'string' || !v.sessionCode) continue;
+    const code = v.sessionCode.slice(0, 20);
+    if (!sessions.has(code)) {
+      if (sessions.size >= SESSION_LIMIT) continue;
+      sessions.set(code, { code, name: v.sessionName || null, createdAt: v.sessionCreatedAt || null, latestAt: row.completed_at, teams: new Map() });
+    }
+    const sess = sessions.get(code);
+    const teamKey = v.teamRunId || `individual:${row.user_id}`;
+    if (!sess.teams.has(teamKey)) {
+      sess.teams.set(teamKey, {
+        key: teamKey, label: v.teamRunId ? (v.teamLabel || v.teamRunId) : row.name,
+        team: !!v.teamRunId, completedBy: v.completedBy || null,
+        roster: Array.isArray(v.teamMembers) ? v.teamMembers.slice(0, 30) : null,
+        overall: v.result?.overall || null, year3: v.result?.year3?.title || null, year3Band: v.year3Band || null,
+        members: []
+      });
+    }
+    const team = sess.teams.get(teamKey);
+    if (team.members.some(m => m.userId === row.user_id)) continue;
+    team.members.push({ userId: row.user_id, name: row.name, completedAt: row.completed_at,
+      reflection1: v.reflection1 || '', reflection2: v.reflection2 || '' });
+  }
+  return [...sessions.values()].map(sess => ({ ...sess,
+    teams: [...sess.teams.values()].sort((a, b) => String(a.label).localeCompare(String(b.label), undefined, { numeric: true }))
+  }));
 }
 async function history(s, course, sim, input) {
   const studentId = String(input.studentId || '').slice(0,200);
@@ -100,4 +137,4 @@ async function history(s, course, sim, input) {
   const more=rows.length>HISTORY_SIZE, items=rows.slice(0,HISTORY_SIZE), last=items[items.length-1];
   return {student,kind,items,next:more?Buffer.from(JSON.stringify({at:last[time],id:last.id})).toString('base64url'):null};
 }
-module.exports={results,history};
+module.exports={results,history,groupSessions};

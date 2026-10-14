@@ -8,7 +8,13 @@ const prefix = () => `rapidsims:${process.env.APP_ENV || 'production'}:reports`;
 const key = id => `${prefix()}:${id}`;
 async function enqueue(report) {
   // No TTL: pending academic records must not silently expire during an outage.
-  await command(['EVAL', "redis.call('SET',KEYS[1],ARGV[1],'NX'); redis.call('ZADD',KEYS[2],ARGV[2],ARGV[3]); return 1",
+  // A later revision of the same report (higher metrics.revision) replaces a pending one.
+  await command(['EVAL', `local function rev(raw) local ok, v = pcall(cjson.decode, raw)
+  if ok and type(v) == 'table' and type(v.metrics) == 'table' and tonumber(v.metrics.revision) then return tonumber(v.metrics.revision) end
+  return 0 end
+local cur = redis.call('GET', KEYS[1])
+if (not cur) or rev(ARGV[1]) > rev(cur) then redis.call('SET', KEYS[1], ARGV[1]) end
+redis.call('ZADD', KEYS[2], ARGV[2], ARGV[3]) return 1`,
     '2', key(report.reportId), prefix(), JSON.stringify(report), String(Date.now()), report.reportId]);
 }
 async function acknowledge(id) {
