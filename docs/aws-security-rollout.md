@@ -50,12 +50,12 @@ The generated locations forward the real client address and add an additional au
 
 ## Release procedure
 
-Requires Node 24 (matching CI), the `rapidsims` service account, Nginx, PostgreSQL, Redis, Git, and the existing AWS SSM/OIDC permissions. This script targets one EC2 machine hosting independent processes; a deployment spread over multiple EC2 machines requires adapting orchestration, not assuming this script provisions them.
+Requires Node 24 (matching CI), the `rapidsims` service account, Nginx, PostgreSQL, Redis, Git, and the self-hosted runner setup in [self-hosted-runner.md](self-hosted-runner.md). This script targets one EC2 machine hosting independent processes; a deployment spread over multiple EC2 machines requires adapting orchestration, not assuming this script provisions them.
 
 1. Review and commit the local changes through your normal process. No commit or push was performed by this work.
 2. Run `npm ci --ignore-scripts --no-audit --no-fund` and `npm test` on the candidate revision. Tests use isolated PostgreSQL and temporary local HTTP servers, never production data. Browser E2E and real Redis tests remain separate checks.
 3. Configure the new keys, shared outbox and Nginx include in staging first.
-4. The checked-in GitHub Actions AWS workflow gates deployment on `npm test` and Bash syntax, then sends the exact triggering commit SHA to SSM. For a deliberately authorized manual release, invoke `sudo bash ec2/deploy.sh <40-character-tested-SHA> /var/www/rapidsims` from reviewed code after fetching that commit.
+4. The checked-in GitHub Actions workflow gates deployment on `npm test` and Bash syntax, then sends the exact triggering commit SHA to the local root-owned helper on the production runner. The helper rejects superseded master revisions. For a deliberately authorized manual release, invoke `sudo bash ec2/deploy.sh <40-character-tested-SHA> /var/www/rapidsims` from reviewed code after fetching that commit.
 5. The script archives the SHA into an isolated staging directory, installs locked dependencies, tests/builds, performs an additive PostgreSQL migration in a transaction, and creates `/var/www/rapidsims-releases/<SHA>`.
 6. Each changed service gets its own `/var/www/rapidsims-services/<service>` pointer. Shared-code/runtime changes affect all services; a single simulation change does not restart unrelated simulations. The script checks authenticated readiness and build SHA before proceeding, updates the managed Nginx locations, and restarts the report worker.
 
