@@ -110,7 +110,11 @@ process.env.SIM03_SESSION_URL = 'http://midland.internal/api/session';
 
   check((await call({ action: 'midland_practice_finish', courseId: 'c1' }, 'f2')).statusCode, 404, 'Another faculty member cannot reach this course');
   r = await call({ action: 'midland_practice_start', courseId: 'c1' });
-  check([r.statusCode, sessions.has(code)], [200, false], 'Starting practice again replaces the earlier practice class');
+  check([r.statusCode, r.body.code, r.body.resumed, sessions.has(code)], [200, code, true, true], 'Rehearse again returns to the practice class already running');
+  check(runs.get(code)['team:practice'].done, true, 'The finished practice run is still there');
+  check(r.body.students.map(x => [x.name, x.entersDecisions]), [['Practice Ana', true], ['Practice Ben', false], ['Practice Cal', false]], 'The same three practice students');
+  r = await call({ action: 'midland_practice_start', courseId: 'c1', startOver: true });
+  check([r.statusCode, r.body.resumed, sessions.has(code)], [200, false, false], 'Start over replaces the practice class');
   const second = r.body.code;
   r = await call({ action: 'midland_practice_finish', courseId: 'c1' });
   check([r.statusCode, sessions.has(second), sessions.has(realClass)], [200, false, true], 'Finish practice removes the practice class and keeps the real class');

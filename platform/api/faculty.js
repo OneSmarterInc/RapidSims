@@ -58,7 +58,8 @@ module.exports = async (req, res) => {
         const sim = (await s`SELECT si.id, si.launch_url FROM course_sims cs
           JOIN sims si ON si.id=cs.sim_id WHERE cs.course_id=${course.id} AND cs.sim_id=${M.SIM}`)[0];
         if (!sim) return res.status(404).json({ error:'no_such_simulation' });
-        const r = await (b.action === 'midland_practice_start' ? M.practiceStart : M.practiceFinish)(me, course, sim);
+        const r = b.action === 'midland_practice_start' ? await M.practiceStart(me, course, sim, b.startOver === true)
+          : await M.practiceFinish(me, course, sim);
         return res.status(r.status).json(r.data);
       }
 
