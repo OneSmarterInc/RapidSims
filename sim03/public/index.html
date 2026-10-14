@@ -36,7 +36,18 @@ button{cursor:pointer;background:none;border:0}
 header{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:14px 22px;border-bottom:1px solid var(--line);background:rgba(14,21,36,.94);backdrop-filter:blur(8px)}
 .brand{margin-right:auto}.brand h1{font-size:17px;font-weight:500}.brand .sub{font:10.5px var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--dimmer);margin-top:2px}
 .pills{display:flex;gap:5px;flex-wrap:wrap}.pill{font:10px var(--mono);letter-spacing:.09em;text-transform:uppercase;padding:5px 9px;border:1px solid var(--line);color:var(--dimmer)}.pill.on{color:var(--amber);border-color:#8A6427;background:rgba(240,166,60,.07)}.pill.done{color:var(--dim);border-color:var(--line2)}.pill.brief-link{cursor:pointer}.pill.brief-link:hover{color:var(--amber);border-color:#8A6427;background:rgba(240,166,60,.07)}
-.timer{font:600 21px var(--mono);color:var(--amber)}
+.timer{font:600 21px var(--mono);color:var(--amber);margin-left:auto;order:2}header .pills{order:3;width:100%}
+.brief-practise{border:1px solid var(--line);border-left:3px solid var(--amber);padding:13px 16px;background:var(--panel);margin:14px 0;max-width:860px}.brief-practise .eyebrow{margin-bottom:5px}.brief-practise p{font-size:17px;line-height:1.55;color:var(--bone);margin:0}
+.howto{border:1px solid var(--line);border-left:3px solid var(--amber);background:var(--panel);padding:16px 18px;margin:18px 0;max-width:860px;font-size:16px;line-height:1.6;color:#C9C6BE}.howto .eyebrow{margin-bottom:8px}.howto ol{margin:10px 0 10px 20px}.howto li{margin-bottom:8px}.howto b{color:var(--bone);font-weight:600}.howto p{margin:0}
+.alloc-last{font:600 11px var(--mono);letter-spacing:.06em;color:var(--amber);opacity:.85;margin-top:6px}
+.run-cell.hl{border-color:var(--amber);background:rgba(240,166,60,.08)}
+.bridge{font-size:18px;line-height:1.6;color:#C9C6BE;max-width:820px;margin:6px 0 18px}
+.handoff{border-left:2px solid var(--amber);padding:12px 15px;background:rgba(240,166,60,.05);color:#CBC8C0;margin-top:18px;font-size:17px}
+.tl-line{display:grid;grid-template-columns:70px 1fr auto;gap:12px;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line)}.tl-line:last-child{border-bottom:0}.tl-year{font:10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--amber)}.tl-what{font-size:16px;color:var(--bone)}.tl-band{font:600 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.voices{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.voice{border:1px solid var(--line);background:var(--panel);padding:13px 15px;font-size:15px;line-height:1.5;color:#C9C6BE}.voice b{display:block;font:600 9px var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--bone);margin-bottom:4px}
+.teaches ol{margin:8px 0 0 20px}.teaches li{margin-bottom:8px;line-height:1.55}.teaches b{color:var(--bone)}
+details.reread summary{cursor:pointer;font:10px var(--mono);letter-spacing:.09em;text-transform:uppercase;color:var(--amber);margin:12px 0}
+@media(max-width:760px){.voices{grid-template-columns:1fr}.tl-line{grid-template-columns:1fr}.timer{margin-left:0}}
 .page{width:min(980px,calc(100% - 36px));margin:0 auto;padding:54px 0 74px}
 .eyebrow{font:10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin-bottom:9px}
 h2{font-size:38px;line-height:1.08;font-weight:400;letter-spacing:-.02em;margin-bottom:16px}
@@ -108,11 +119,11 @@ const S={
   runnerId:null,runnerRevision:0,canAssignRunner:false,runnerChoice:'',
   hasSessionState:false,stateRequest:0,stateApplied:0,reflectionDirty:false,advancing:false
 };
-const STEPS=['Brief','Room','Position','View','Year 1','Outcome','Year 2','Events','Year 3','Buyers','Close'];
+const STEPS=['Brief','People','Position','View','Year 1','Outcome','Year 2','Events','Year 3','Buyers','Close'];
 
 function friendlyError(code,status){
   const m={
-    strategic_view_locked:'Your opening view was committed before Year 1 and can no longer be changed.',
+    strategic_view_locked:'Your Year 1 sentence was committed with the Year 1 budget and stays as written.',
     year1_locked:'Year 1 has already been committed and cannot be changed after its outcome is revealed.',
     year2_locked:'Year 2 has already been committed and cannot be changed after its events are revealed.',
     session_not_running:'Your instructor has not started the session yet.',
@@ -153,7 +164,7 @@ async function sessionApi(payload){
 }
 
 function shell(content){
-  const visibleSteps=STEPS.map((x,i)=>({x,i})).filter(o=>C?.buyers?.authored!==false||o.i!==9);
+  const visibleSteps=STEPS.map((x,i)=>({x,i})).filter(o=>o.i!==3&&(C?.buyers?.authored!==false||o.i!==9));
   const pills=visibleSteps.map((o,j)=>o.i===0
     ? `<button type="button" class="pill brief-link ${o.i===S.step?'on':o.i<S.step?'done':''}" data-open-briefing title="Open briefing packet">${j+1}. ${o.x}</button>`
     : `<span class="pill ${o.i===S.step?'on':o.i<S.step?'done':''}">${j+1}. ${o.x}</span>`).join('');
@@ -181,8 +192,8 @@ async function goToStep(n){
     S.step=n;render();
   }catch(e){alert(e.message)}finally{S.advancing=false}
 }
-function next(){let n=Math.min(10,S.step+1);if(n===9&&C?.buyers?.authored===false)n=10;return goToStep(n)}
-function back(){let n=Math.max(0,S.step-1);if(n===9&&C?.buyers?.authored===false)n=8;return goToStep(n)}
+function next(){let n=Math.min(10,S.step+1);if(n===3)n=4;if(n===9&&C?.buyers?.authored===false)n=10;return goToStep(n)}
+function back(){let n=Math.max(0,S.step-1);if(n===3)n=2;if(n===9&&C?.buyers?.authored===false)n=8;return goToStep(n)}
 function safeToRerender(){if(document.getElementById('briefingPacketModal')?.classList.contains('open'))return false;const el=document.activeElement;return !el||!['INPUT','TEXTAREA','SELECT'].includes(el.tagName)}
 
 async function init(){
@@ -321,8 +332,8 @@ function teamProgressText(){
   if((r.phase||0)>=3)return 'The shared run is complete. The same team result is ready here.';
   if(r.year2)return 'Year 2 is committed. Your runner is moving through the final consequences.';
   if(r.year1)return 'Year 1 is committed. Your runner is continuing the shared run.';
-  if(r.strategicView)return 'The opening view is committed. Your runner is working on Year 1.';
-  return 'The shared run has not committed its opening view yet.';
+  if(r.strategicView)return 'The Year 1 sentence is committed. Your runner is continuing the shared run.';
+  return 'Your runner is reading the brief and setting the Year 1 budget.';
 }
 function teamRunner(){return S.mates.find(x=>x.id===S.runnerId)||null}
 function runnerPicker(){
@@ -363,14 +374,14 @@ function renderTeamLobby(){
   const runnerName=runner?.name||lead?.name||'your team lead';
   shell(`<div class="eyebrow">Team lobby</div><h2>${esc(teamName)} has one shared run.</h2>
     <p class="lede">The team lead / runner will run the simulation on one screen. Everyone else should discuss decisions with that person, not start a separate run.</p>
-    <div class="card" style="margin-top:22px"><h3>Selected runner</h3><p>${runner?`<b>${esc(runner.name)}</b> will run the simulation for this team.`:'Waiting for the instructor to choose a team lead / runner.'}</p><p class="hint">Only the selected runner gets the Start/Continue controls after faculty starts the room.</p></div>
+    <div class="card" style="margin-top:22px"><h3>Selected runner</h3><p>${runner?`<b>${esc(runner.name)}</b> will run the simulation for this team.`:'Waiting for the instructor to choose a team lead / runner.'}</p><p class="hint">Only the selected runner gets the Start/Continue controls after faculty starts the session.</p></div>
     ${!S.canSubmit?notice(`Your team lead / runner is ${runnerName}. Contact ${runnerName} and play together on that person's screen.`):''}
     ${sessionGate()}`);
 }
 function sharedResultsHTML(){
   const r=S.teamRun||{},o=r.outcomes||{};
   const cards=[o.year1, (r.screen>=7?o.year2?.heat:null), (r.year2Event>=1||r.screen>=8?o.year2?.competitor:null), (r.screen>=8?o.year3:null)].filter(Boolean);
-  return `${r.strategicView?`<div class="card"><h3>Team opening view</h3><p>${esc(r.strategicView)}</p></div>`:''}
+  return `${r.strategicView?`<div class="card"><h3>Team reason for the Year 1 budget</h3><p>${esc(r.strategicView)}</p></div>`:''}
     ${r.year1?readOnlyAllocationHTML(r.year1,'Shared Year 1 allocation',1):''}
     ${r.year2?readOnlyAllocationHTML(r.year2,'Shared Year 2 allocation',2):''}
     ${cards.map(x=>`<div class="outcome"><h3>${esc(x.title)}</h3><p>${esc(x.narrative)}</p></div>`).join('')}`;
@@ -386,8 +397,8 @@ function renderTeamMemberWaiting(){
 function renderTeamMemberReflection(){
   shell(`<div class="eyebrow">Your reflection</div><h2>The shared team run is complete.</h2>
     <p class="lede">You worked through the decisions with your team on one runner's screen. Now answer these two questions in your own words.</p>
-    <div class="field"><label>${esc(C.reflectionPrompts[0])}</label>${C.reflectionFollowups?.[0]?`<div class="reflection-followup">${esc(C.reflectionFollowups[0])}</div>`:''}<textarea id="r1" maxlength="1500">${esc(S.reflection1)}</textarea><div class="hint reflection-note">Your instructor can see this response and may read it aloud in the debrief. It is not scored.</div></div>
-    <div class="field"><label>${esc(C.reflectionPrompts[1])}</label><textarea id="r2" maxlength="1500">${esc(S.reflection2)}</textarea><div class="hint reflection-note">Your instructor can see this response and may read it aloud in the debrief. It is not scored.</div></div>
+    <div class="field"><label>${esc(C.reflectionPrompts[0])}</label>${C.reflectionFollowups?.[0]?`<div class="reflection-followup">${esc(C.reflectionFollowups[0])}</div>`:''}<textarea id="r1" maxlength="1500">${esc(S.reflection1)}</textarea></div>
+    <div class="field"><label>${esc(C.reflectionPrompts[1])}</label><textarea id="r2" maxlength="1500">${esc(S.reflection2)}</textarea><div class="hint reflection-note">${esc(C.reflectionDisclosure||'')}</div></div>
     <div class="actions"><button class="btn pri" id="memberFinishBtn">Submit my reflection</button></div>`);
   document.getElementById('memberFinishBtn').onclick=finish;
 }
@@ -405,7 +416,7 @@ function render(){
     case 0:return renderBrief();
     case 1:return renderRoom();
     case 2:return renderPosition();
-    case 3:return renderView();
+    case 3:return renderAllocation(1);
     case 4:return renderAllocation(1);
     case 5:return renderYear1Outcome();
     case 6:return renderAllocation(2);
@@ -453,7 +464,7 @@ function wireBriefingPacketModal(){
 function renderBrief(){
   shell(`<section class="brief-screen"><div class="eyebrow">MIDLAND EQUIPMENT</div><h2>Forty-one years old, profitable, and nobody thinks it is in trouble.</h2>
   <div class="copy">${C.coldOpen.map((x,i)=>i===2?`<div class="brief-profit"><div class="eyebrow">The business model</div><p>${esc(x)}</p></div>`:`<p>${esc(x)}</p>`).join('')}</div>
-  <p class="lede">There is no score, rank, grade or hidden correct allocation. You will find out what happened, not how you "did."</p>
+  <div class="brief-practise"><div class="eyebrow">What you will practise</div><p>${esc(C.practise||'')}</p></div>
   <div class="briefing-prep"><div class="briefing-prep-copy"><span class="small">Before you continue</span><b>This sim assumes you have read the briefing packet before starting.</b> If you have not read it yet, open the in-app packet here before continuing.</div><button class="btn" data-open-briefing>Read briefing packet</button></div>
   ${sessionGate()}${!S.session?(LAUNCH&&(LAUNCH.role==='faculty'||LAUNCH.role==='faculty_preview')?'<div class="actions"><button class="btn" id="runSessionEntry">Run a facilitated session</button></div>':'<div class="actions"><button class="btn" id="joinSessionEntry">Join a facilitated session</button></div>'):''}${nav({backOk:false,disabled:blocked()})}</section>`);
   const runEntry=document.getElementById('runSessionEntry');if(runEntry)runEntry.onclick=()=>{
@@ -465,25 +476,25 @@ function renderBrief(){
   const joinEntry=document.getElementById('joinSessionEntry');if(joinEntry)joinEntry.onclick=()=>{S.error='';renderJoin()};
   wireNav(next,false);
 }
-const CAPACITY_SILENCE='No one in the room speaks for this line.';
-function positionVoice(l){const a=l?.advocate;return a?`<div class="line-guide-voice"><b>${esc(a.name)} · speaks for ${esc(l.label)}</b>${esc(a.shortWant||a.want||'')}</div>`:`<div class="line-guide-voice capacity"><b>Capacity</b>${esc(CAPACITY_SILENCE)}</div>`}
+const CAPACITY_SILENCE='You are the only person who speaks for this line.';
+function positionVoice(l){const a=l?.advocate;return a?`<div class="line-guide-voice"><b>${esc(a.name)} · speaks for ${esc(l.label)}</b>${esc(a.shortWant||a.want||'')}</div>`:`<div class="line-guide-voice capacity"><b>You · speak for Capacity</b>${esc(CAPACITY_SILENCE)}</div>`}
 function lineGuide(){return `<div class="line-guide">${C.lines.map(l=>`<div class="line-guide-row" data-line="${esc(l.id)}"><b>${esc(l.label)}</b><div class="line-guide-main"><span class="line-guide-desc">${esc(l.description||'')}</span>${positionVoice(l)}</div></div>`).join('')}</div>`}
 function renderPosition(){
   shell(`<div class="eyebrow">Your position</div><h2>You run technology at Midland.</h2><p class="lede" id="position-rules">${esc(C.position)}</p>
-  <div class="rule"></div><div class="eyebrow">The five lines</div>${lineGuide()}
+  <div class="rule"></div><div class="eyebrow">The five budget lines</div>${lineGuide()}
   ${nav()}`);wireNav(next);
 }
 function renderRoom(){
   const room=C.room||{},cast=Array.isArray(room.cast)?room.cast:[];
-  shell(`<div class="eyebrow">THE ROOM</div><h2>Four people, one budget.</h2>
-  <p class="lede">Nobody here is going to tell you what to do. Each of them is responsible for a different part of the company and each of them is right about their own part.</p>
+  shell(`<div class="eyebrow">THE PEOPLE</div><h2>Four people, one budget.</h2>
+  <p class="lede">Midland splits its $${C.annualBudget} million technology budget into five budget lines. A budget line is one area of spending, such as keeping current systems running or getting data back from field units. Four executives each speak for one line, and each one is right about their own part of the company.</p>
   <div class="room-tour">${cast.map(c=>`<div class="room-card"><div class="room-name">${esc(c.name)}</div><div class="room-role">${esc(c.role)}</div><div class="room-line">${esc(c.line)}</div><div class="room-quote">“${esc(c.quote||c.stake||'')}”</div></div>`).join('')}</div>
-  <div class="room-close">One of the five lines has nobody speaking for it. You may want to notice which.</div>
-  ${nav({nextLabel:'Take the seat'})}`);wireNav(next);
+  <div class="room-close">The fifth line is Capacity. You are the only person who can speak for it.</div>
+  ${nav({nextLabel:'See the five lines'})}`);wireNav(next);
 }
 function usefulOpeningView(v){const words=String(v||'').trim().split(/\s+/).filter(Boolean);return String(v||'').trim().length>=20&&words.length>=4}
 function allocationCap(line){return line.id==='run'?`MIN $${C.runMinimum}M`:`MAX $${C.lineMaximum}M / YEAR`}
-function lineAdvocate(line,year=1){const a=line?.advocate;if(!a)return `<div class="advocate-reminder capacity-silence"><b>No advocate · ${esc(line.label)}</b><span>${esc(CAPACITY_SILENCE)}</span></div>`;const text=year===2?(a.shortWant||a.want):a.want;return `<div class="advocate-reminder"><b>${esc(a.name)} · speaks for ${esc(line.label)}</b><span>${esc(text)}</span></div>`}
+function lineAdvocate(line,year=1){const a=line?.advocate;if(!a)return `<div class="advocate-reminder capacity-silence"><b>You · speak for ${esc(line.label)}</b><span>${esc(CAPACITY_SILENCE)}</span></div>`;const text=a.shortWant||a.want;return `<div class="advocate-reminder"><b>${esc(a.name)} · speaks for ${esc(line.label)}</b><span>${esc(text)}</span></div>`}
 function year2BreakdownHTML(y1,y2,year2Label='Year 2 draft'){
   if(!y1||!y2)return '';
   const rows=C.lines.map(l=>{const a=Number(y1[l.id]||0),b=Number(y2[l.id]||0);return `<div class="year2-breakdown-row"><div class="year2-breakdown-name">${esc(l.label)}</div><div class="year2-breakdown-num">$${a}M</div><div class="year2-breakdown-num">$${b}M</div><div class="year2-breakdown-num year2-breakdown-total">$${a+b}M</div></div>`}).join('');
@@ -516,26 +527,40 @@ function briefingPanel(){
 function renderAllocation(year){
   const key=year===1?'year1':'year2';
   const teamReadOnly=!S.canSubmit&&S.session?.mode==='team';
-  const heading=year===1?`The first $${C.annualBudget} million is yours.`:`A year later, the same $${C.annualBudget} million is back on the table.`;
-  const intro=year===1
-    ? 'The ERP is fourteen years old, the service operation is profitable, and every line has a constituency. This is the first portfolio you set before anyone knows which problem arrives first.'
-    : (S.year1Outcome?.year2Intro||'A year has passed. The first consequence is now part of Midland’s history, and the same five lines are competing for the same budget again.');
+  const heading=year===1?`The first $${C.annualBudget} million is yours.`:'Your second and final budget.';
+  const intro=year===1?'':(S.year1Outcome?.year2Intro||'A year has passed. Dale is back at the table looking at the Run number.');
+  const howto=year===1?`<div class="howto"><div class="eyebrow">How to set your Year 1 budget</div><p>You have $${C.annualBudget} million to divide across the five budget lines. Work through it in four steps.</p><ol>
+    <li><b>Start with Run.</b> Run must get at least $${C.runMinimum}M. That is the lowest amount that keeps Midland’s current systems working. Last year Run got $6.1M, so every million you move out of Run is a million you can spend on something new.</li>
+    <li><b>Decide what Midland needs most over the next three years.</b> Each line answers a different need. Uptime keeps dispatch working on a bad day. Capacity gives the company room to run new computing work. Connect brings data back from the units in the field. Features gives the business something visible to show. Look back at the four people and the exhibits if you need to.</li>
+    <li><b>Set your priorities.</b> After Run, you have about $${C.annualBudget-C.runMinimum}M left, and each other line can take up to $${C.lineMaximum}M a year. Put the most money where you think it matters most.</li>
+    <li><b>Remember that spending adds up.</b> Money you put in a line this year still counts next year and in Year 3.</li></ol>
+    <p>When the budget totals exactly $${C.annualBudget}M, write one sentence about what this budget is for, then commit. Year 1 locks when you commit, and you see what happened.</p></div>`
+    :`<div class="howto"><div class="eyebrow">How to set your Year 2 budget</div><p>This is the last budget you set. Year 3 runs on everything you bought in Year 1 and Year 2 together. Use the same steps as Year 1: start with Run, decide what Midland needs, and put the most money where you think it matters most. The number under each line shows its two-year total, which is what Year 2 and Year 3 respond to.</p></div>`;
+  const viewDone=!!(S.viewCommitted||S.teamRun?.strategicView);
+  const viewField=year===1?`<div class="field" style="margin-top:20px"><label>Your sentence: what is this budget for?</label><textarea id="viewText" maxlength="500" placeholder="${esc(C.viewPrompt)}" ${viewDone?'readonly':''}>${esc(S.strategicView)}</textarea><div class="hint">${esc(C.viewDisclosure)}</div></div>`:'';
   if(teamReadOnly)return renderTeamMemberWaiting();
   if(!S[key])S[key]=defaultAlloc();
   const a=S[key],used=Object.values(a).reduce((x,y)=>x+y,0),left=C.annualBudget-used;
   const running=year===2&&S.year1?runningTotals(S.year1,a):null;
-  shell(`<div class="eyebrow">Year ${year} allocation</div><h2>${heading}</h2><p class="lede">${esc(intro)}</p>
+  shell(`<div class="eyebrow">${year===1?'Year 1 allocation':'Year 2 allocation · your last budget'}</div><h2>${heading}</h2>${intro?`<p class="lede">${esc(intro)}</p>`:''}
+  ${howto}
   ${briefingPanel()}
-  ${year===2&&S.year1?year2BreakdownHTML(S.year1,a,'Year 2 draft'):''}
   <div class="alloc-wrap"><div class="allocs">${C.lines.map(l=>allocRow(l,a,year)).join('')}</div>
-  <aside class="budget"><div class="n">${left}</div><div class="lab">$M remaining</div><div class="total">Allocated: <b>$${used}M</b> of $${C.annualBudget}M<br>Submit unlocks only at exactly $${C.annualBudget}M.</div></aside></div>
+  <aside class="budget"><div class="n">${left}</div><div class="lab">$M remaining</div><div class="total">Allocated: <b>$${used}M</b> of $${C.annualBudget}M<br>Commit unlocks when you have allocated exactly $${C.annualBudget}M.</div></aside></div>
+  ${viewField}
   ${nav({backOk:year===1,nextLabel:left===0?`Commit Year ${year}`:`Allocate all $${C.annualBudget}M`,disabled:blocked()||left!==0})}`);
   document.querySelectorAll('.step').forEach(b=>b.onclick=()=>changeAlloc(key,b.dataset.line,Number(b.dataset.delta)));
   wireNav(async()=>{
     const v=validateClient(S[key]);if(v)return alert(v);
+    let view;
+    if(year===1&&!viewDone){
+      view=(document.getElementById('viewText')?.value||'').trim();
+      if(!usefulOpeningView(view)){alert('Write one complete sentence about what this budget is for (at least four words). It comes back to you at the end.');return document.getElementById('viewText')?.focus()}
+    }
     if(!allocationConfirmation(year,S[key]))return;
     try{
-      await saveRun({[key]:S[key]});
+      if(view){await saveRun({strategicView:view,[key]:S[key]});S.strategicView=view;S.viewCommitted=true}
+      else await saveRun({[key]:S[key]});
       if(year===1){const d=await request('/api/outcome',{stage:'year1',year1:S.year1,sessionCode:S.sessionCode,participantId:S.participantId});S.year1Outcome=d.outcome}
       else {const d=await request('/api/outcome',{stage:'year2',year1:S.year1,year2:S.year2,sessionCode:S.sessionCode,participantId:S.participantId});S.year2Outcome=d.outcome}
       next();
@@ -549,7 +574,8 @@ function allocRow(l,a,key){
   const minusDisabled=readOnly||n<=min,plusDisabled=readOnly||n>=max||used>=C.annualBudget;
   const minusTitle=readOnly?'Read-only team allocation':n<=min?(l.id==='run'?`Run has a $${C.runMinimum}M minimum`:'Already at $0M'):'Remove $1M';
   const plusTitle=readOnly?'Read-only team allocation':n>=max&&l.id!=='run'?`$${C.lineMaximum}M annual ceiling reached`:used>=C.annualBudget?`All $${C.annualBudget}M is already allocated`:'Add $1M';
-  return `<div class="alloc"><div><div class="alloc-title-row"><h3>${esc(l.label)}</h3><span class="alloc-cap">${esc(allocationCap(l))}</span></div>${lineAdvocate(l,key)}</div><div class="stepper">
+  const sub=key===1?(C.lastYear&&C.lastYear[l.id]!==undefined?`Last year: $${C.lastYear[l.id]}M`:''):(S.year1?`Two-year total: $${Number(S.year1[l.id]||0)+n}M`:'');
+  return `<div class="alloc"><div><div class="alloc-title-row"><h3>${esc(l.label)}</h3><span class="alloc-cap">${esc(allocationCap(l))}</span></div>${sub?`<div class="alloc-last">${esc(sub)}</div>`:''}${lineAdvocate(l,key)}</div><div class="stepper">
     <button class="step" title="${esc(minusTitle)}" data-line="${l.id}" data-delta="-1" ${minusDisabled?'disabled':''}>−</button>
     <div class="amount">${n}<small> M</small></div>
     <button class="step" title="${esc(plusTitle)}" data-line="${l.id}" data-delta="1" ${plusDisabled?'disabled':''}>+</button></div></div>`;
@@ -570,27 +596,28 @@ function validateClient(a){
   return '';
 }
 function runningTotals(a,b){const o={};C.lines.forEach(l=>o[l.id]=(a[l.id]||0)+(b[l.id]||0));return o}
-function runningHTML(o,label){return `<div class="eyebrow" style="margin-top:24px">${esc(label)}</div><div class="running">${C.lines.map(l=>`<div class="run-cell"><div class="v">${o[l.id]}</div><div class="k">${esc(l.label)}</div></div>`).join('')}</div>`}
+function runningHTML(o,label,hl=[]){return `<div class="eyebrow" style="margin-top:24px">${esc(label)}</div><div class="running">${C.lines.map(l=>`<div class="run-cell${hl.includes(l.id)?' hl':''}"><div class="v">${o[l.id]}</div><div class="k">${esc(l.label)}</div></div>`).join('')}</div>`}
 function allocationNotesHTML(o){const notes=Array.isArray(o?.allocationNotes)?o.allocationNotes.filter(Boolean):[];return notes.length?`<div class="outcome-signals">${notes.map(x=>`<div class="outcome-signal">${esc(x)}</div>`).join('')}</div>`:''}
 
 function renderYear1Outcome(){
   const o=S.year1Outcome;
-  shell(`<div class="eyebrow">Year 1 outcome</div><h2>A renewal is six weeks away. The district wants proof.</h2>
-  ${o?`<div class="outcome"><h3>${esc(o.title)}</h3><p>${esc(o.narrative)}</p>${allocationNotesHTML(o)}</div>`:notice('Outcome not loaded. Return to Year 1 and recommit.',true)}
-  ${runningHTML(S.year1,'Year 1 portfolio')}
-  ${nav({backOk:false})}`);wireNav(next,false);
+  shell(`<div class="eyebrow">Year 1 · What happened</div><h2>A year has passed. Here is the first test of your budget.</h2>
+  <p class="bridge">You committed your Year 1 budget, and the year played out. Late in the year, a school district that buys Midland’s service asked for proof of how its rooftop units had performed. Whether Midland could answer quickly depended on one budget line: Connect, which brings data back from the units in the field.</p>
+  ${o?`<div class="outcome"><h3>${esc(o.title)}</h3><p>${esc(o.narrative)}</p>${allocationNotesHTML({allocationNotes:[...(o.allocationNotes||[]),'Uptime, Capacity and Features come into play later.']})}</div>`:notice('Outcome not loaded. Return to Year 1 and recommit.',true)}
+  ${runningHTML(S.year1,'Year 1 portfolio',['connect'])}
+  ${nav({backOk:false,nextLabel:'Plan Year 2'})}`);wireNav(next,false);
 }
 function renderYear2Events(){
   const o=S.year2Outcome;
   const cum=S.year1&&S.year2?runningTotals(S.year1,S.year2):null;
   const first=o?`<div class="outcome"><h3>${esc(o.heat.title)}</h3><p>${esc(o.heat.narrative)}</p>${allocationNotesHTML(o.heat)}</div>`:'';
-  const second=o?`<div class="outcome"><h3>${esc(o.competitor.title)}</h3><p>${esc(o.competitor.narrative)}</p></div>`:'';
-  shell(`<div class="eyebrow">Year 2 outcomes</div><h2>Year 2 stops being quiet.</h2><p class="lede">First the weather turns. Then the market does.</p>
+  const second=o?`<div class="outcome"><h3>${esc(o.competitor.title)}</h3><p>${esc(o.competitor.narrative)}</p>${allocationNotesHTML(o.competitor)}</div>`:'';
+  shell(`<div class="eyebrow">Year 2 · What happened</div><h2>Year 2 brought two tests.</h2><p class="bridge">You committed your final budget, and Year 2 played out. In July, a heat wave tested dispatch, which depends on Uptime. Later, a competitor launched a new service, and Midland’s answer depended on Connect. Both tests use your two-year totals, so your Year 1 spending counts here too.</p>
   ${o?`<div class="events" style="grid-template-columns:1fr">${first}${S.year2Event>=1?second:''}</div>`:notice('Outcome not loaded. Return to Year 2 and recommit.',true)}
-  ${cum?runningHTML(cum,'Cumulative portfolio'):''}
+  ${cum?runningHTML(cum,'Two-year totals',S.year2Event>=1?['uptime','connect']:['uptime']):''}
   ${S.year2Event<1
-    ? nav({backOk:false,nextLabel:'Continue to the second event'})
-    : nav({backOk:false,nextLabel:'Go to Year 3'})}`);
+    ? nav({backOk:false,nextLabel:'See the second test'})
+    : nav({backOk:false,nextLabel:'See Year 3'})}`);
   if(S.year2Event<1){wireNav(async()=>{try{if(S.session?.mode==='team')await saveRun({year2Event:1});S.year2Event=1;render()}catch(e){alert(e.message)}},false);return}
   wireNav(async()=>{
     try{const d=await request('/api/outcome',{stage:'all',year1:S.year1,year2:S.year2,sessionCode:S.sessionCode,participantId:S.participantId});S.allOutcomes=d.outcome;next()}catch(e){alert(e.message)}
@@ -599,26 +626,45 @@ function renderYear2Events(){
 function renderYear3(){
   const o=S.allOutcomes?.year3;
   const cum=o?.cumulative||(S.year1&&S.year2?runningTotals(S.year1,S.year2):null);
-  shell(`<div class="eyebrow">Year 3</div><h2>The CEO asks whether Midland can predict a failure before the truck rolls.</h2>
-  <p class="lede">The request is now on the table.</p><div class="year3-lock">No Year 3 allocation · the two committed portfolios now stand</div>
-  ${cum?runningHTML(cum,'Cumulative portfolio'):''}
+  shell(`<div class="eyebrow">Year 3 · What happened</div><h2>Tom wants to sell a new service: fixing units before they fail.</h2>
+  <p class="bridge">Year 3 runs on everything you bought in Year 1 and Year 2. Tom, the CEO, wants to sell customers a service that predicts when a rooftop unit is about to fail, so a technician can fix it before the customer has a problem. That service needs two things from your budget: field history from Connect, and computing room from Capacity.</p>
+  ${cum?runningHTML(cum,'Two-year totals',['connect','capacity']):''}
   <section class="year3-stage">
-    <div class="eyebrow">Your opening view</div><div class="year3-opening">“${esc(S.strategicView||'—')}”</div>
+    <div class="eyebrow">Your reason for the Year 1 budget</div><div class="year3-opening">“${esc(S.strategicView||'—')}”</div>
     ${o?`<div class="outcome"><h3>${esc(o.title)}</h3><p>${esc(o.narrative)}</p></div>`:notice('Year 3 outcome is unavailable.',true)}
   </section>
-  ${nav({backOk:false,nextLabel:C.buyers?.authored===false?'Continue to close':'See the three buyers'})}`);wireNav(next,false);
+  ${C.buyers?.authored===false?'':'<div class="handoff">At the end of Year 3, the owners decide it is time to sell. Three buyers come to look at Midland.</div>'}
+  ${nav({backOk:false,nextLabel:C.buyers?.authored===false?'Continue to the review':'Meet the three buyers'})}`);wireNav(next,false);
 }
+const INTEREST_LABEL={high:'Strong interest',qualified:'Some interest',low:'Low interest'};
+function buyerCard(x,withKicker=true){return `<div class="buyer">${withKicker?`<div class="eyebrow">${esc(x.description)}</div>`:''}<h3>${esc(x.name)}</h3><div class="buyer-interest ${esc(x.interest)}">${esc(INTEREST_LABEL[x.interest]||x.interest)}</div><p>${esc(x.reason)}</p><div class="buyer-room-link">${x.spendNote?esc(x.spendNote)+' ':''}${esc(x.roomLink||'')}</div></div>`}
 function renderBuyers(){
   const b=S.allOutcomes?.buyers;
   if(!b){S.step=10;return renderClose()}
   const ordered=[b.carrolton,b.ridge_hollow,b.corven].filter(Boolean);
-  shell(`<div class="eyebrow">Three buyers</div><h2>Same company. Three different answers.</h2>
-  <p class="lede">There is no valuation total, ranking or winner. Each buyer sees a different thing in the company you built.</p>
-  <div class="buyers">${ordered.map(x=>`<div class="buyer"><div class="eyebrow">${esc(x.description)}</div><h3>${esc(x.name)}</h3><div class="buyer-interest ${esc(x.interest)}">${esc(x.interest)}</div><p>${esc(x.reason)}</p>${x.roomLink?`<div class="buyer-room-link">${esc(x.roomLink)}</div>`:''}</div>`).join('')}</div>
+  shell(`<div class="eyebrow">After Year 3 · Three buyers</div><h2>Three buyers look at the company you built.</h2>
+  <p class="bridge">Each buyer values something different, so each one reads your budget differently.</p>
+  <div class="buyers">${ordered.map(x=>buyerCard(x)).join('')}</div>
   <div class="buyer-close">${esc(b.closing||C.buyers?.closing||'')}</div>
-  ${nav({backOk:false,nextLabel:'Continue to close'})}`);wireNav(next,false);
+  ${nav({backOk:false,nextLabel:'Write your review for Tom'})}`);wireNav(next,false);
 }
-function closingLessonHTML(){const d=S.closingLesson;if(!d)return '';const ps=Array.isArray(d.paragraphs)?d.paragraphs:[];const run=Array.isArray(d.yourRun)?d.yourRun:[];return `<div class="result-section" id="closingLesson"><div class="eyebrow">${esc(d.title||'What this run was teaching you')}</div><div class="closing-lesson"><div class="closing-lesson-inner">${ps.map(p=>`<p>${esc(p)}</p>`).join('')}${run.length?`<div class="closing-run"><h3>In your run</h3>${run.map(p=>`<p>${esc(p)}</p>`).join('')}</div>`:''}<div class="closing-carry">${esc(d.carryOut||'')}</div></div></div></div>`}
+function voicesHTML(){const v=S.closingLesson?.voices;if(!Array.isArray(v)||!v.length)return '';return `<div class="result-section"><div class="eyebrow">What the four people would say</div><div class="voices">${v.map(x=>`<div class="voice"><b>${esc(x.name)} · ${esc(x.role)}</b>“${esc(x.line)}”</div>`).join('')}</div></div>`}
+function closingLessonHTML(){const d=S.closingLesson;if(!d)return '';const ps=Array.isArray(d.paragraphs)?d.paragraphs:[];const run=Array.isArray(d.yourRun)?d.yourRun:[];const t=Array.isArray(d.teaches)?d.teaches:[];return `<div class="result-section" id="closingLesson"><div class="eyebrow">${esc(d.title||'What this RapidSim teaches')}</div><div class="closing-lesson"><div class="closing-lesson-inner">${t.length?`<div class="teaches"><ol>${t.map(x=>`<li><b>${esc(x.head)}</b> ${esc(x.text)}</li>`).join('')}</ol></div>`:''}${ps.map(p=>`<p>${esc(p)}</p>`).join('')}${run.length?`<div class="closing-run"><h3>In your run</h3>${run.map(p=>`<p>${esc(p)}</p>`).join('')}</div>`:''}<div class="closing-carry">${esc(d.carryOut||'')}</div></div></div></div>`}
+const RESULT_PHRASE={
+  y1:{strong:'Report sent the next day',middle:'Late, thin report',weak:'A week on the roofs'},
+  heat:{strong:'Dispatch held',middle:'Six-hour outage',weak:'Four-day outage'},
+  comp:{strong:'Matched the offer',middle:'Thirty-unit pilot',weak:'Offer out of reach'},
+  y3:{strong:'A service to sell',pilot:'A pilot',data_no_room:'Data with no room to run it',weak:'Too little history'}};
+function timelineHTML(y1o,y2o,y3o,cum){
+  const rows=[
+    y1o&&['Year 1','District report',RESULT_PHRASE.y1[y1o.band],`Connect $${S.year1?.connect??0}M`],
+    y2o?.heat&&['Year 2','Heat wave',RESULT_PHRASE.heat[y2o.heat.band],`Uptime $${cum?.uptime??0}M`],
+    y2o?.competitor&&['Year 2','Competitor’s flat-rate plan',RESULT_PHRASE.comp[y2o.competitor.band],`Connect $${cum?.connect??0}M`],
+    y3o&&['Year 3','Predicting failures',RESULT_PHRASE.y3[y3o.band],`Connect $${cum?.connect??0}M · Capacity $${cum?.capacity??0}M`]
+  ].filter(Boolean);
+  const stories=[y1o,y2o?.heat,y2o?.competitor,y3o].filter(Boolean).map(o=>`<div class="outcome"><h3>${esc(o.title)}</h3><p>${esc(o.narrative)}</p></div>`).join('');
+  return `<div class="card">${rows.map(r=>`<div class="tl-line"><div class="tl-year">${esc(r[0])}</div><div class="tl-what">${esc(r[1])} <span class="hint">· ${esc(r[3])}</span></div><div class="tl-band">${esc(r[2]||'')}</div></div>`).join('')}</div><details class="reread"><summary>Read the stories again</summary>${stories}</details>`;
+}
 function renderClose(){
   if(S.finished){
     const teamMode=S.session?.mode==='team';
@@ -627,46 +673,40 @@ function renderClose(){
     const y3o=S.allOutcomes?.year3||null;
     const cum=y3o?.cumulative||(S.year1&&S.year2?runningTotals(S.year1,S.year2):null);
     const overall=overallOutcomeText();
-    shell(`<div class="eyebrow">Your outcome</div><h2>What your architecture made possible.</h2>
-    <p class="lede">This is not a score or grade. It is the chain of consequences produced by the portfolio you committed.</p>
+    const b=S.allOutcomes?.buyers;
+    shell(`<div class="eyebrow">Your three years at Midland</div><h2>What your budgets made possible.</h2>
+    <p class="lede">Here is the chain of results your two budgets produced.</p>
     ${overall?`<div class="result-hero"><h3>Overall result</h3><p>${esc(overall)}</p></div>`:''}
-    <div class="result-section"><div class="eyebrow">Three-year consequence timeline</div>
-      <div class="timeline">
-        <div class="timeline-year"><div class="timeline-label">Year 1</div><div class="timeline-body">${y1o?`<div class="outcome"><h3>${esc(y1o.title)}</h3><p>${esc(y1o.narrative)}</p></div>`:'<div class="card"><p>Outcome unavailable.</p></div>'}</div></div>
-        <div class="timeline-year"><div class="timeline-label">Year 2</div><div class="timeline-body"><div class="timeline-pair">
-          ${y2o?.heat?`<div class="outcome"><h3>${esc(y2o.heat.title)}</h3><p>${esc(y2o.heat.narrative)}</p></div>`:''}
-          ${y2o?.competitor?`<div class="outcome"><h3>${esc(y2o.competitor.title)}</h3><p>${esc(y2o.competitor.narrative)}</p></div>`:''}
-        </div></div></div>
-        <div class="timeline-year"><div class="timeline-label">Year 3</div><div class="timeline-body">${y3o?`<div class="outcome"><h3>${esc(y3o.title)}</h3><p>${esc(y3o.narrative)}</p></div>`:'<div class="card"><p>Outcome unavailable.</p></div>'}</div></div>
-      </div>
-    </div>
-    <div class="result-section"><div class="eyebrow">The portfolio that produced this</div>
+    <div class="result-section"><div class="eyebrow">Your three years, test by test</div>${timelineHTML(y1o,y2o,y3o,cum)}</div>
+    ${voicesHTML()}
+    <div class="result-section"><div class="eyebrow">The budgets that produced this</div>
       <div class="result-grid">
-        <div class="card"><h3>Year 1 allocation</h3>${S.year1?miniAlloc(S.year1):'<p>—</p>'}</div>
-        <div class="card"><h3>Year 2 allocation</h3>${S.year2?miniAlloc(S.year2):'<p>—</p>'}</div>
-        <div class="card" style="grid-column:1/-1"><h3>Cumulative portfolio</h3>${cum?miniAlloc(cum):'<p>—</p>'}</div>
+        <div class="card"><h3>Year 1 budget</h3>${S.year1?miniAlloc(S.year1):'<p>—</p>'}</div>
+        <div class="card"><h3>Year 2 budget</h3>${S.year2?miniAlloc(S.year2):'<p>—</p>'}</div>
+        <div class="card" style="grid-column:1/-1"><h3>Two-year totals</h3>${cum?miniAlloc(cum):'<p>—</p>'}</div>
       </div>
     </div>
-    ${S.allOutcomes?.buyers?`<div class="result-section"><div class="eyebrow">The three buyers</div><div class="buyers">${[S.allOutcomes.buyers.carrolton,S.allOutcomes.buyers.ridge_hollow,S.allOutcomes.buyers.corven].filter(Boolean).map(x=>`<div class="buyer"><h3>${esc(x.name)}</h3><div class="buyer-interest ${esc(x.interest)}">${esc(x.interest)}</div><p>${esc(x.reason)}</p>${x.roomLink?`<div class="buyer-room-link">${esc(x.roomLink)}</div>`:''}</div>`).join('')}</div><div class="buyer-close">${esc(S.allOutcomes.buyers.closing||'')}</div></div>`:''}
-    <div class="result-section"><div class="eyebrow">Your original view</div>
-      <div class="card"><p>${esc(S.strategicView||'—')}</p></div>
-    </div>
-    ${teamMode?`<div class="result-section"><div class="eyebrow">Team submission</div><div class="card"><p>The selected runner submitted this shared result for the whole team. Every team member sees the same outcome.</p></div></div>`:`<div class="result-section"><div class="eyebrow">Your reflections</div>
+    ${b?`<div class="result-section"><div class="eyebrow">The three buyers</div><div class="buyers">${[b.carrolton,b.ridge_hollow,b.corven].filter(Boolean).map(x=>buyerCard(x,false)).join('')}</div></div>`:''}
+    ${teamMode?`<div class="result-section"><div class="eyebrow">Team submission</div><div class="card"><p>The selected runner submitted this shared result for the whole team. Every team member sees the same outcome.</p></div></div>`:''}
+    ${closingLessonHTML()}
+    <div class="result-section"><div class="eyebrow">Your reason for the Year 1 budget</div><div class="card"><p>${esc(S.strategicView||'—')}</p></div></div>
+    ${teamMode?'':`<div class="result-section"><div class="eyebrow">Your review for Tom</div>
       <div class="card"><h3>${esc(C.reflectionPrompts[0])}</h3><p style="white-space:pre-wrap">${esc(S.reflection1||'—')}</p></div>
       <div class="card" style="margin-top:12px"><h3>${esc(C.reflectionPrompts[1])}</h3><p style="white-space:pre-wrap">${esc(S.reflection2||'—')}</p></div>
-    </div>
-    ${closingLessonHTML()}`}
-    <div class="notice run-complete">Run complete. The full outcome, portfolio and reflections are ready to screenshot or print to PDF.</div>
+    </div>`}
+    <div class="notice run-complete">Run complete. Print or save this page as a PDF to keep it.</div>
     <div class="actions"><button class="btn pri" id="printBtn">Print / save PDF</button><a class="btn" id="studentHomeBtn" href="${esc((C.platformUrl||location.origin).replace(/\/$/,'')+'/student.html')}">Back to student home</a></div>`);
     document.getElementById('printBtn').onclick=()=>window.print();
     return;
   }
-  shell(`<div class="eyebrow">Close</div><h2>The decisions are over. Explain what you would defend or change.</h2>
-  <div class="summary"><div class="card"><h3>Your opening view</h3><p>${esc(S.strategicView||'—')}</p></div>
-  <div class="card"><h3>Your Year 1 allocation</h3>${S.year1?miniAlloc(S.year1):'<p>—</p>'}</div></div>
-  <div class="field"><label>${esc(C.reflectionPrompts[0])}</label>${C.reflectionFollowups?.[0]?`<div class="reflection-followup">${esc(C.reflectionFollowups[0])}</div>`:''}<textarea id="r1" maxlength="1500">${esc(S.reflection1)}</textarea><div class="hint reflection-note">Your instructor can see this response and may read it aloud in the debrief. It is not scored.</div></div>
-  <div class="field"><label>${esc(C.reflectionPrompts[1])}</label><textarea id="r2" maxlength="1500">${esc(S.reflection2)}</textarea><div class="hint reflection-note">Your instructor can see this response and may read it aloud in the debrief. It is not scored.</div></div>
-  <div class="actions"><button class="btn pri" id="finishBtn">Complete run</button></div>`);
+  const cum=S.year1&&S.year2?runningTotals(S.year1,S.year2):null;
+  shell(`<div class="eyebrow">Before the sale · Your review</div><h2>Tom asks you to look back on your three years.</h2>
+  <p class="bridge">Before the sale closes, Tom wants a short review of your budgets. ${esc(C.reflectionDisclosure||'')}</p>
+  <div class="summary"><div class="card"><h3>Your reason for the Year 1 budget</h3><p>${esc(S.strategicView||'—')}</p></div>
+  <div class="card"><h3>Year 1 budget</h3>${S.year1?miniAlloc(S.year1):'<p>—</p>'}<h3 style="margin-top:12px">Year 2 budget</h3>${S.year2?miniAlloc(S.year2):'<p>—</p>'}<h3 style="margin-top:12px">Two-year totals</h3>${cum?miniAlloc(cum):'<p>—</p>'}</div></div>
+  <div class="field"><label>${esc(C.reflectionPrompts[0])}</label><textarea id="r1" maxlength="1500">${esc(S.reflection1)}</textarea></div>
+  <div class="field"><label>${esc(C.reflectionPrompts[1])}</label><textarea id="r2" maxlength="1500">${esc(S.reflection2)}</textarea></div>
+  <div class="actions"><button class="btn pri" id="finishBtn">Send your review to Tom</button></div>`);
   document.getElementById('finishBtn').onclick=finish;
 }
 function miniAlloc(a){return `<div class="mini">${C.lines.map(l=>`<div><b>${a[l.id]}</b><span>${esc(l.label)}</span></div>`).join('')}</div>`}

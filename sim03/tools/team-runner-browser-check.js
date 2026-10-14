@@ -207,21 +207,23 @@ async function snapshot(name, page) {
   await ben.setViewportSize({ width: 1366, height: 768 });
   check(await ben.locator('.brief-profit').evaluate(box =>
     box.previousElementSibling.textContent.includes('main office system') &&
-    box.nextElementSibling.textContent.includes('about to take over technology')), true,
-    'Brief places the business-model callout after systems and before taking over');
+    box.nextElementSibling.textContent.includes('sell the company')), true,
+    'Brief places the business-model callout after systems and before the planned sale');
+  check(await ben.locator('.brief-practise').textContent().then(t => t.includes('What you will practise')), true, 'Brief states what students will practise');
   await snapshot('06-brief-order', ben);
   await next(ben, 1); await next(ben, 2);
   const rules = await ben.locator('#position-rules').innerText();
-  check(rules.includes('Run has a $4M minimum') && rules.includes('$3M maximum per year') && rules.includes('cannot borrow from next year'), true,
-    'Position states the Run minimum, other-line caps, and no-borrow rule before allocation');
-  check(await ben.locator('.line-guide-row[data-line="capacity"]').innerText().then(t => t.includes('No one in the room speaks for this line.')), true,
+  check(rules.includes('Run has a $4M minimum') && rules.includes('up to $3M a year') && rules.includes('spent in that year'), true,
+    'Position states the Run minimum, other-line caps, and the same-year rule before allocation');
+  check(await ben.locator('.line-guide-row[data-line="capacity"]').innerText().then(t => t.includes('You are the only person who speaks for this line.')), true,
     'Position explains Capacity silence in its own table row');
   await snapshot('07-position-rules', ben);
-  await next(ben, 3);
-  await ben.locator('#viewText').fill('Build a resilient service platform for Midland customers.');
   await next(ben, 4);
+  check(await ben.locator('.howto').textContent().then(t => t.includes('How to set your Year 1 budget')), true, 'Year 1 opens with allocation instructions');
   await allocate(ben, { uptime: 2, capacity: 1, connect: 2, features: 0 });
+  await ben.locator('#viewText').fill('This budget is for connecting the field units, because the data already exists.');
   await next(ben, 5);
+  check(await ben.evaluate(() => S.strategicView).then(v => v.startsWith('This budget is for')), true, 'Year 1 sentence commits with the Year 1 budget');
   check(await ben.locator('.outcome').evaluate(box => !!(box.compareDocumentPosition(document.querySelector('.running')) & Node.DOCUMENT_POSITION_FOLLOWING)), true,
     'Year 1 story precedes portfolio reference numbers');
   await snapshot('08-year1-story-first', ben);

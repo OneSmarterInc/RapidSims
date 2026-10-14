@@ -15,11 +15,12 @@ const META = {
     "seat": "Technology leader at Midland Equipment",
     "clock": "Three business years",
     "teaches": "Balance daily operations with future needs and understand why technology spending takes time to pay off.",
+    "practise": "You will set a technology budget for a real-sized company, choose between strong cases from four executives, and explain your priorities. Then you will see what your budgets made possible over three years.",
     "tangle": "The same budget must keep existing systems running and prepare the company for future needs. Spending more in one area leaves less for another.",
     "turn": "You see the later effects of choices that looked reasonable when you made them.",
     "roomIntro": "Four people want different things from the same $9 million budget. Each represents a different business need.",
     "momentsIntro": "",
-    "after": "Review your starting view and allocations, then answer two reflection questions. There is no score or ranking.",
+    "after": "Review your budgets and your one-sentence reason, then answer two questions for the CEO. You see what your budgets made possible over three years.",
     "discussion": "The instructor can compare anonymous budgets and outcomes to discuss the trade-offs.",
     "tryIt": "Try the complete activity before assigning it to students.",
     "sessionShape": "Allow about 30 minutes for play and the rest of a class hour for discussion. Students should read the briefing packet before the session.",
@@ -34,7 +35,7 @@ const META = {
       },
       {
         "label": "Feedback",
-        "value": "Reflection; no score"
+        "value": "A story of your results, plus reflection"
       }
     ],
     "atAGlance": [
@@ -88,7 +89,7 @@ const META = {
     "beats": [
       {
         "at": "Year 1",
-        "what": "State your starting view and choose your first budget."
+        "what": "Choose your first budget and explain it in one sentence."
       },
       {
         "at": "Year 2",
@@ -99,10 +100,10 @@ const META = {
         "what": "See the later effects and reflect on your choices."
       }
     ],
-    "activity": "Read the briefing, write your starting view, and divide the budget for Year 1. Review the results, set the Year 2 budget, and reflect on what happens in Year 3.",
+    "activity": "Read the briefing, divide the budget for Year 1, and explain it in one sentence. Review the results, set the Year 2 budget, and reflect on what happens in Year 3.",
     "suitableFor": "IT strategy, budgeting, and operations management classes.",
     "preparation": "Read the briefing packet before the session.",
-    "output": "A starting view, two annual budgets, and two final reflections.",
+    "output": "A one-sentence reason, two annual budgets, and two final reflections.",
     "durationNote": "About 30 minutes of play, plus discussion."
   }
 };
@@ -141,9 +142,9 @@ const COPY = Object.freeze({
     weak: 'July brings ten straight days above 95 degrees and service calls triple. Dispatch is down for four days in the hottest week, leaving sixty-two technicians working from phones and paper while repeat visits pile up and two hospital accounts go public with their anger. The system that was supposed to tell the trucks where to go becomes the failure inside the failure. Renata: “I asked for eight more trucks. Four days like this and I would not have known where to send them.”'
   },
   competitor: {
-    strong: 'The Carrolton pilot from the trade press has become a national flat-rate coverage offer, and Midland customers start asking when they can buy the same thing. Flat-rate service only works if Midland can see which units are healthy and price the risk, and the connected history is already there when the question arrives. The alternative would have been starting an eighteen-month connectivity build after the market moved; this portfolio does not have to wait for that clock. Tom: “This is something real. I can put it in front of the board before my eighteen months are up.”',
-    middle: 'The Carrolton pilot from Georgia and Tennessee has become a national flat-rate coverage offer, and Midland customers immediately ask for an answer. Midland has enough connected data to price a thirty-unit pilot, but not enough coverage to make the offer broadly without guessing at the risk. Finishing the missing connection now is an eighteen-month job, which is exactly Tom’s board window. Tom: “Thirty units is a pilot. I have a board in eighteen months. I need to know whether this becomes a business before I walk into that room.”',
-    weak: 'A national rival turns Carrolton’s flat-rate pilot into a real market offer, and Midland customers start asking why they cannot have it too. Midland cannot price the risk because it still cannot see enough of the four thousand units in the field, and building that visibility now takes about eighteen months; the annual cap means money cannot buy the lost lead time back in one move. Tom: “That is my board window. If the build takes eighteen months from today, I have nothing real to show when I walk into that room.”'
+    strong: 'In Year 1, the trade press reported that Carrolton Systems was testing a flat-rate plan in Georgia and Tennessee. Under a flat-rate plan, a customer pays one fixed yearly fee and gets all the service it needs. To set that fee safely, a company has to know which of its units are healthy, and that knowledge comes from connected field data. Now Carrolton is offering the plan nationally, and Midland’s customers want the same thing. Midland can answer right away. Its connected history already shows which units are healthy, so it can set a safe price and make the offer. A company starting today would need about eighteen months to build that view. Tom: “This is something real. I can put it in front of the board before my eighteen months are up.”',
+    middle: 'In Year 1, the trade press reported that Carrolton Systems was testing a flat-rate plan in Georgia and Tennessee. Under a flat-rate plan, a customer pays one fixed yearly fee and gets all the service it needs. To set that fee safely, a company has to know which of its units are healthy, and that knowledge comes from connected field data. Now Carrolton is offering the plan nationally, and Midland’s customers want the same thing. Midland has enough connected data to price a thirty-unit pilot. Offering the plan to every customer needs wider coverage, and finishing that connection now is an eighteen-month job, which is exactly Tom’s board window. Tom: “Thirty units is a pilot. I have a board in eighteen months. I need to know whether this becomes a business before I walk into that room.”',
+    weak: 'In Year 1, the trade press reported that Carrolton Systems was testing a flat-rate plan in Georgia and Tennessee. Under a flat-rate plan, a customer pays one fixed yearly fee and gets all the service it needs. To set that fee safely, a company has to know which of its units are healthy, and that knowledge comes from connected field data. Now Carrolton is offering the plan nationally, and Midland’s customers want the same thing. Midland sees only a small share of its four thousand units in the field, which is too little to price the risk safely. Building the rest of that view takes about eighteen months from today, and the yearly limit on each line sets that pace. Tom: “That is my board window. If the build takes eighteen months from today, I have nothing real to show when I walk into that room.”'
   },
   year3: {
     strong: 'In Year 3 the CEO asks whether Midland can predict failures before a customer calls and sell that capability across the installed base. The company now has years of field history and enough capacity to run the model continuously, so patterns across thousands of units become service calls Midland can prevent instead of emergencies it reacts to. Predictive uptime becomes something Midland can actually sell, not a demo. Tom: “This is real. I can put a service in front of the board instead of another promise.” Sam: “We used to spend $290 to send a truck to hear what the machine could have told us yesterday. Now it tells us before the customer calls.”',
@@ -154,9 +155,9 @@ const COPY = Object.freeze({
 });
 
 const YEAR2_INTRO = Object.freeze({
-  strong: 'A year has passed. The district renewed early, and Sam’s report is now the example people point to when they argue that the machines can do more than Midland has been asking of them. Dale is back at the table looking at the Run number, and the same $9 million is available again.',
-  middle: 'A year has passed. The district renewed, grudgingly, after Midland patched together a late report and the service team did work the architecture could not do for them. Dale is back at the table looking at the Run number, and the same $9 million is available again.',
-  weak: 'A year has passed. The district renewed on price but has started taking competitor calls, and Sam’s team remembers the week spent on roofs because Midland could not pull its own machine history. Dale is back at the table looking at the Run number, and the same $9 million is available again.'
+  strong: 'Year 2 begins. The district renewed early, and Sam’s report is now the example people point to when they argue that the machines can do more than Midland has been asking of them. Dale is back at the table looking at the Run number.',
+  middle: 'Year 2 begins. The district renewed, grudgingly, after Midland patched together a late report and the service team did work the architecture could not do for them. Dale is back at the table looking at the Run number.',
+  weak: 'Year 2 begins. The district renewed on price but has started taking competitor calls, and Sam’s team remembers the week spent on roofs because Midland could not pull its own machine history. Dale is back at the table looking at the Run number.'
 });
 
 const BUYERS = Object.freeze({
@@ -165,14 +166,14 @@ const BUYERS = Object.freeze({
     name: 'Carrolton Systems',
     description: 'Regional competitor',
     copy: 'We are buying the customers and the service contracts. Your systems are overhead we plan to retire in the first year.',
-    roomLink: 'No one in the room was arguing for this outcome. Carrolton is buying Midland’s customers and contracts, not the architecture.'
+    roomLink: 'Carrolton values Midland’s customers and service contracts. Its interest is the same for every budget.'
   },
   ridge_hollow: {
     id: 'ridge_hollow',
     name: 'Ridge Hollow Partners',
     description: 'Private equity',
-    roomLink: 'This is Dale’s argument from the room, judged by a buyer: keep the cost base lean and do not carry spending that has to be defended forever.',
-    high: 'Likes what it sees: a lean operation with no expensive habits. After closing, it plans to keep capital spending tight, harvest cash for four years, and sell; nothing in your portfolio gets in the way of that plan.',
+    roomLink: 'This is Dale’s argument, judged by a buyer: keep the cost base lean.',
+    high: 'Likes what it sees: a lean operation. After closing, it plans to keep capital spending tight, harvest cash for four years, and sell, and your portfolio fits that plan.',
     qualified: 'Interested, with reservations about how much of the spending it would have to keep funding.',
     low: 'Sees a cost base it would have to cut hard, and it has done this often enough to know how that goes.'
   },
@@ -180,13 +181,13 @@ const BUYERS = Object.freeze({
     id: 'corven',
     name: 'Corven Building Systems',
     description: 'Platform acquirer',
-    roomLink: 'This is Sam’s argument from the room, judged by a buyer: the field data and customer relationships are valuable because they cannot be recreated quickly.',
-    high: 'This is the only reason it is at the table. Three years of fault history from four thousand units in buildings it does not yet serve. It is not buying an HVAC dealer, it is buying what those machines have been saying.',
+    roomLink: 'This is Sam’s argument, judged by a buyer: field data takes years to build.',
+    high: 'Three years of fault history from four thousand units is the reason it came. It is buying what those machines have been saying.',
     qualified: 'Sees the beginning of something and would want to finish it themselves, which changes the price and who runs the company afterward.',
-    low: 'It came for the fault history from four thousand units and cannot find enough connected history to buy. Without that asset, Corven sees an HVAC dealer rather than the platform Sam kept arguing Midland could become.'
+    low: 'It came for the fault history from four thousand units and finds too little connected history to buy. It sees an HVAC dealer, where Sam saw a platform.'
   }
 });
-const BUYER_CLOSING = 'Three buyers, one company, three different answers. Which one showed up was never yours to control. What you controlled was whether there was anything worth paying for.';
+const BUYER_CLOSING = 'Each buyer valued a different part of Midland. Your budget decided what each of them found.';
 
 function integer(v) {
   const n = Number(v);
@@ -248,16 +249,24 @@ function heatAllocationNotes(c, t, band) {
   return [`Cumulative Uptime was $${x}M. $${Math.max(0, middle - x)}M more would have avoided the four-day outage, and $${Math.max(0, strong - x)}M more would have kept dispatch fully online.`];
 }
 
+function competitorAllocationNotes(c, band) {
+  const x = Number(c.connect || 0);
+  const tail = band === 'strong' ? 'and in this test it came from Connect.'
+    : band === 'middle' ? 'and Connect got Midland as far as a pilot.'
+    : 'and in this test it depended on Connect.';
+  return [`Your two-year Connect total was $${x}M. Tom wanted something real to show the board, ${tail}`];
+}
+
 function evaluateYear1(y1, thresholds) {
   const t = sanitizeThresholds(thresholds);
   const c = y1.connect;
   if (c >= t.year1ConnectStrong) {
-    return { band: 'strong', title: 'The school district asks for a performance report', narrative: COPY.year1.strong, allocationNotes: year1AllocationNotes(y1, t, 'strong'), year2Intro: YEAR2_INTRO.strong.replace('$9 million', `$${t.budgetPerYear} million`) };
+    return { band: 'strong', title: 'The district asks for a performance report', narrative: COPY.year1.strong, allocationNotes: year1AllocationNotes(y1, t, 'strong'), year2Intro: YEAR2_INTRO.strong.replace('$9 million', `$${t.budgetPerYear} million`) };
   }
   if (c > 0) {
-    return { band: 'middle', title: 'The school district asks for a performance report', narrative: COPY.year1.middle, allocationNotes: year1AllocationNotes(y1, t, 'middle'), year2Intro: YEAR2_INTRO.middle.replace('$9 million', `$${t.budgetPerYear} million`) };
+    return { band: 'middle', title: 'The district asks for a performance report', narrative: COPY.year1.middle, allocationNotes: year1AllocationNotes(y1, t, 'middle'), year2Intro: YEAR2_INTRO.middle.replace('$9 million', `$${t.budgetPerYear} million`) };
   }
-  return { band: 'weak', title: 'The school district asks for a performance report', narrative: COPY.year1.weak, allocationNotes: year1AllocationNotes(y1, t, 'weak'), year2Intro: YEAR2_INTRO.weak.replace('$9 million', `$${t.budgetPerYear} million`) };
+  return { band: 'weak', title: 'The district asks for a performance report', narrative: COPY.year1.weak, allocationNotes: year1AllocationNotes(y1, t, 'weak'), year2Intro: YEAR2_INTRO.weak.replace('$9 million', `$${t.budgetPerYear} million`) };
 }
 
 function evaluateYear2(y1, y2, thresholds) {
@@ -269,15 +278,15 @@ function evaluateYear2(y1, y2, thresholds) {
   else heat = { band: 'weak', narrative: COPY.heat.weak, allocationNotes: heatAllocationNotes(c, t, 'weak') };
 
   let competitor;
-  if (c.connect >= t.competitorConnectStrong) competitor = { band: 'strong', narrative: COPY.competitor.strong };
+  if (c.connect >= t.competitorConnectStrong) competitor = { band: 'strong', narrative: COPY.competitor.strong, allocationNotes: competitorAllocationNotes(c, 'strong') };
   else if (c.connect >= t.competitorConnectPilotMin && c.connect <= t.competitorConnectPilotMax) {
-    competitor = { band: 'middle', narrative: COPY.competitor.middle };
-  } else competitor = { band: 'weak', narrative: COPY.competitor.weak };
+    competitor = { band: 'middle', narrative: COPY.competitor.middle, allocationNotes: competitorAllocationNotes(c, 'middle') };
+  } else competitor = { band: 'weak', narrative: COPY.competitor.weak, allocationNotes: competitorAllocationNotes(c, 'weak') };
 
   return {
     cumulative: c,
-    heat: { title: 'The heat wave', ...heat },
-    competitor: { title: "The competitor's flat-rate plan", ...competitor }
+    heat: { title: 'Test 1 · The heat wave', ...heat },
+    competitor: { title: "Test 2 · The competitor's flat-rate plan", ...competitor }
   };
 }
 
@@ -286,15 +295,15 @@ function evaluateYear3(y1, y2, thresholds) {
   const c = cumulative(y1, y2);
 
   if (c.connect >= t.year3ConnectStrong && c.capacity >= t.year3CapacityStrong) {
-    return { band: 'strong', title: 'The CEO wants AI failure prediction', narrative: COPY.year3.strong, cumulative: c };
+    return { band: 'strong', title: 'Predicting failures before customers call', narrative: COPY.year3.strong, cumulative: c };
   }
   if (c.connect >= t.year3ConnectStrong && c.capacity < t.year3CapacityStrong) {
-    return { band: 'data_no_room', title: 'The CEO wants AI failure prediction', narrative: COPY.year3.data_no_room, cumulative: c };
+    return { band: 'data_no_room', title: 'Predicting failures before customers call', narrative: COPY.year3.data_no_room, cumulative: c };
   }
   if (c.connect >= t.year3ConnectPilotMin && c.connect <= t.year3ConnectPilotMax) {
-    return { band: 'pilot', title: 'The CEO wants AI failure prediction', narrative: COPY.year3.pilot, cumulative: c };
+    return { band: 'pilot', title: 'Predicting failures before customers call', narrative: COPY.year3.pilot, cumulative: c };
   }
-  return { band: 'weak', title: 'The CEO wants AI failure prediction', narrative: COPY.year3.weak, cumulative: c };
+  return { band: 'weak', title: 'Predicting failures before customers call', narrative: COPY.year3.weak, cumulative: c };
 }
 
 function evaluateBuyers(y1, y2) {
@@ -317,6 +326,7 @@ function evaluateBuyers(y1, y2) {
       description: BUYERS.ridge_hollow.description,
       interest: ridgeInterest,
       reason: BUYERS.ridge_hollow[ridgeInterest],
+      spendNote: `Ridge Hollow looked at your two-year Run and Features spending: $${ridgeSpend}M.`,
       roomLink: BUYERS.ridge_hollow.roomLink
     },
     corven: {
@@ -325,6 +335,7 @@ function evaluateBuyers(y1, y2) {
       description: BUYERS.corven.description,
       interest: corvenInterest,
       reason: BUYERS.corven[corvenInterest],
+      spendNote: `Corven looked at your two-year Connect spending: $${c.connect}M.`,
       roomLink: BUYERS.corven.roomLink
     },
     closing: BUYER_CLOSING
@@ -374,7 +385,8 @@ function publicConfig(thresholds = DEFAULT_THRESHOLDS) {
       ],
       company: [
         'Midland sells and services commercial HVAC systems — the large rooftop units that heat and cool schools, hospitals, and office buildings. The company operates in Ohio, Indiana, and Michigan, and has roughly 4,000 of its units installed in customers’ buildings. Revenue comes from two places: selling equipment, and a service department that bills by the visit. Sixty-two field technicians drive to those buildings all day, every day.',
-        'The company is 41 years old, profitable, and nobody thinks it is in trouble.'
+        'The company is 41 years old, profitable, and nobody thinks it is in trouble.',
+        'Midland is still owned by the family that founded it. The owners plan to sell the company within a few years, and they want it to be worth buying.'
       ],
       exhibits: [
         {
@@ -388,7 +400,7 @@ function publicConfig(thresholds = DEFAULT_THRESHOLDS) {
         },
         {
           title: 'Exhibit 2 — Where last year’s technology money went',
-          body: ['The technology budget is $9 million a year and has not changed in four years.'],
+          body: ['The technology budget is $9 million a year and has stayed at that level for four years. It is split into five budget lines. A budget line is one area of spending, and each row below is one line.'],
           columns: ['Line', 'Last year'],
           rows: [
             ['Keeping current systems running (the 14-year-old ERP, help desk, licenses)', '$6.1M'],
@@ -426,35 +438,38 @@ function publicConfig(thresholds = DEFAULT_THRESHOLDS) {
         }
       ],
       people: META.detail.cast.map(({ name, role, quote }) => ({ name, role, quote })),
-      peopleNote: 'All four of them are reasonable. None of them is going to tell you the answer, and if you ask any of them what you should do, you will get a confident reply shaped by the part of the company they are responsible for.',
+      peopleNote: 'All four of them are reasonable. Ask any of them what you should do, and you will get a confident answer shaped by the part of the company they run.',
       whatHappens: [
-        `You make two annual $${rules.annualBudget} million allocations across five lines. Year 1 reveals the first consequence; after the second allocation, two Year 2 events resolve; Year 3 is then revealed with no further allocation.`,
-        'In individual mode you commit your own choices. In team mode the group works from one shared run. In either mode, you cannot save money or borrow from the next year.',
-        'Come with a view about what this company should become. You will be asked for it early, in one sentence.'
+        `You make two annual $${rules.annualBudget} million allocations across five budget lines. Year 1 reveals the first consequence; after the second allocation, two Year 2 events resolve; Year 3 is then revealed with no further allocation.`,
+        'In individual mode you commit your own choices. In team mode the group works from one shared run. In either mode, each year’s money is spent in that year, and what you spend adds up across the years.',
+        'Come ready to explain your priorities. When you commit your first budget, you will write one sentence about what it is for.'
       ]
     },
     coldOpen: [
       'Midland sells and services the big rooftop heating and cooling units on schools, hospitals, and office buildings across Ohio, Indiana, and Michigan. About four thousand of them are out there right now. Sixty-two technicians drive to those buildings all day, every day.',
       'The main office system is fourteen years old. Every unit installed since 2016 records its own run hours, temperatures, and faults. Nobody has ever looked at that data, because the only way to see it is to drive out and plug in a laptop.',
       'Selling equipment brings in most of the revenue. Servicing it brings in most of the profit.',
+      'The family that owns Midland plans to sell the company within a few years.',
       'You are about to take over technology decisions here.'
     ],
     position: rules.position,
-    viewPrompt: 'Midland should become a company that can ___ for customers by ___.',
-    viewDisclosure: 'Your instructor can see this sentence in the instructor view. It is not scored, and it will come back to you at the close.',
+    practise: META.detail.practise,
+    lastYear: { run: 6.1, uptime: 0.7, capacity: 0.4, connect: 0.2, features: 1.6 },
+    viewPrompt: 'This budget is for ___, because ___.',
+    viewDisclosure: 'Your instructor can see this sentence. It comes back to you at the end.',
     reflectionPrompts: [
-      'Which of Dale, Renata, Tom, or Sam did you overrule most?',
-      'If you could change one Year 1 million after seeing Year 3, where would it move and why?'
+      'Dale, Renata, Tom and Sam each wanted more money. Whose line got the least from you, and why?',
+      'Now that you have seen Year 3, which line would you move $1M into in Year 1, and where would you take it from?'
     ],
     reflectionFollowups: [
-      'After seeing Year 3, would you make the same call? Why or why not?',
+      '',
       ''
     ],
-    reflectionDisclosure: 'Your instructor can see these responses and may use them in the class debrief. They are not scored.',
+    reflectionDisclosure: 'Your instructor also sees your answers and may read them in class.',
     buyers: {
       authored: true,
       title: 'Three buyers, one company',
-      note: 'Each buyer gives a verdict and an interest level. There is no total, ranking or winner.',
+      note: 'Each buyer gives a verdict and an interest level.',
       closing: BUYER_CLOSING
     }
   };

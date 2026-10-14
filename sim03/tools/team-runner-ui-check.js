@@ -77,7 +77,7 @@ run("C={annualBudget:9,runMinimum:3,lineMaximum:3,lines:['run','uptime','capacit
   assert.equal(run('S.step'), 6);
   assert.equal(run('S.year1Outcome.title'), 'Saved outcome');
   assert.deepEqual(clone(run('S.year1')), y1);
-  assert(html.includes('A year later, the same $9 million is back on the table.'));
+  assert(html.includes('Your second and final budget.'));
 
   // A reloaded runner restores the persisted screen without recommitting.
   run('S.hasSessionState=false; S.step=0; S.year1=null; S.year1Outcome=null');
@@ -108,7 +108,7 @@ run("C={annualBudget:9,runMinimum:3,lineMaximum:3,lines:['run','uptime','capacit
   assert.equal(run('C.annualBudget'),10);assert.equal(run('C.runMinimum'),5);
   assert.deepEqual(clone(run('defaultAlloc()')),{run:5,uptime:0,capacity:0,connect:0,features:0});
   assert.deepEqual(clone(run('S.year1')),y1,'a rules refresh must never erase a committed year');
-  assert(html.includes('same $10 million'),'rendered budget follows the saved session');
+  assert(html.includes('of $10M'),'rendered budget follows the saved session');
   assert.equal(run('validateClient({run:5,uptime:2,capacity:1,connect:2,features:0})'),'');
   console.log('RapidSim 03 runner UI checks passed (selection, observer gating, handoff/reload, focus revocation, stale polls, runner-only completion).');
 })().catch(error => { console.error(error); process.exitCode = 1; });

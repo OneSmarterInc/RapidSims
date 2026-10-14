@@ -14,7 +14,7 @@ assert.equal(cfg.lines.find(x=>x.id==='uptime').description,'Backup and redundan
 assert.equal(cfg.lines.find(x=>x.id==='connect').description,'Gets data back from units in the field automatically.');
 assert.equal(cfg.lines.find(x=>x.id==='features').description,'Visible new things the business can point at.');
 assert.ok(cfg.reflectionPrompts[0].includes('Dale') && cfg.reflectionPrompts[0].includes('Sam'));
-assert.ok(cfg.reflectionDisclosure.includes('class debrief'));
+assert.ok(cfg.reflectionDisclosure.includes('read them in class'));
 assert.ok(cfg.viewPrompt.includes('___'));
 
 const y1Weak=valid({run:3,uptime:2,capacity:2,connect:0,features:2});
@@ -64,8 +64,8 @@ assert.ok(text.includes('Closest counterfactual:'));
 assert.equal((text.match(/Closest counterfactual:/g)||[]).length,1);
 
 const html=fs.readFileSync(path.join(__dirname,'..','public','index.html'),'utf8');
-assert.ok(html.includes("const STEPS=['Brief','Room','Position','View'"));
+assert.ok(html.includes("const STEPS=['Brief','People','Position','View'"));
 assert.ok(html.includes('case 1:return renderRoom()') && html.includes('case 2:return renderPosition()'));
-for(const marker of ['30 MIN','brief-profit','allocationConfirmation','usefulOpeningView','Year 1 committed','year3-stage','timeline-pair','may read it aloud in the debrief','buyer-room-link','$${C.lineMaximum}M annual ceiling reached']) assert.ok(html.includes(marker),marker);
+for(const marker of ['30 MIN','brief-profit','allocationConfirmation','usefulOpeningView','Year 1 committed','year3-stage','tl-line','reflectionDisclosure','buyer-room-link','$${C.lineMaximum}M annual ceiling reached']) assert.ok(html.includes(marker),marker);
 for(const old of ['The first consequence arrives.','You get one more allocation.','Two events resolve in sequence.','You do not get another move.','Return to what you believed before the consequences.']) assert.equal(html.includes(old),false,old);
 console.log('RapidSim 03 Increment 2 checks passed.');
