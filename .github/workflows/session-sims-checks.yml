@@ -50,6 +50,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Install shared runtime dependencies
+        run: npm ci --no-audit --no-fund
       - name: Platform launch, course lookup and faculty roster
         run: node platform/tools/session-sims-check.js
       - name: Sim07, Sim08 and Sim09 client entry and completion
