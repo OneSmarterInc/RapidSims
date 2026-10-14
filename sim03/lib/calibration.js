@@ -40,7 +40,7 @@ function publicRules(input = DEFAULT_THRESHOLDS) {
   const t = sanitizeThresholds(input);
   return {
     annualBudget: t.budgetPerYear, runMinimum: t.runFloor, lineMaximum: t.perLineCap,
-    position: `You have $${t.budgetPerYear} million to allocate this year across five lines. Spend all $${t.budgetPerYear}M; you cannot borrow from next year. Run has a $${t.runFloor}M minimum. Each other line — Uptime, Capacity, Connect, and Features — has a $${t.perLineCap}M maximum per year.`
+    position: `You have $${t.budgetPerYear} million each year to divide across five budget lines. Each year’s money is spent in that year. Run has a $${t.runFloor}M minimum, the lowest amount that keeps current systems working. Each other line — Uptime, Capacity, Connect and Features — can take up to $${t.perLineCap}M a year.`
   };
 }
 

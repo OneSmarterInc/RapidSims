@@ -181,11 +181,12 @@
       "seat": "Technology leader at Midland Equipment",
       "clock": "Three business years",
       "teaches": "Balance daily operations with future needs and understand why technology spending takes time to pay off.",
+      "practise": "You will set a technology budget for a real-sized company, choose between strong cases from four executives, and explain your priorities. Then you will see what your budgets made possible over three years.",
       "tangle": "The same budget must keep existing systems running and prepare the company for future needs. Spending more in one area leaves less for another.",
       "turn": "You see the later effects of choices that looked reasonable when you made them.",
       "roomIntro": "Four people want different things from the same $9 million budget. Each represents a different business need.",
       "momentsIntro": "",
-      "after": "Review your starting view and allocations, then answer two reflection questions. There is no score or ranking.",
+      "after": "Review your budgets and your one-sentence reason, then answer two questions for the CEO. You see what your budgets made possible over three years.",
       "discussion": "The instructor can compare anonymous budgets and outcomes to discuss the trade-offs.",
       "tryIt": "Try the complete activity before assigning it to students.",
       "sessionShape": "Allow about 30 minutes for play and the rest of a class hour for discussion. Students should read the briefing packet before the session.",
@@ -200,7 +201,7 @@
         },
         {
           "label": "Feedback",
-          "value": "Reflection; no score"
+          "value": "A story of your results, plus reflection"
         }
       ],
       "atAGlance": [
@@ -254,7 +255,7 @@
       "beats": [
         {
           "at": "Year 1",
-          "what": "State your starting view and choose your first budget."
+          "what": "Choose your first budget and explain it in one sentence."
         },
         {
           "at": "Year 2",
@@ -265,10 +266,10 @@
           "what": "See the later effects and reflect on your choices."
         }
       ],
-      "activity": "Read the briefing, write your starting view, and divide the budget for Year 1. Review the results, set the Year 2 budget, and reflect on what happens in Year 3.",
+      "activity": "Read the briefing, divide the budget for Year 1, and explain it in one sentence. Review the results, set the Year 2 budget, and reflect on what happens in Year 3.",
       "suitableFor": "IT strategy, budgeting, and operations management classes.",
       "preparation": "Read the briefing packet before the session.",
-      "output": "A starting view, two annual budgets, and two final reflections.",
+      "output": "A one-sentence reason, two annual budgets, and two final reflections.",
       "durationNote": "About 30 minutes of play, plus discussion."
     }
   },

@@ -41,10 +41,10 @@ for (const marker of ['${esc(o.band)}', '${esc(o.heat.band)}', '${esc(o.competit
 }
 
 for (const marker of [
-  'Continue to the second event',
-  'Your outcome',
+  'See the second test',
+  'Your three years at Midland',
   'Print / save PDF',
-  'nav({backOk:false})',
+  "nav({backOk:false,nextLabel:'Plan Year 2'})",
   'backOk:year===1',
   'function friendlyError(code,status)',
   'briefing packet before starting',
@@ -115,9 +115,9 @@ for (const marker of ['Auto split teams', 'Unassigned students', 'Team lead', 'A
   if (!workspace.includes(marker)) refuse('faculty workspace marker missing: ' + marker);
 if (index.includes('Valuation pending authored rule')) refuse('unauthored buyer placeholder reached the student bundle');
 if (index.includes('authored calibration does not yet define')) refuse('Year 3 calibration scaffolding reached the student bundle');
-for (const marker of ['Briefing & exhibits','Your outcome','Overall result','Three-year consequence timeline','The portfolio that produced this','Your original view','Year 2 allocation','Cumulative portfolio','Three buyers','buyer-interest'])
+for (const marker of ['Briefing & exhibits','Your three years at Midland','Overall result','Your three years, test by test','The budgets that produced this','Your reason for the Year 1 budget','Year 2 allocation','Two-year totals','Three buyers','buyer-interest'])
   if (!index.includes(marker)) refuse('briefing/outcome-results marker missing: ' + marker);
-for (const marker of ['Forty-one years old, profitable, and nobody thinks it is in trouble.','Four people, one budget.','Take the seat','One of the five lines has nobody speaking for it'])
+for (const marker of ['Forty-one years old, profitable, and nobody thinks it is in trouble.','Four people, one budget.','See the five lines','The fifth line is Capacity. You are the only person who can speak for it.'])
   if (!index.includes(marker)) refuse('increment-1 story marker missing: ' + marker);
 if (!index.includes('function overallOutcomeText()')) refuse('deterministic overall outcome synthesis missing');
 for (const forbidden of ['Score:','Grade:','Rank:']) if (index.includes(forbidden)) refuse('grade-like final result leaked: ' + forbidden);
@@ -125,19 +125,19 @@ for (const marker of ['Exhibit 1 â€” Where the revenue comes from','Exhibit 6 â€
   if (!S.publicConfig().briefing?.exhibits?.some(x => x.title === marker)) refuse('briefing data missing: ' + marker);
 if (S.publicConfig().buyers?.authored !== true) refuse('buyer content is not marked authored');
 if (!index.includes('data_no_room')) refuse('student final result does not recognize data_no_room');
-for (const marker of ['function closingLessonHTML()','What this run was teaching you','In your run','d.yourRun','run-complete','closingLesson=done.closingLesson']) if (!index.includes(marker)) refuse('closing lesson marker missing: ' + marker);
+for (const marker of ['function closingLessonHTML()','What this RapidSim teaches','In your run','d.yourRun','run-complete','closingLesson=done.closingLesson']) if (!index.includes(marker)) refuse('closing lesson marker missing: ' + marker);
 const finishSource = fs.readFileSync(path.join(__dirname, 'api', 'finish.js'), 'utf8');
 if (!finishSource.includes('buildClosingLesson(y1, y2, outcomes, lessonThresholds)')) refuse('server-authored dynamic closing lesson missing');
 if (index.includes('Your largest cumulative commitment was')) refuse('run-specific closing prose leaked into student bundle before completion');
-for (const marker of ['30 MIN','allocationConfirmation','usefulOpeningView','year3-stage','timeline-pair','may read it aloud in the debrief','buyer-room-link']) if (!index.includes(marker)) refuse('Increment 2 student marker missing: ' + marker);
+for (const marker of ['30 MIN','allocationConfirmation','usefulOpeningView','year3-stage','tl-line','reflectionDisclosure','buyer-room-link']) if (!index.includes(marker)) refuse('Increment 2 student marker missing: ' + marker);
 if (S.META.minutes !== 30) refuse('Increment 2 catalogue duration is not 30 minutes');
 if (index.includes('That imbalance was intentional')) refuse('simulation-design language leaked into the debrief');
 if (index.includes('calibrationGap') || index.includes('unresolved_calibration')) refuse('resolved Year 3 calibration scaffolding remains in the student UI');
 if (!instructor.includes('Data without room to run it')) refuse('instructor Year 3 distribution is missing data_no_room label');
 if (!instructor.includes('Corven high / Ridge Hollow low')) refuse('instructor buyer debate finder is missing');
-for (const marker of ['MAX $${C.lineMaximum}M / YEAR','The business model','function year2BreakdownHTML(','Year 1 + Year 2 split','advocate-reminder','may read it aloud in the debrief'])
+for (const marker of ['MAX $${C.lineMaximum}M / YEAR','The business model','function year2BreakdownHTML(','Year 1 + Year 2 split','advocate-reminder','How to set your Year 1 budget'])
   if (!index.includes(marker)) refuse('Increment 2 visibility follow-up marker missing: ' + marker);
-for (const marker of ['Year 2 stops being quiet.','The CEO asks whether Midland can predict a failure before the truck rolls.','The decisions are over. Explain what you would defend or change.'])
+for (const marker of ['Year 2 brought two tests.','Tom wants to sell a new service: fixing units before they fail.','Tom asks you to look back on your three years.'])
   if (!index.includes(marker)) refuse('situation heading missing: ' + marker);
 for (const old of ['Two events resolve in sequence.','You do not get another move.','Return to what you believed before the consequences.'])
   if (index.includes(old)) refuse('old moralizing/software heading remains: ' + old);
