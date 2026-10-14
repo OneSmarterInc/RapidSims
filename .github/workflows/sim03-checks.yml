@@ -27,6 +27,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Install shared runtime dependencies (Redis client used by sim03/lib/store.js)
+        working-directory: .
+        run: npm ci --no-audit --no-fund
       - name: Scenario tests
         run: npm test
       - name: Production guards

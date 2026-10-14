@@ -1,5 +1,7 @@
 const assert = require('assert');
 const Module = require('module');
+// Signed reports with a distinct key, and an in-memory outbox in place of Redis.
+require('../../tools/security/report-fixture.cjs');
 
 // The lifecycle test runs without a real Neon database. Stub the package before
 // loading platform/db.js, then replace the exported db functions with an in-memory
@@ -28,6 +30,9 @@ const norm = (strings) => strings.join('?').replace(/\s+/g, ' ').trim();
 function sql(strings, ...v) {
   const q = norm(strings);
 
+  // Sign-in throttle (platform/lib/auth-throttle.js): every test attempt is the first in its window.
+  if (q.startsWith('INSERT INTO auth_attempts')) return Promise.resolve([{ attempts: 1 }]);
+  if (q.startsWith('DELETE FROM auth_attempts')) return Promise.resolve([]);
   if (q.includes('SELECT id FROM courses WHERE join_code')) {
     return Promise.resolve([...state.courses.values()].filter(c => c.join_code === v[0]).map(c => ({ id: c.id })));
   }
@@ -68,9 +73,9 @@ function sql(strings, ...v) {
     const u = state.users.get(v[0]);
     return Promise.resolve(u ? [u] : []);
   }
-  if (q.includes('SELECT id FROM enrolments WHERE course_id =') && q.includes('student_id =')) {
+  if ((q.includes('SELECT id FROM enrolments WHERE course_id =') || q.includes('SELECT id, dropped FROM enrolments WHERE course_id =')) && q.includes('student_id =')) {
     const e = state.enrolments.find(x => x.course_id === v[0] && x.student_id === v[1]);
-    return Promise.resolve(e ? [{ id: e.id }] : []);
+    return Promise.resolve(e ? [{ id: e.id, dropped: !!e.dropped }] : []);
   }
   if (q.startsWith('INSERT INTO enrolments ')) {
     const [id, course_id, student_id] = v;
@@ -115,6 +120,11 @@ function sql(strings, ...v) {
     const [id, user_id, sim_id, course_id, as_role] = v;
     state.launches.push({ id, user_id, sim_id, course_id, as_role, created_at: new Date() });
     return Promise.resolve([]);
+  }
+  if (q.startsWith('SELECT id, course_id, as_role FROM launches WHERE id =')) {
+    const [id, userId, simId, courseId] = v;
+    return Promise.resolve(state.launches.filter(x => x.id === id && x.user_id === userId && x.sim_id === simId &&
+      (x.course_id || null) === (courseId || null)).map(x => ({ id: x.id, course_id: x.course_id, as_role: x.as_role })));
   }
   if (q.includes('SELECT course_id, as_role FROM launches') && q.includes('course_id =')) {
     const [userId, simId, courseId] = v;

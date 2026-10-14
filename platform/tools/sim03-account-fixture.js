@@ -20,6 +20,9 @@ const query = async (strings, ...v) => {
     const c = cookies.get(v[0]), user = c && users.get(c.user_id);
     return c && c.expires_at > new Date() && user && !user.disabled ? [user] : [];
   }
+  // Sign-in throttle (platform/lib/auth-throttle.js): every test attempt is the first in its window.
+  if (q.startsWith('INSERT INTO auth_attempts')) return Promise.resolve([{ attempts: 1 }]);
+  if (q.startsWith('DELETE FROM auth_attempts')) return Promise.resolve([]);
   if (q.startsWith('INSERT INTO sessions ')) { cookies.set(v[0], {user_id:v[1], expires_at:v[2]}); return []; }
   if (q.startsWith('DELETE FROM sessions WHERE id')) { cookies.delete(v[0]); return []; }
   if (q.startsWith('UPDATE users SET last_seen_at')) return [];
@@ -32,7 +35,7 @@ const query = async (strings, ...v) => {
     return c && !c.archived && (!q.includes('cs.sim_id =') || v[1] === sim.id) ? [{...c, faculty_name:'Teacher'}] : [];
   }
   if (q.startsWith('SELECT * FROM courses WHERE join_code')) return [...courses.values()].filter(c => c.join_code === v[0] && !c.archived);
-  if (q.startsWith('SELECT id FROM enrolments')) return enrolments.filter(e => e.course_id === v[0] && e.student_id === v[1]);
+  if (q.startsWith('SELECT id FROM enrolments') || q.startsWith('SELECT id, dropped FROM enrolments')) return enrolments.filter(e => e.course_id === v[0] && e.student_id === v[1]);
   if (q.startsWith('INSERT INTO enrolments ')) { enrolments.push({id:v[0], course_id:v[1], student_id:v[2], paid:false, dropped:false}); return []; }
   if (q.startsWith('UPDATE enrolments SET dropped')) { enrolments.find(e => e.id === v[0]).dropped=false; return []; }
   if (q.startsWith('SELECT id, role, disabled FROM users WHERE id')) return users.has(v[0]) ? [users.get(v[0])] : [];
@@ -63,6 +66,7 @@ const query = async (strings, ...v) => {
     return [];
   }
   if (q.startsWith('SELECT * FROM sims WHERE id')) return v[0] === sim.id ? [sim] : [];
+  if (q.startsWith('SELECT id, detail FROM sims WHERE id')) return v[0] === sim.id ? [{ id: sim.id, detail: null }] : [];
   if (q.startsWith('SELECT c.id, c.title FROM course_sims cs')) {
     return v[0] === sim.id && !sim.detached ? [...courses.values()]
       .filter(c => c.faculty_id === v[1] && !c.archived).map(c => ({id:c.id,title:c.title})) : [];

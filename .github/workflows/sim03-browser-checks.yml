@@ -35,12 +35,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Check a clean sim-only archive with no sibling platform or dependencies
+      # Midland runs inside the monorepo on EC2 and uses the shared ec2/ and tools/
+      # modules plus the root Redis client, so checks run from the repository.
+      - name: Install shared runtime dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Regression checks, and the browser gate refuses to pass without prerequisites
+        working-directory: sim03
         run: |
-          mkdir -p "$RUNNER_TEMP/midland-standalone"
-          git archive HEAD sim03 | tar -x -C "$RUNNER_TEMP/midland-standalone"
-          mv "$RUNNER_TEMP/midland-standalone/sim03" "$RUNNER_TEMP/midland-standalone/sim-03"
-          cd "$RUNNER_TEMP/midland-standalone/sim-03"
           env -u NODE_PATH npm test
           env -u NODE_PATH -u AGENT_BROWSER_BIN node tools/team-runner-browser-check.js > optional-browser.log 2>&1
           cat optional-browser.log
@@ -64,7 +65,7 @@ jobs:
         run: |
           export NODE_PATH="$RUNNER_TEMP/sim03-browser/node_modules"
           export AGENT_BROWSER_BIN="$RUNNER_TEMP/sim03-browser/node_modules/.bin/agent-browser"
-          node "$RUNNER_TEMP/midland-standalone/sim-03/tools/team-runner-browser-check.js" --required
+          node sim03/tools/team-runner-browser-check.js --required
       - name: Account sign-in and sign-up session entry
         run: |
           export NODE_PATH="$RUNNER_TEMP/sim03-browser/node_modules"
