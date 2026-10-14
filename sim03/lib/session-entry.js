@@ -1,5 +1,6 @@
 const { verifyLaunch } = require('./launch.js');
 const { META } = require('./scenario.js');
+const store = require('./store.js');
 
 function accountJoinUrl(sess) {
   const base = (process.env.PLATFORM_URL || 'https://rapidsims.flexee.org').replace(/\/+$/, '');
@@ -28,4 +29,18 @@ function participantError(req, b, sess, pid) {
   return null;
 }
 
-module.exports = { accountJoinUrl, participantLaunch, participantError };
+// A student launched from a course that has an open team session belongs in
+// that session. Returns the session, or null when there is none to join.
+async function openTeamSessionFor(launch) {
+  if (!launch || launch.role !== 'student' || !launch.course || !store.configured()) return null;
+  try {
+    const code = await store.getCourseTeamSession(launch.course);
+    const sess = code ? await store.getSession(code) : null;
+    return sess && sess.mode === 'team' && sess.state !== 'closed' && sess.courseId === launch.course ? sess : null;
+  } catch (e) {
+    console.error('course team session lookup failed', e.code || e.message);
+    return null;
+  }
+}
+
+module.exports = { accountJoinUrl, participantLaunch, participantError, openTeamSessionFor };

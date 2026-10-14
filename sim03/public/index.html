@@ -102,7 +102,7 @@ let LAUNCH=null;
 if(LAUNCH_TOKEN){try{LAUNCH=JSON.parse(atob(LAUNCH_TOKEN.split('.')[0].replace(/-/g,'+').replace(/_/g,'/')))}catch{}}
 if(LAUNCH_TOKEN&&LAUNCH&&(LAUNCH.role==='faculty'||LAUNCH.role==='faculty_preview'))sessionStorage.setItem('m03-faculty-lt',LAUNCH_TOKEN);
 const initialParams=new URLSearchParams(location.search);
-const INITIAL_SESSION=(initialParams.get('session')||'').toUpperCase();
+let INITIAL_SESSION=(initialParams.get('session')||'').toUpperCase();
 if(LAUNCH_TOKEN||ACCESS_CODE){
   const keep=new URLSearchParams(location.search);keep.delete('lt');keep.delete('code');
   history.replaceState(null,'',location.pathname+(keep.toString()?'?'+keep.toString():''));
@@ -135,7 +135,8 @@ function friendlyError(code,status){
     team_lead_only:'Only your team lead can assign the simulation runner.',
     run_already_completed:'The shared team run is complete.',
     team_run_not_complete:'Wait for your team runner to reach the close before submitting your reflection.',
-    not_joined:'Rejoin the session before continuing.'
+    not_joined:'Rejoin the session before continuing.',
+    team_session_open:'Your instructor has set this simulation up for teams. Reload the page to join your team.'
   };
   if(/^budget_must_equal_\d+$/.test(code))return `The allocation must equal exactly $${code.split('_').pop()}M.`;
   if(/^run_minimum_\d+$/.test(code))return `Run cannot be below $${code.split('_').pop()}M.`;
@@ -210,6 +211,18 @@ async function init(){
     }
     app.innerHTML=`<main class="page">${notice(e.message,true)}<div class="actions"><button class="btn pri" onclick="location.reload()">Try again</button></div></main>`;
     return;
+  }
+  // A student launched from a course with an open team session joins that
+  // session; the team run replaces a solo run.
+  if(!INITIAL_SESSION&&LAUNCH?.sub&&LAUNCH.role==='student'&&LAUNCH.course){
+    try{
+      const d=await sessionApi({action:'course_session'});
+      if(d.code){
+        INITIAL_SESSION=d.code;S.sessionCode=d.code;
+        const p=new URLSearchParams(location.search);p.set('session',d.code);
+        history.replaceState(null,'',location.pathname+'?'+p.toString());
+      }
+    }catch{}
   }
   if(INITIAL_SESSION&&LAUNCH?.sub){
     // Always bind to the signed account; a shared browser may remember another
