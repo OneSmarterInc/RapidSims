@@ -147,6 +147,13 @@ module.exports = {
     return (await cmd(['ZREVRANGE', `m03:course:${courseId}:sessions`, '0', '19'])) || [];
   },
 
+  // One practice session per faculty member and course.
+  async setPracticeSession(courseId, ownerId, code) {
+    await cmd(['SET', `m03:practice:${courseId}:${ownerId}`, code, 'EX', String(TTL)]);
+  },
+  async getPracticeSession(courseId, ownerId) { return (await cmd(['GET', `m03:practice:${courseId}:${ownerId}`])) || null; },
+  async clearPracticeSession(courseId, ownerId) { await cmd(['DEL', `m03:practice:${courseId}:${ownerId}`]); },
+
   async wipe(code) {
     await cmd(['DEL', `m03:sess:${code}`, `m03:sess:${code}:p`, `m03:sess:${code}:run`]);
   }

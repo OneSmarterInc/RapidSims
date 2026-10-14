@@ -98,9 +98,12 @@ function entryParam(key){return new URLSearchParams(location.hash.slice(1)).get(
 let ACCESS_CODE=entryParam('code')||sessionStorage.getItem('m03-access')||null;
 if(ACCESS_CODE)sessionStorage.setItem('m03-access',ACCESS_CODE);
 let LAUNCH_TOKEN=entryParam('lt')||null;
+// A practice student lives in one tab; keep its launch in this tab so a reload keeps the same student.
+if(!LAUNCH_TOKEN)LAUNCH_TOKEN=sessionStorage.getItem('m03-practice-lt')||null;
 let LAUNCH=null;
 if(LAUNCH_TOKEN){try{LAUNCH=JSON.parse(atob(LAUNCH_TOKEN.split('.')[0].replace(/-/g,'+').replace(/_/g,'/')))}catch{}}
 if(LAUNCH_TOKEN&&LAUNCH&&(LAUNCH.role==='faculty'||LAUNCH.role==='faculty_preview'))sessionStorage.setItem('m03-faculty-lt',LAUNCH_TOKEN);
+if(LAUNCH_TOKEN&&LAUNCH&&LAUNCH.role==='student'&&String(LAUNCH.sub||'').startsWith('practice-'))sessionStorage.setItem('m03-practice-lt',LAUNCH_TOKEN);
 const initialParams=new URLSearchParams(location.search);
 let INITIAL_SESSION=(initialParams.get('session')||'').toUpperCase();
 if(LAUNCH_TOKEN||ACCESS_CODE){

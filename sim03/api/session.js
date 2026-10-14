@@ -3,7 +3,7 @@ const { syncCourseRoster, approvedIds } = require('../lib/session-roster.js');
 const store = require('../lib/store.js');
 const { verifyLaunch } = require('../lib/launch.js');
 const S = require('../lib/scenario.js');
-const { accountJoinUrl, participantLaunch, participantError, openTeamSessionFor } = require('../lib/session-entry.js');
+const { accountJoinUrl, participantLaunch, participantError, openTeamSessionFor, isPracticeSub } = require('../lib/session-entry.js');
 
 async function pointCourse(fn) {
   try { await fn(); } catch (e) { console.error('course session pointer update failed', e.code || e.message); }
@@ -174,7 +174,7 @@ module.exports = async (req, res) => {
         const sessions = [];
         for (const c of codes.slice(0, 20)) {
           const sess = await store.getSession(c);
-          if (!sess || !ownsSession(who, sess)) continue;
+          if (!sess || sess.practice || !ownsSession(who, sess)) continue;
           const [people, teamRuns] = await Promise.all([store.getParticipants(c), store.getRuns(c)]);
           const list = Object.values(people || {}).filter(Boolean);
           const runs = Object.values(teamRuns || {}).filter(Boolean);
@@ -185,6 +185,45 @@ module.exports = async (req, res) => {
         }
         sessions.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         return res.status(200).json({ sessions });
+      }
+
+      // Rehearse: a running team session with practice students only, outside
+      // the course's real classes. The platform names the practice students.
+      case 'practice_start': {
+        const who = whoIsFaculty(req, b);
+        if (!who) return res.status(401).json({ error: 'faculty_authorization_required' });
+        if (!who.platformAuth || !who.courseId || !who.userId) return res.status(403).json({ error: 'course_launch_required' });
+        const prefix = `practice-${who.userId}-`;
+        const people = (Array.isArray(b.students) ? b.students : []).slice(0, 6).filter(x => x &&
+          typeof x.sub === 'string' && x.sub.startsWith(prefix) && /^[A-Za-z0-9_-]{1,160}$/.test(x.sub) &&
+          typeof x.name === 'string' && x.name.trim());
+        if (people.length < 2) return res.status(400).json({ error: 'practice_students_required' });
+        const earlier = await store.getPracticeSession(who.courseId, who.userId);
+        if (earlier) await store.wipe(earlier);
+        const c = newCode(), now = Date.now();
+        const sess = { code: c, owner: who.name, ownerId: who.userId, platformAuth: true, courseId: who.courseId,
+          name: 'Practice', mode: 'team', state: 'running', paused: false, practice: true,
+          thresholds: S.validateThresholds(undefined).thresholds, createdAt: now, startedAt: now };
+        await store.putSession(c, sess);
+        const records = people.map((x, i) => ({ id: `platform:${x.sub}`, name: x.name.trim().slice(0, 60),
+          groupId: 'team:practice', teamLabel: 'Practice team', isCaptain: i === 0,
+          source: 'practice', addedAt: now, joinedAt: null }));
+        if (await store.ensureParticipants(c, records, sess) < 0) return res.status(409).json({ error: 'practice_busy' });
+        await store.setPracticeSession(who.courseId, who.userId, c);
+        return res.status(200).json({ code: c, students: records.map(p => ({ participantId: p.id, name: p.name, entersDecisions: p.isCaptain })) });
+      }
+
+      case 'practice_finish': {
+        const who = whoIsFaculty(req, b);
+        if (!who) return res.status(401).json({ error: 'faculty_authorization_required' });
+        if (!who.courseId || !who.userId) return res.status(403).json({ error: 'course_launch_required' });
+        const current = await store.getPracticeSession(who.courseId, who.userId);
+        if (current) {
+          const sess = await store.getSession(current);
+          if (sess && sess.practice && ownsSession(who, sess)) await store.wipe(current);
+          await store.clearPracticeSession(who.courseId, who.userId);
+        }
+        return res.status(200).json({ ok: true });
       }
 
       case 'create': {
@@ -225,10 +264,10 @@ module.exports = async (req, res) => {
           return res.status(403).json({ error: 'not_your_session', message: `That session belongs to ${sess.owner}.` });
         }
         // Sessions created before course routing existed get their pointer here.
-        if (sess.mode === 'team' && sess.courseId && sess.state !== 'closed') {
+        if (!sess.practice && sess.mode === 'team' && sess.courseId && sess.state !== 'closed') {
           await pointCourse(() => store.setCourseTeamSession(sess.courseId, code, true));
         }
-        if (sess.courseId) await pointCourse(() => store.addCourseSession(sess.courseId, code, sess.createdAt));
+        if (!sess.practice && sess.courseId) await pointCourse(() => store.addCourseSession(sess.courseId, code, sess.createdAt));
         const [participants, runs] = await Promise.all([
           store.getParticipants(code),
           store.getRuns(code)
@@ -476,6 +515,12 @@ module.exports = async (req, res) => {
         }
         if (launched && sess.courseId && launched.course !== sess.courseId) {
           return res.status(403).json({ error: 'session_course_mismatch' });
+        }
+        // Practice students join only their own faculty member's practice session,
+        // and a practice session admits only those practice students.
+        if (launched && (isPracticeSub(launched.sub) || sess.practice) &&
+            !(sess.practice && String(launched.sub).startsWith(`practice-${sess.ownerId}-`))) {
+          return res.status(403).json({ error: 'practice_only' });
         }
         const name = String(launched ? launched.name || '' : b.name || '').slice(0, 60).trim();
         if (!name) return res.status(400).json({ error: 'name_required' });

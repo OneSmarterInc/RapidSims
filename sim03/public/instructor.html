@@ -146,6 +146,8 @@ function sentences(rs){
 }
 function startPresent(){const debrief=document.getElementById('fw-debrief');if(debrief)debrief.open=true;const cards=[...document.querySelectorAll('#app .card')].filter(x=>/Projector view|Year 3 bands|Connect vs Uptime|Buyer interest|Contrasting runs/.test(x.textContent));if(!cards.length)return;document.body.classList.add('present');presentIndex=Math.min(presentIndex,cards.length-1);const show=()=>{cards.forEach((c,i)=>c.classList.toggle('present-on',i===presentIndex))};show();const key=e=>{if(!document.body.classList.contains('present'))return;if(e.key==='Escape'){document.body.classList.remove('present');cards.forEach(c=>c.classList.remove('present-on'));document.removeEventListener('keydown',key);return}if(e.key==='ArrowRight'||e.key==='ArrowDown'){presentIndex=(presentIndex+1)%cards.length;show()}if(e.key==='ArrowLeft'||e.key==='ArrowUp'){presentIndex=(presentIndex-1+cards.length)%cards.length;show()}};document.addEventListener('keydown',key)}
 render();
+// The course page opens one session directly: ?session=CODE with a signed faculty launch.
+{const asked=(new URLSearchParams(location.search).get('session')||'').toUpperCase();if(/^[A-Z2-9]{5}$/.test(asked)&&LT){draftResume=asked;resumeSession()}}
 if(!BASE)fetch(BASE+'/api/platform').then(r=>r.ok?r.json():null).then(d=>{
   if(d&&/^https?:\/\//.test(d.platformUrl||'')){
     facultyDashboard=d.platformUrl.replace(/\/$/,'')+'/faculty.html';

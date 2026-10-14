@@ -65,6 +65,30 @@ function wirePager() {
   });
 }
 
+// Rehearse Midland: three practice students on one team, each in its own tab.
+function practicePanel(courseId, d) {
+  const box = app.querySelector('[data-midland-practice]');
+  if (!box) return;
+  box.hidden = false;
+  box.innerHTML = `<div class="faculty-practice-head"><b>Practice class · running</b>
+      <span>Open each practice student in its own tab. Practice students stay out of your roster, counts and results.</span></div>
+    <div class="faculty-practice-grid">${d.students.map(x => `<div class="faculty-practice-card">
+      <b>${esc(x.name)}</b><span>${x.entersDecisions ? 'Enters the decisions' : 'Follows and reviews'}</span>
+      <a class="btn sm ${x.entersDecisions ? 'pri' : ''}" href="${esc(x.url)}" target="_blank" rel="noopener">Open</a></div>`).join('')}</div>
+    <div class="faculty-practice-actions"><a class="btn sm" href="${esc(d.classUrl)}" target="_blank" rel="noopener">Open practice class page</a>
+      <button class="btn sm" data-practice-finish>Finish practice</button></div>`;
+  box.querySelector('[data-practice-finish]').onclick = async e => {
+    const done = acting(e.currentTarget, 'Finishing…');
+    try { await api('/api/faculty', { action:'midland_practice_finish', courseId }); box.hidden = true; box.innerHTML = ''; }
+    catch (err) { if (err.stale) return; done(); alert('Practice is still running. ' + (err.message || 'Try again.')); }
+  };
+}
+async function startMidlandPractice(courseId, btn) {
+  const done = acting(btn, 'Preparing…');
+  try { const d = await api('/api/faculty', { action:'midland_practice_start', courseId }); done(); practicePanel(courseId, d); }
+  catch (err) { if (err.stale) return; done(); alert('Practice could not start. ' + (err.message || 'Try again.')); }
+}
+
 async function api(path, payload) {
   const version = navigation?.version;
   const r = await fetch(path, { method:'POST', cache:'no-store', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
@@ -431,11 +455,13 @@ function renderCourse() {
               ${x.expected_seats ? `<div class="faculty-sim-kpi"><b>${x.expected_seats}</b><span>Expected</span></div>` : ''}
             </div>
             <div class="faculty-run-progress" title="${x.finished_runs||0} of ${x.started_runs||0} started runs completed"><i style="width:${runPct}%"></i></div>
+            ${x.sim_id === 'rapid-03-midland' ? '<div class="faculty-practice" data-midland-practice hidden></div>' : ''}
           </div>
           <div class="side faculty-sim-side">
             <div class="faculty-sim-actions">
               ${x.sim_id === 'rapid-03-midland'
-                ? `<a class="btn pri sm" href="/api/launch?sim=${encodeURIComponent(x.sim_id)}&course=${encodeURIComponent(course.id)}&mode=session">Sessions</a>`
+                ? `<a class="btn pri sm" href="/api/launch?sim=${encodeURIComponent(x.sim_id)}&course=${encodeURIComponent(course.id)}&mode=session">Sessions</a>
+                   <button class="btn sm" data-midland-rehearse>Rehearse</button>`
                 : x.sim_id === 'rapid-05-approve'
                 ? `<a class="btn pri sm" href="/api/launch?sim=${encodeURIComponent(x.sim_id)}&course=${encodeURIComponent(course.id)}&mode=session&play=team">Run groups</a>
                    <a class="btn sm" href="/api/launch?sim=${encodeURIComponent(x.sim_id)}&course=${encodeURIComponent(course.id)}&mode=session&play=individual">Run individual</a>`
@@ -549,6 +575,7 @@ function renderCourse() {
   };
   app.querySelectorAll('[data-prog]').forEach(b => b.onclick = () => openProgress(course.id, b.dataset.prog));
   app.querySelectorAll('[data-sim-results]').forEach(b => b.onclick = () => openSimResults(course.id,b.dataset.simResults));
+  app.querySelectorAll('[data-midland-rehearse]').forEach(b => b.onclick = () => startMidlandPractice(course.id, b));
   app.querySelectorAll('[data-student-results]').forEach(b => b.onclick = () => openStudentResults(course.id, b.dataset.studentResults));
   app.querySelectorAll('[data-seats]').forEach(b => b.onclick = async () => {
     const v = prompt('How many students do you expect for this simulation?\n\nA forecast, not a limit — nobody is turned away if more enrol.', b.dataset.cur || '');

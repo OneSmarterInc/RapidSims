@@ -172,7 +172,9 @@ module.exports = async (req, res) => {
   const lt = req.headers['x-launch-token'];
   const launch = lt ? verifyLaunch(String(lt)) : null;
   let report = { ok: false, skipped: true };
-  if (launch && (!launch.sim || launch.sim === S.META.id)) {
+  // Practice runs are rehearsals; they stay out of the course's results.
+  const practice = (sr && sr.sess.practice) || String(launch?.sub || '').startsWith('practice-');
+  if (launch && !practice && (!launch.sim || launch.sim === S.META.id)) {
     let subjects = [launch.sub];
     if (sr && sr.sess.mode === 'team' && !sr.memberReview) {
       const teamSubjects = Object.values(sr.participants || {})

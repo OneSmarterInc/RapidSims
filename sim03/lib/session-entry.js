@@ -11,6 +11,9 @@ function accountJoinUrl(sess) {
   return url.href;
 }
 
+// Practice students exist only inside a practice session: practice-<faculty id>-<name>.
+const isPracticeSub = sub => String(sub || '').startsWith('practice-');
+
 function participantLaunch(req, b) {
   const token = req.headers?.['x-launch-token'] || b?.launchToken;
   const p = token ? verifyLaunch(String(token)) : null;
@@ -33,6 +36,7 @@ function participantError(req, b, sess, pid) {
 // that session. Returns the session, or null when there is none to join.
 async function openTeamSessionFor(launch) {
   if (!launch || launch.role !== 'student' || !launch.course || !store.configured()) return null;
+  if (isPracticeSub(launch.sub)) return null;
   try {
     const code = await store.getCourseTeamSession(launch.course);
     const sess = code ? await store.getSession(code) : null;
@@ -43,4 +47,4 @@ async function openTeamSessionFor(launch) {
   }
 }
 
-module.exports = { accountJoinUrl, participantLaunch, participantError, openTeamSessionFor };
+module.exports = { accountJoinUrl, participantLaunch, participantError, openTeamSessionFor, isPracticeSub };
