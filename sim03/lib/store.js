@@ -137,6 +137,16 @@ module.exports = {
     if ((await cmd(['GET', `m03:course:${courseId}`])) === code) await cmd(['DEL', `m03:course:${courseId}`]);
   },
 
+  // Every session created for a course, newest first, so faculty can find and close them.
+  async addCourseSession(courseId, code, createdAt) {
+    const key = `m03:course:${courseId}:sessions`;
+    await cmd(['ZADD', key, String(Number(createdAt) || Date.now()), code]);
+    await cmd(['EXPIRE', key, String(60 * 60 * 24 * 30)]);
+  },
+  async listCourseSessions(courseId) {
+    return (await cmd(['ZREVRANGE', `m03:course:${courseId}:sessions`, '0', '19'])) || [];
+  },
+
   async wipe(code) {
     await cmd(['DEL', `m03:sess:${code}`, `m03:sess:${code}:p`, `m03:sess:${code}:run`]);
   }
