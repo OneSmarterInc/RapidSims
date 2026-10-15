@@ -2,7 +2,7 @@
 const assert = require('assert');
 const cfg = require('../data/config');
 const E = require('../lib/engine');
-const { checkConfig, checkVercel } = require('../tools/build-gate');
+const { checkConfig, checkVercel, checkKitFiles } = require('../tools/build-gate');
 
 let pass = 0, fail = 0;
 function t(name, fn) {
@@ -195,5 +195,12 @@ planted.forEach(([name, mut, re]) => t(`gate catches ${name}`, () => {
 
 t('gate catches deploymentEnabled false', () => assert.ok(checkVercel({ git: { deploymentEnabled: false } }).length === 1));
 t('real vercel.json passes', () => assert.deepStrictEqual(checkVercel(require('../vercel.json')), []));
+{
+  const fs = require('fs'), path = require('path');
+  const real = f => { try { return fs.readFileSync(path.join(__dirname, '..', 'public', f), 'utf8'); } catch (e) { return null; } };
+  t('real faculty files pass the gate', () => assert.deepStrictEqual(checkKitFiles(cfg, real), []));
+  t('gate catches the hidden name in a faculty file', () => assert.ok(checkKitFiles(cfg, f => f === 'switch-debrief.js' ? real(f) + cfg.hiddenDependency : real(f)).some(e => /names scenario content/.test(e))));
+  t('gate catches "room" in a faculty file', () => assert.ok(checkKitFiles(cfg, f => f === 'switch-faculty.js' ? real(f) + ' the room ' : real(f)).some(e => /room/.test(e))));
+}
 console.log(`${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

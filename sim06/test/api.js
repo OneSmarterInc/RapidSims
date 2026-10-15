@@ -32,6 +32,15 @@ const mem = {
     if (!db.sess[c]) return false; db.run[c] ||= {};
     if ((db.run[c][id] || '') !== S(prev)) return false; db.run[c][id] = S(next); return true;
   },
+  async getCourseSession(c) { return db.course?.[c] || null; },
+  async setCourseSession(c, code) { (db.course ||= {})[c] = code; },
+  async clearCourseSession(c, code) { if (db.course?.[c] === code) delete db.course[c]; },
+  async addCourseSession(c, code) { ((db.list ||= {})[c] ||= []).unshift(code); },
+  async listCourseSessions(c) { return (db.list || {})[c] || []; },
+  async getPracticeSession(c, o) { return (db.prac || {})[c + ':' + o] || null; },
+  async setPracticeSession(c, o, code) { (db.prac ||= {})[c + ':' + o] = code; },
+  async clearPracticeSession(c, o) { delete (db.prac || {})[c + ':' + o]; },
+  async wipe(c) { delete db.sess[c]; delete db.p[c]; delete db.run[c]; },
 };
 require.cache[path.resolve(__dirname, '../lib/store.js')] = { id: 'store', filename: 'store', loaded: true, exports: mem };
 
@@ -132,7 +141,8 @@ async function t(name, fn) { try { await fn(); pass++; } catch (e) { fail++; con
     assert.strictEqual(r.body.projector.counts.stayed, 1);
     assert.strictEqual(r.body.projector.counts.stillDeciding, 1);
     assert.strictEqual(r.body.debrief, null, 'debrief prompts stay hidden until the clock ends');
-    const s = JSON.stringify(r.body);
+    // The projector is aggregates only. Names and reasons go to the faculty session pages (runs), never the projector.
+    const s = JSON.stringify(r.body.projector);
     assert.ok(!s.includes('Ana') && !s.includes('Meridian is in both') && !s.includes(a));
   });
   await t('another faculty member cannot see or control this session', async () => {
@@ -256,7 +266,10 @@ async function t(name, fn) { try { await fn(); pass++; } catch (e) { fail++; con
     await post({ action: 'reveal', code: pc, participantId: 'platform:u-stu', launchToken: stu });
     await post({ action: 'reveal', code: pc, participantId: 'platform:u-stu', launchToken: stu });
     assert.strictEqual(reports.length, 1);
-    assert.strictEqual(reports[0].metrics.choice, 'none');
+    assert.strictEqual(reports[0].summary.choice, 'none');
+    assert.strictEqual(reports[0].summary.sessionCode, pc, 'a class session reports its session');
+    assert.strictEqual(reports[0].runId, `${pc}:individual:platform:u-stu`);
+    assert.strictEqual(reports[0].metrics.revision, 1);
   });
 
   // ---- Public config
