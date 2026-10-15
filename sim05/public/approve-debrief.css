@@ -1,0 +1,15 @@
+/* Would You Approve This? debrief bodies. Sizes in em off the shared slide base (kit/debrief.css). */
+.ap-names{display:flex;flex-wrap:wrap;gap:.4em;margin-top:.5em}
+.ap-names span{font:1em var(--mono);padding:.2em .55em;border:1px solid var(--line2);border-radius:.3em;color:var(--soft)}
+.ap-split{display:flex;gap:1.4em}
+.ap-col{flex:1;display:flex;flex-direction:column;gap:.4em;padding:1em 1.2em;border:1px solid var(--line2);border-radius:.4em;background:var(--panel)}
+.ap-col b{font:600 3.6em var(--mono);line-height:1}
+.ap-ok b{color:var(--g-t)}.ap-no b{color:var(--soft)}
+.ap-h{font:600 1.1em var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.ap-rounds{display:flex;flex-direction:column;gap:.9em}
+.ap-row{display:grid;grid-template-columns:22em 1fr 13em;gap:1em;align-items:center}
+.ap-rt{font-size:1.25em;color:var(--ink)}.ap-rt b{font-family:var(--mono);color:var(--amber);margin-right:.4em}
+.ap-bar{display:flex;height:1.8em;border-radius:.3em;overflow:hidden;background:var(--panel2);border:1px solid var(--line2)}
+.ap-bar i{display:block;height:100%}.ap-a{background:var(--g)}.ap-t{background:var(--y)}.ap-d{background:var(--run)}
+.ap-n{font:1.05em var(--mono);color:var(--soft)}
+.ap-q{display:block;color:var(--dim);font-size:1em;margin-top:.5em}

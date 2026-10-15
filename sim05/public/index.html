@@ -209,6 +209,8 @@ p.body{color:var(--soft);margin-bottom:14px}
 .team-box .body{margin-bottom:10px;color:var(--bone)}
 .rename{display:flex;gap:8px}.rename input{flex:1;background:var(--night);border:1px solid var(--line2);padding:8px 10px}
 .btn.sm{padding:8px 14px;font-size:13px}
+.reflect textarea{display:block;width:100%;box-sizing:border-box;margin:6px 0 14px;padding:10px 12px;font:inherit;font-size:16px;line-height:1.45;background:var(--panel2,#1D2637);color:inherit;border:1px solid var(--line2,#3A4659);border-radius:4px}
+.reflect ol{margin:8px 0 0;padding-left:20px}.reflect label{display:block;margin-top:10px}
 </style>
 </head>
 <body>
@@ -277,6 +279,10 @@ async function init(){
     }
     app.innerHTML=`<div class="note bad">${esc(e.message)}</div><button class="btn" onclick="location.reload()">Try again</button>`;return;
   }
+  // A student from the class link lands in the class's open session, when there is one.
+  if(!S.code&&LAUNCH?.sub&&LAUNCH.role==='student'&&LAUNCH.course){
+    try{const c=await sessionApi({action:'course_session'});if(c.code)S.code=c.code}catch{}
+  }
   if(S.code){
     if(LAUNCH?.sub){
       try{const d=await sessionApi({action:'join',code:S.code});S.pid=d.participantId;localStorage.setItem('m05-pid-'+S.code,S.pid)}
@@ -340,7 +346,7 @@ async function join(){
 async function poll(){
   const d=await sessionApi({action:'state',code:S.code,participantId:S.pid});
   S.session=d.session;S.view=d.view;S.syncedAt=performance.now();S.remaining=d.view.clock.remaining;
-  const key=JSON.stringify([d.session.state,d.session.paused,d.view.clock.phase,d.view.clock.round,d.view.rounds,d.view.ending,d.view.canVote,d.view.canSkip,d.view.ready,d.view.team]);
+  const key=JSON.stringify([d.session.state,d.session.paused,d.view.clock.phase,d.view.clock.round,d.view.rounds,d.view.ending,d.view.canVote,d.view.canSkip,d.view.ready,d.view.team,d.view.review]);
   if(key!==S.shown&&!S.renaming){S.shown=key;if(!d.view.canVote)S.confirming=null;render()}
   if(d.view.ending&&LAUNCH_TOKEN&&!S.reported){S.reported=true;request('/api/finish',{code:S.code,participantId:S.pid}).then(d=>{S.reported=!!d.reported}).catch(()=>{S.reported=false})}
 }
@@ -542,7 +548,21 @@ function renderEnding(paused){
   <div class="ending"><section><h3 class="sec">${esc(CFG.copy.endingKnows)}</h3><ul>${knows}</ul></section>
   <section><h3 class="sec">${esc(CFG.copy.endingMissing)}</h3><ul>${missing}</ul>
   <figure class="phone list"><figcaption>${esc(CFG.copy.appHeading)}</figcaption><div class="ph-screen"><div class="ph-app">Loopwell</div><ul>${appRows}</ul></div></figure></section></div>
-  ${S.session.solo?`<div class="reflect"><p>${esc(CFG.copy.soloReflection)}</p></div>`:''}<p class="closing">${esc(S.session.solo?CFG.copy.soloClosingLine:CFG.copy.closingLine)}</p>`;
+  ${S.view.afterEnding?`<div class="reflect"><h3 class="sec">Four questions to keep in mind</h3><p>You will come back to these in the class discussion.</p><ol>${S.view.afterEnding.map(q=>`<li>${esc(q)}</li>`).join('')}</ol></div>`:''}
+  ${S.view.review?.open?(S.view.review.sent?`<p class="body">Your review is saved. Thank you.</p>`:`<div class="reflect"><h3 class="sec">Your review</h3><p>Answer both questions. Your instructor reads them.</p>
+    <label class="body" for="rv1">${esc(S.view.review.questions[0])}</label><textarea id="rv1" rows="3" maxlength="1500">${esc(S.rv1||'')}</textarea>
+    <label class="body" for="rv2">${esc(S.view.review.questions[1])}</label><textarea id="rv2" rows="3" maxlength="1500">${esc(S.rv2||'')}</textarea>
+    <button class="btn pri" id="rvgo">Submit my review</button><div class="note bad" id="rverr" hidden></div></div>`)
+    :S.session.solo?`<div class="reflect"><p>${esc(CFG.copy.soloReflection)}</p></div>`:''}<p class="closing">${esc(S.session.solo?CFG.copy.soloClosingLine:CFG.copy.closingLine)}</p>`;
+  const go=document.getElementById('rvgo');
+  if(go){
+    ['rv1','rv2'].forEach(k=>document.getElementById(k).oninput=e=>{S[k]=e.target.value});
+    go.onclick=async()=>{const a=(S.rv1||'').trim(),b=(S.rv2||'').trim(),err=document.getElementById('rverr');
+      if(!a||!b){err.textContent='Answer both questions, then submit.';err.hidden=false;return}
+      go.disabled=true;
+      try{const d=await sessionApi({action:'review',code:S.code,participantId:S.pid,reflection1:a,reflection2:b});S.view=d.view;S.shown='';render()}
+      catch(e){err.textContent=e.message;err.hidden=false;go.disabled=false}};
+  }
 }
 
 init();

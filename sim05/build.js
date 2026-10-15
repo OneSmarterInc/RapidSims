@@ -9,7 +9,10 @@ const C = require('./config/content.js');
 
 const read = (f) => fs.readFileSync(path.join(__dirname, 'public', f), 'utf8');
 const pages = { student: read('index.html'), launcher: read('launch.html') };
-if (fs.existsSync(path.join(__dirname, 'public', 'instructor.html'))) pages.instructor = read('instructor.html');
+// The Round screen (the live projector page) is the instructor's own page.
+if (fs.existsSync(path.join(__dirname, 'public', 'rounds.html'))) pages.instructor = read('rounds.html');
+// The shared faculty pages (kit/) load these. Debrief content arrives from the server with the faculty session.
+const kitFiles = ['instructor.html', 'approve-faculty.js', 'approve-debrief.js'].filter(f => fs.existsSync(path.join(__dirname, 'public', f)));
 const problems = [];
 const refuse = (m) => problems.push(m);
 
@@ -18,6 +21,13 @@ const secret = [];
 for (const r of C.ROUNDS) secret.push(r.title, r.request, r.reason, r.adds, r.cost, r.missing);
 for (const r of C.ROUNDS) if (r.app) secret.push(r.app.title, r.app.small, r.app.off);
 for (const i of C.INFERENCES) for (const l of i.levels) { secret.push(l.text); if (l.lighter) secret.push(l.lighter); }
+for (const f of kitFiles) {
+  const text = read(f);
+  for (const x of secret) if (text.includes(x)) refuse(`${f} contains scenario content: "${x.slice(0, 50)}"`);
+  if (/pregnan/i.test(text)) refuse(`${f} names the round-five inference`);
+  if (/\broom\b/i.test(text)) refuse(`${f} uses the word "room"; say "class" or "session"`);
+  if (f.endsWith('.js')) { try { new vm.Script(text); } catch (e) { refuse(`${f} does not parse: ${e.message}`); } }
+}
 for (const [name, html] of Object.entries(pages)) {
   for (const s of secret) if (html.includes(s)) refuse(`${name} page contains scenario content: "${s.slice(0, 50)}"`);
   if (/privacy/i.test(html) && name !== 'instructor') refuse(`${name} page uses the word "privacy"`);
