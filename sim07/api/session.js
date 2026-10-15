@@ -583,7 +583,7 @@ module.exports = async (req, res) => {
             settings: clampSettings({ autoAdvanceSeconds: 45 }), stage: 0, pinned: [], showPrompts: false, createdAt: t });
           await store.addParticipant(c, id, { id, name: x.name.trim().slice(0, 60), groupId: `individual:${id}`, teamLabel: '', joinedAt: null });
           await store.setPracticeSession(who.courseId, who.userId, c);
-          return res.status(200).json({ code: c, students: [{ participantId: id, name: x.name }] });
+          return res.status(200).json({ code: c, students: [{ participantId: id, name: x.name, status: 'Ready to start', finished: false }] });
         }
 
         // A private run's student starts their own clock.
