@@ -47,7 +47,7 @@ const WhoseSettings={
  controlDone:{review:'Review questions released. Students see them now.'},
  debrief:{
   mount:(root,getInput,opts)=>global.WhoseDebrief.mount(root,getInput,opts),
-  input:(teams,cfg)=>({kit:cfg.state.kit||K,team:cfg.state.session.mode==='team',
+  input:(teams,cfg)=>({kit:cfg.state.kit||K,team:cfg.state.session.mode==='team',reviewOpen:!!cfg.state.session.reviewOpen||cfg.state.session.state==='closed',
    teams:teams.filter(t=>t.joined).map(t=>({id:t.id,name:t.name,members:t.members,sheetId:t.sheetId,number:t.number,confidence:t.confidence,band:t.band,
     reviews:(t.people||[]).map(p=>{const r=(cfg.state.runs[t.id]||{}).reflections||{};const x=r[p.id];return x?{name:p.name,a1:x.reflection1,a2:x.reflection2}:null}).filter(Boolean)}))})
  }

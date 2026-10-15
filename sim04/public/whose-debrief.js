@@ -59,7 +59,9 @@ function model(input) {
   base.slides.push({ key: 'worked', kicker: 'The calculation', lesson: 1,
     headline: 'Same 40 accounts. The definition decides which ones count.',
     sub: 'Choose any two to compare their worked calculation.',
-    evidence: `Each definition, worked from the same 40 accounts, gives its own number${hi && lo && hi !== lo ? `: ${hi.number}% and ${lo.number}%` : ''}.`,
+    evidence: hi && lo && hi !== lo && S[hi.sheetId] && S[lo.sheetId] && hi.sheetId !== lo.sheetId
+      ? `From the same 40 accounts, ${dept(hi)}'s definition gives ${S[hi.sheetId].value}%. ${dept(lo)}'s gives ${S[lo.sheetId].value}%.`
+      : 'Each definition, worked from the same 40 accounts, gives its own number.',
     ask: 'Which accounts moved between the two calculations?',
     body: { kind: 'worked', choices, first: hi ? hi.key : (choices[0] || {}).key, second: lo ? lo.key : (choices[1] || {}).key,
       sheets: Object.fromEntries(order.filter(id => S[id]).map(id => [id, { department: S[id].department, line: (S[id].lines || [])[S[id].contestedIndex] || '', derivation: S[id].derivation || [] }])) } });
@@ -68,6 +70,7 @@ function model(input) {
   const cards = [];
   rows.forEach((r, i) => (r.reviews || []).forEach((x, j) => cards.push({ id: `${r.key}-${j}`, name: anon ? (team ? `${r.name} · member ${j + 1}` : r.name) : (team ? `${x.name} · ${r.name}` : r.name), a1: x.a1, a2: x.a2 })));
   base.slides.push({ key: 'said', kicker: 'What students said', headline: cards.length ? 'In their own words, after the reveal.' : 'Reviews arrive as students answer.',
+    sub: cards.length || input.reviewOpen ? '' : 'Press Release review questions in the bar below. Students see the questions within a few seconds.',
     ask: 'Whose answer surprised you?', body: { kind: 'said', questions: K.reviewQuestions || [], cards } });
 
   // D5 · lessons, each with where this class showed it

@@ -98,7 +98,8 @@ function practiceProgress(session) {
   const students = Object.values(session.participants).map(p => {
     const slot = room.slotFor(session, p.id);
     const finished = !!slot?.commit && (!!p.review || !session.reviewOpen);
-    const status = p.review ? 'Sent the review' : slot?.commit ? 'Locked a number' : room.clock(session, now).expired ? 'Time ended' : p.joinedAt ? 'Working on the number' : 'Ready to start';
+    const status = p.review ? 'Sent the review' : slot?.commit ? 'Locked a number' : session.state === 'lobby' ? (p.joinedAt ? 'Reading the story' : 'Ready to start')
+      : room.clock(session, now).expired ? 'Time ended' : p.joinedAt ? 'Working on the number' : 'Ready to start';
     return { name: p.name, status, finished: !!slot?.commit };
   });
   return { students, complete: students.length > 0 && students.every(x => x.finished) };
@@ -221,7 +222,7 @@ module.exports = async (req, res) => {
           const id = `platform:${x.sub}`;
           session.participants[id] = { id, email: null, name: x.name.trim().slice(0, 60), joinedAt: null, slotId: null, reportedAt: null };
         }
-        session = room.start(session, now);
+        // Practice opens in setup, as a class does: the students read the story, then one starts the clock.
         if (!await store.createSession(c, session)) continue;
         await store.setPracticeSession(who.courseId, ownerSub, c);
         return res.status(200).json({ code: c, students: people.map(x => ({ participantId: `platform:${x.sub}`, name: x.name })) });
@@ -327,7 +328,7 @@ module.exports = async (req, res) => {
         }
       } catch (e) { return error(res, 409, action === 'control' ? 'control_rejected' : 'groups_rejected', e.message); }
 
-      if (['join', 'state', 'commit', 'review'].includes(action)) {
+      if (['join', 'state', 'commit', 'review', 'practice_clock'].includes(action)) {
         const me = participant(req, b, session);
         if (!me) return error(res, 401, 'participant_authorization_required');
         if (action === 'join') {
@@ -342,6 +343,14 @@ module.exports = async (req, res) => {
         }
         if (!me.id || !session.participants[me.id]) return error(res, 403, 'not_joined');
         if (action === 'state') return res.status(200).json(studentResult(session, me.id));
+        // Rehearse: any practice student starts the practice clock (a class waits for its instructor).
+        if (action === 'practice_clock') {
+          if (!session.practice || session.solo) return error(res, 403, 'practice_only');
+          try { next = room.start(session, Date.now()); }
+          catch (e) { return error(res, 409, 'start_rejected', e.message); }
+          if (!await store.compareAndSetSession(code, session, next)) continue;
+          return res.status(200).json(studentResult(next, me.id));
+        }
         if (action === 'review') {
           const view = room.studentView(session, me.id, Date.now());
           if (!view.review.open) return error(res, 409, 'review_closed', 'The review questions open after the class sees the numbers.');

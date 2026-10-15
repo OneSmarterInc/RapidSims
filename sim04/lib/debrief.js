@@ -14,8 +14,8 @@ const REVIEW_QUESTIONS = [
 ];
 const LESSONS = [
   { head: 'A number is a definition, a measurement and a purpose.', text: 'The data was the same for every team. The definition and the purpose behind it set the number.' },
-  { head: 'Every number here was right.', text: 'Each one answers its own question. None of them is the retention figure.' },
-  { head: 'Ask for the definition before you argue about the number.', text: 'Two careful teams can defend two numbers twenty points apart and both be correct.' },
+  { head: 'Every definition gives a correct number.', text: 'Each one answers its own question. None of them is the retention figure.' },
+  { head: 'Ask for the definition before you argue about the number.', text: 'Two careful teams can defend two numbers far apart, and both can be correct.' },
   { head: 'Who writes the definition decides what counts.', text: 'Sales, Finance and Investor Relations each wrote the line that suits their job.' }
 ];
 // Result bands: did the team report the number its own definition gives?
