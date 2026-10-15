@@ -261,6 +261,8 @@ function drawMenu() {
   const classes = (F.data.courses || []).map(c => ({ id:c.id, title:c.title, href:`/faculty.html?view=course&course=${encodeURIComponent(c.id)}` }));
   const c = menuCourse();
   const sims = c && F.course?.course?.id === c.id ? F.course.sims : [];
+  // Every class page shows Midland's open session in the menu, not only Class home.
+  if (c && F.view !== 'course' && (sims || []).some(x => x.sim_id === MIDLAND) && (F.midland?.courseId !== c.id || Date.now() - (F.midland.at || 0) > 15000)) loadMidlandStatus(c.id);
   const current = F.view === 'home' ? 'classes' : F.view === 'sim-results' ? `${F.simResults?.sim?.id}:all-results`
     : F.view === 'sim' && F.frame ? `${F.frame.sim}:${F.frame.session ? (F.frame.tab || 'teams') : 'sessions'}` : 'class';
   FacultyMenu.mount({ classes, classesHref:'/faculty.html', current,
@@ -1028,7 +1030,8 @@ async function restoreFaculty(params,current) {
   const data=await api('/api/faculty',{action:'overview'});
   const tab=params.get('tab')==='sim'?'sim':'crs';
   const simsOverview=tab==='sim' ? (await api('/api/faculty',{action:'sims_overview'})).sims || [] : null;
-  const course=view!=='home' && view!=='sim-results'?await api('/api/faculty',{action:'course_detail',courseId}):null;
+  // Every class view keeps the class (and its sims) so the menu shows the same items on each page.
+  const course=view==='home'?null:view==='sim-results'&&F.course?.course?.id===courseId?F.course:await api('/api/faculty',{action:'course_detail',courseId});
   const progress=view==='played'?await api('/api/faculty',{action:'sim_progress',courseId,simId}):null;
   const studentResults=view==='student-results'?await api('/api/faculty',{action:'student_results',courseId,studentId}):null;
   const lists=PortalNavigation.lists(params,['crs','sim','ros','studentResults','played','simResults']);
