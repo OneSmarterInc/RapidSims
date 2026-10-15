@@ -277,7 +277,7 @@ async function check(name, fn) {
   await check('class completion waits for the ending and retries failed callbacks', async () => {
     const faculty = { 'x-launch-token': token({ sim: META.id, sub: 'teacher', name: 'Teacher', role: 'faculty', mode: 'session', course: 'course-a' }) };
     const pupil = { 'x-launch-token': token({ sim: META.id, sub: 'pupil', name: 'Pupil', role: 'student', course: 'course-a' }) };
-    const c = (await S({ action: 'create', mode: 'individual' }, faculty)).body.session.code;
+    const c = (await S({ action: 'create', mode: 'individual', closeOpen: true }, faculty)).body.session.code;
     const pid = (await S({ action: 'join', code: c }, pupil)).body.participantId;
     await S({ action: 'control', code: c, set: 'start' }, faculty);
     await S({ action: 'decide', code: c, participantId: pid, choice: 'buy', justification: 'The acquisition gives us an affordable option to try a different way of doing business.' }, pupil);
@@ -298,7 +298,7 @@ async function check(name, fn) {
       assert.strictEqual((await call(finish, payload, pupil)).body.reported, false);
       assert(!(await store.getParticipants(c))[pid].reportedAt);
       assert.strictEqual((await call(finish, payload, pupil)).body.reported, true);
-      assert.deepStrictEqual([callback.sub, callback.sim, callback.course, callback.metrics.choice], ['pupil', META.id, 'course-a', 'buy']);
+      assert.deepStrictEqual([callback.sub, callback.sim, callback.course, callback.summary.choice, callback.summary.band, callback.summary.sessionCode], ['pupil', META.id, 'course-a', 'buy', 'bought', c]);
       assert.strictEqual((await call(finish, payload, pupil)).body.already, true);
       assert.strictEqual(reports, 2);
     } finally { global.fetch = oldFetch; delete process.env.PLATFORM_URL; }

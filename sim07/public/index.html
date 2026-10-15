@@ -170,7 +170,8 @@ setInterval(()=>{tick();if(S.solo)return soloTick()},1000);
 function viewSetting(){const s=C.setting;return `<div class="date">${esc(s.eyebrow)}</div><h1>${esc(s.title)}</h1>${s.body.map(p=>`<p>${esc(p)}</p>`).join('')}<p class="note">${esc(s.recognition)}</p><button class="btn" data-go="briefing">Read the briefing</button>`}
 function introMinutes(){return (!S.solo&&S.state?.decisionMinutes)||C.settings.decisionMinutes}
 function viewIntro(){
-  const s=C.setting,i=C.intro,lobby=!S.solo;
+  // A Rehearse practice run is a private session: its student starts the clock.
+  const s=C.setting,i=C.intro,lobby=!S.solo&&!S.state?.session?.solo;
   const who=lobby&&S.state?.me?`<p class="dim">Welcome, ${esc(S.state.me.name)}${S.state.session?.mode==='team'&&S.state.me.team?`, you are in ${esc(S.state.me.team)}`:''}.</p>`:'';
   return `<div class="date">${esc(s.eyebrow)}</div><h1>${esc(s.title)}</h1>${who}${s.body.map(p=>`<p>${esc(p)}</p>`).join('')}<p class="note">${esc(s.recognition)}</p>
   <h2>${esc(i.title)}</h2><ol class="how">${i.points.map(p=>`<li>${esc(p.replace('{minutes}',introMinutes()))}</li>`).join('')}</ol>
@@ -202,12 +203,23 @@ function viewReveal(){
   st.forEach(s=>{html+=`<section class="stage ${s.n===n?'current':'past'}"><div class="yr">${esc(s.year)}</div><h2>${esc(s.title)}</h2>${s.body.map(p=>`<p>${esc(p)}</p>`).join('')}${s.names?`<p class="names">${esc(s.names)}</p>`:''}</section>`});
   const close=st.find(s=>s.close)?.close;
   if(close)html+=`<section class="stage"><h2>${esc(close.title)}</h2><blockquote class="echo">${esc(record().justification)}</blockquote><p>${esc(close.body)}</p><p>${esc(close.handoff)}</p></section>`;
+  const qs=S.state?.afterReveal||[];
+  if(close&&qs.length)html+=`<section class="stage"><h2>Think about it</h2><ol class="how">${qs.map(q=>`<li>${esc(q)}</li>`).join('')}</ol></section>`;
+  if(close)html+=reviewHTML(S.state?.review);
   else if(S.solo){
     if(S.error)html+=`<div class="err" role="alert">Unable to load the next part. ${esc(S.error)}</div><button class="btn ghost" id="reveal-retry" ${S.soloLoading?'disabled':''}>Try again now</button>`;
     if(S.demo&&!S.error)html+=`<p class="waiting">Faculty demo: continue whenever you are ready.</p><button class="btn" id="reveal-next" ${S.soloLoading?'disabled':''}>${S.soloLoading?'Loading…':'Next part'}</button>`;
     else html+=`<p class="waiting" id="reveal-progress" role="status"></p>`;
   }else if(st.length)html+=`<p class="waiting">Wait for your instructor to continue. This page updates automatically.</p>`;
   return html;
+}
+// Two questions for the instructor's debrief. Signed-in class students only.
+function reviewHTML(rv){
+  if(!rv||!rv.open)return '';
+  if(rv.sent)return `<section class="stage" id="review"><h2>Your review</h2><p>Sent to your instructor. Thank you.</p></section>`;
+  return `<section class="stage" id="review"><h2>Your review</h2><p class="dim">Your instructor reads these in the class debrief.</p>
+  ${rv.questions.map((q,i)=>`<label for="rv${i+1}">${esc(q)}</label><textarea id="rv${i+1}" rows="3" maxlength="1500">${esc(S['rv'+(i+1)]||'')}</textarea>`).join('')}
+  <button class="btn" id="review-send">Submit review</button><div class="err" role="alert" id="review-error">${esc(S.reviewError||'')}</div></section>`;
 }
 function viewLobby(){return `<div class="date">Waiting to start</div><h1>You're in.</h1><p>${esc(S.state?.me?.name||'')}, your instructor will start the session shortly.${S.state?.session?.mode==='team'&&S.state?.me?.team?` You are in ${esc(S.state.me.team)}.`:''}</p><p class="waiting">This page updates on its own.</p>`}
 function viewJoin(){return `<h1>Join your class session</h1><p class="dim">Session ${esc(S.code)}</p><label for="nm">Your name</label><input id="nm" type="text" maxlength="60" autocomplete="name"><button class="btn" id="join">Join</button><div class="err" role="alert">${esc(S.error)}</div>`}
@@ -228,7 +240,7 @@ function render(){
   const v=currentView();
   const map={intro:viewIntro,setting:viewSetting,briefing:viewBriefing,advisers:viewAdvisers,decision:viewDecision,lapse:viewLapse,recognition:viewRecognition,reveal:viewReveal,lobby:viewLobby,join:viewJoin};
   const active=document.activeElement&&document.activeElement.tagName==='TEXTAREA'?document.activeElement.id:'';
-  if((v==='decision'&&active==='why')||(v==='lapse'&&active==='lapse')){renderBar();return}
+  if((v==='decision'&&active==='why')||(v==='lapse'&&active==='lapse')||(v==='reveal'&&/^rv[12]$/.test(active))){renderBar();return}
   app.innerHTML=(map[v]||viewSetting)();renderBar();wire();
 }
 function wire(){
@@ -242,8 +254,17 @@ function wire(){
   const lp=document.getElementById('lapse');if(lp){lp.oninput=()=>{S.lapseText=lp.value;const n=words(S.lapseText);document.getElementById('count').textContent=`${n} word${n===1?'':'s'}`;document.getElementById('lapseSubmit').disabled=n<C.settings.lapseMinWords}}
   const ls=document.getElementById('lapseSubmit');if(ls)ls.onclick=()=>submitLapse(ls);
   app.querySelectorAll('[data-rec]').forEach(b=>b.onclick=()=>submitRecognition(b.dataset.rec));
-  const sc=document.getElementById('startClock');if(sc)sc.onclick=()=>{S.soloClosesAt=Date.now()+C.settings.decisionMinutes*60000;S.view='briefing';render();scrollTo(0,0)};
+  const sc=document.getElementById('startClock');if(sc&&!S.solo)sc.onclick=async()=>{sc.disabled=true;try{await sessionApi({action:'solo_start',code:S.code,participantId:S.pid});await refresh();S.view='briefing'}catch(e){S.error=e.message;sc.disabled=false}render();scrollTo(0,0)};
+  else if(sc)sc.onclick=()=>{S.soloClosesAt=Date.now()+C.settings.decisionMinutes*60000;S.view='briefing';render();scrollTo(0,0)};
   const jn=document.getElementById('join');if(jn)jn.onclick=()=>join(document.getElementById('nm').value);
+  for(const id of ['rv1','rv2']){const t=document.getElementById(id);if(t)t.oninput=()=>{S[id]=t.value}}
+  const rs=document.getElementById('review-send');if(rs)rs.onclick=async()=>{
+    const a1=(S.rv1||'').trim(),a2=(S.rv2||'').trim();
+    if(!a1||!a2){S.reviewError='Answer both questions, then submit.';render();return}
+    rs.disabled=true;S.reviewError='';
+    try{applyState(await sessionApi({action:'review',code:S.code,participantId:S.pid,reflection1:a1,reflection2:a2}))}catch(e){S.reviewError=e.message}
+    render();
+  };
   for(const id of ['reveal-retry','reveal-next']){const b=document.getElementById(id);if(b)b.onclick=()=>soloStageAdvance(S.soloStage+1);}
 }
 
@@ -343,6 +364,10 @@ function demoGate(message=''){
       const q=new URLSearchParams({sim:C.meta.id,mode:'session'});if(LAUNCH.course)q.set('course',LAUNCH.course);
       app.innerHTML=`<div class="date">Faculty</div><h1>${esc(C.meta.title)}</h1><p>${esc(C.meta.tagline)}</p><div class="row"><a class="btn" href="${esc(platform+'/api/launch?'+q)}">Run a class session</a><button class="btn ghost" id="preview">Play it yourself</button><a class="btn ghost" href="${esc(BASE+'/demo#lt='+encodeURIComponent(LAUNCH_TOKEN))}">Demo without timers</a></div>`;
       document.getElementById('preview').onclick=startSolo;return;
+    }
+    // A student from the class link lands in the class's open session, when there is one.
+    if(LAUNCH?.sub&&LAUNCH.role==='student'&&LAUNCH.course){
+      try{const c=await sessionApi({action:'course_session'});if(c.code){location.replace(location.pathname+'?session='+encodeURIComponent(c.code)+'#lt='+encodeURIComponent(LAUNCH_TOKEN));return}}catch{}
     }
     startSolo();return;
   }

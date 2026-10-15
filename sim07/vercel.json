@@ -56,7 +56,7 @@
       ]
     },
     {
-      "source": "/projector.html",
+      "source": "/live.html",
       "headers": [
         {
           "key": "Cache-Control",

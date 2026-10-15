@@ -77,4 +77,7 @@
 .faculty-results .fr-tone-y{background:#FBF2DC;border-color:#E6C77A;color:#7A5300}
 .faculty-results .fr-tone-o{background:#FCEBDF;border-color:#EAB08B;color:#8A4317}
 .faculty-results .fr-tone-l{background:#F9E9EC;border-color:#E3B5C0;color:#8E3449}
+.faculty-results .fr-tone-b{background:#E6F0F9;border-color:#A9C8E6;color:#25577F}
+.faculty-results .fr-tone-v{background:#EFEAF9;border-color:#C6B6E6;color:#4F3A87}
+.faculty-results .fr-tone-n{background:#EEF0F3;border-color:#C2C8D2;color:#3F4756}
 .faculty-results .fr-more-text summary{cursor:pointer;font:11px var(--mono);color:var(--amber)}

@@ -57,6 +57,8 @@ function phaseOf(sess, now) {
 // A participant's recorded position. Anyone without a decision after the close
 // is treated as a lapsed offer, which counts as declining.
 function positionOf(p, sess, now) {
+  // A class-list student who never opened the sim has no position, not a lapsed offer.
+  if (p && !p.joinedAt) return null;
   if (p && p.choice) return { choice: p.choice, lapsed: !!p.lapsed, text: p.justification || '' };
   if (sess && sess.state !== 'lobby' && !acceptsDecision(sess, now)) return { choice: 'decline', lapsed: true, text: '' };
   return null;

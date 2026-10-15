@@ -1,0 +1,19 @@
+/* Would You Have Bought It? debrief bodies. Sizes in em off the shared slide base (kit/debrief.css). */
+.bt-names{display:flex;flex-wrap:wrap;gap:.4em;margin-top:.5em}
+.bt-names span{font:1em var(--mono);padding:.2em .55em;border:1px solid var(--line2);border-radius:.3em;color:var(--soft)}
+.bt-pair{display:flex;gap:1.4em}
+.bt-memo{flex:1;display:flex;flex-direction:column;gap:.6em;padding:1.2em 1.4em;border:1px solid var(--line2);border-radius:.4em;background:var(--panel)}
+.bt-memo select{font:1em var(--mono);background:var(--panel2);color:var(--ink);border:1px solid var(--line2);border-radius:.3em;padding:.3em .5em;max-width:100%}
+.bt-h{font:600 1.1em var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.bt-quote{font:1.55em/1.4 var(--serif);color:var(--ink);margin:0}
+.bt-stages{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2em}
+.bt-stage{padding:1em 1.2em;border:1px solid var(--line2);border-radius:.4em;background:var(--panel)}
+.bt-stage b{display:block;font-size:1.25em;margin-bottom:.4em;color:var(--ink)}
+.bt-stage p{margin:.4em 0;color:var(--soft);line-height:1.45}
+.bt-year{display:block;font:600 1.6em var(--mono);color:var(--amber)}
+.bt-names-line{border-top:2px solid var(--amber);padding-top:.5em;color:var(--ink)!important;font-size:1.2em}
+.bt-table{border-collapse:collapse;font:1.25em var(--mono);color:var(--ink)}
+.bt-table th,.bt-table td{padding:.5em 1.4em;border-bottom:1px solid var(--line2);text-align:right}
+.bt-table th:first-child,.bt-table td:first-child{text-align:left}.bt-table th{color:var(--dim);font-weight:400}
+.bt-q{display:block;color:var(--dim);font-size:1em;margin-top:.5em}
+@media(max-width:800px){.bt-pair{flex-direction:column}.bt-stages{grid-template-columns:1fr}}

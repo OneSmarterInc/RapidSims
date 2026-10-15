@@ -11,7 +11,7 @@
 <script src="/render-transcript.js?v=2"></script>
 <script src="/portal-navigation.js"></script>
 <script src="/faculty-menu.js?v=20261015c"></script>
-<link rel="stylesheet" href="/faculty-results.css?v=20261015c">
+<link rel="stylesheet" href="/faculty-results.css?v=20261015d">
 <script src="/faculty-results.js?v=20261015c"></script>
 </head>
 <body class="console">
@@ -282,8 +282,8 @@ function render() {
 /* ── left menu and Midland's session status ─────────────────────────────── */
 const MIDLAND = 'rapid-03-midland';
 // Sims on the shared faculty pages (kit): sessions, results and debrief in the class page, plus Rehearse.
-const KIT_SIMS = ['rapid-03-midland', 'rapid-01-disaster', 'rapid-02-relay', 'rapid-04-whose-number', 'rapid-05-approve', 'rapid-06-switch'];
-const PRACTICE_N = { 'rapid-03-midland': 3, 'rapid-01-disaster': 1, 'rapid-02-relay': 1, 'rapid-04-whose-number': 3, 'rapid-05-approve': 1, 'rapid-06-switch': 1 };
+const KIT_SIMS = ['rapid-03-midland', 'rapid-01-disaster', 'rapid-02-relay', 'rapid-04-whose-number', 'rapid-05-approve', 'rapid-06-switch', 'rapid-07-bought'];
+const PRACTICE_N = { 'rapid-03-midland': 3, 'rapid-01-disaster': 1, 'rapid-02-relay': 1, 'rapid-04-whose-number': 3, 'rapid-05-approve': 1, 'rapid-06-switch': 1, 'rapid-07-bought': 1 };
 // Practice students who form one team (Midland). Elsewhere each practice student plays their own run.
 const PRACTICE_TEAM = { 'rapid-03-midland': true };
 const isKit = id => KIT_SIMS.includes(id);
