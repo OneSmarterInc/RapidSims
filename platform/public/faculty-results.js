@@ -24,7 +24,7 @@
     const metrics=attempt.metrics;
     return `<article class="fr-attempt"><div class="fr-attempt-meta"><b>Completion ${esc(attempt.ordinal)}</b>${attempt.id===latestId?'<span class="fr-latest">Latest</span>':''}<time>${esc(date(attempt.completed_at))}</time></div>
       <p class="fr-outcome">${esc(summary(attempt))}</p>
-      <div class="fr-meta">${attempt.duration_seconds != null ? esc(Number(attempt.duration_seconds))+' seconds' : 'Duration not reported'}${team?` · Team ${esc(saved.teamLabel || saved.teamRunId)}${saved.completedBy?' · Submitted by '+esc(saved.completedBy):''} · Shared outcome`:''}</div>
+      <div class="fr-meta">${attempt.duration_seconds != null ? esc(Number(attempt.duration_seconds))+' seconds' : 'Duration not reported'}${team?` · ${esc(teamName(saved.teamLabel || saved.teamRunId))}${saved.completedBy?' · Submitted by '+esc(saved.completedBy):''} · Shared outcome`:''}</div>
       ${attempt.legacy_course?'<p class="fr-small">Legacy record · associated through this student’s only recorded course for this SIM.</p>':''}
       <details class="fr-attempt-details"><summary>View completion ${esc(attempt.ordinal)} details</summary><div class="fr-details">
         <h3>Reported metrics</h3>${metrics && Object.keys(metrics).length?fields(metrics):'<p class="fr-small">No metrics reported. This is not a zero score.</p>'}
@@ -37,13 +37,17 @@
     const answers=[m.reflection1,m.reflection2].filter(t=>typeof t==='string'&&t.trim());
     return answers.length?answers.map((t,i)=>`<p class="fr-review"><span class="fr-meta">Answer ${i+1}</span>${esc(t)}</p>`).join(''):'<p class="fr-small">Review on its way.</p>';
   }
+  // Midland's Year 3 result names, as the debrief shows them.
+  const BANDS={strong:'Strong',pilot:'Pilot',middle:'Middle',data_no_room:'Data without room',weak:'Limited'};
+  // A saved team label already reads "Team 1"; a bare number gets the word.
+  const teamName=l=>{const x=String(l==null?'':l).replace(/^team:/,'');return /^team\b/i.test(x)?x:'Team '+x;};
   function sessionsHTML(sessions) {
     if(!Array.isArray(sessions)||!sessions.length)return '';
     return `<div class="fr-section"><div><h2>Class sessions</h2><p>Newest first · each team’s result with every member’s own review</p></div></div>
-      ${sessions.map(s=>`<details class="fr-panel fr-session" ${s===sessions[0]?'open':''}><summary class="fr-session-head"><b>${esc(s.name||'Class session')}</b> · ${esc(date(s.createdAt||s.latestAt))} · Code ${esc(s.code)} · ${s.teams.length} ${s.teams.some(t=>t.team)?'team':'result'}${s.teams.length===1?'':'s'}</summary>
-        <table class="fr-table fr-session-table"><caption class="fr-sr">Session ${esc(s.code)} results</caption><thead><tr><th scope="col">Team</th><th scope="col">Result</th><th scope="col">Members and reviews</th></tr></thead><tbody>
-        ${s.teams.map(t=>`<tr><td data-label="Team"><div class="fr-name">${esc(t.team?'Team '+t.label:t.label)}</div>${t.completedBy?`<div class="fr-meta">Decisions entered by ${esc(t.completedBy)}</div>`:''}${t.roster?`<div class="fr-meta">${t.roster.length} member${t.roster.length===1?'':'s'}</div>`:''}</td>
-          <td data-label="Result">${t.year3?`<div class="fr-badge fr-ok">${esc(t.year3)}</div>`:''}<p class="fr-outcome">${esc(t.overall||'Result saved.')}</p></td>
+      ${sessions.map(s=>`<details class="fr-panel fr-session" ${s===sessions[0]?'open':''}><summary class="fr-session-head"><b>${esc(s.name||'Class session')}</b> · ${esc(date(s.createdAt||s.latestAt))} · ${s.teams.length} ${s.teams.some(t=>t.team)?'team':'result'}${s.teams.length===1?'':'s'}</summary>
+        <table class="fr-table fr-session-table"><caption class="fr-sr">${esc(s.name||"Class session")} results</caption><thead><tr><th scope="col">Team</th><th scope="col">Result</th><th scope="col">Members and reviews</th></tr></thead><tbody>
+        ${s.teams.map(t=>`<tr><td data-label="Team"><div class="fr-name">${esc(t.team?teamName(t.label):t.label)}</div>${t.completedBy?`<div class="fr-meta">Decisions entered by ${esc(t.completedBy)}</div>`:''}${t.roster?`<div class="fr-meta">${t.roster.length} member${t.roster.length===1?'':'s'}</div>`:''}</td>
+          <td data-label="Result">${BANDS[t.year3Band]?`<div class="fr-badge ${t.year3Band==='strong'?'fr-ok':''}">${esc(BANDS[t.year3Band])}</div>`:''}<p class="fr-outcome">${esc(t.overall||'Result saved.')}</p></td>
           <td data-label="Members and reviews">${t.members.map(m=>`<div class="fr-member"><b>${esc(m.name)}</b> <span class="fr-meta">${esc(date(m.completedAt))}</span>${reviewHTML(m)}</div>`).join('')}</td></tr>`).join('')}
         </tbody></table></details>`).join('')}`;
   }

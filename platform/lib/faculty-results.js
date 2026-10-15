@@ -99,7 +99,7 @@ function groupSessions(rows) {
         key: teamKey, label: v.teamRunId ? (v.teamLabel || v.teamRunId) : row.name,
         team: !!v.teamRunId, completedBy: v.completedBy || null,
         roster: Array.isArray(v.teamMembers) ? v.teamMembers.slice(0, 30) : null,
-        overall: v.result?.overall || null, year3: v.result?.year3?.title || null, year3Band: v.year3Band || null,
+        overall: v.result?.overall || null, year3: v.result?.year3?.title || null, year3Band: v.year3Band || v.result?.year3?.band || null,
         members: []
       });
     }
