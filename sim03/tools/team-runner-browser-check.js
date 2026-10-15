@@ -140,7 +140,7 @@ async function snapshot(name, page) {
       await handlers[match[1]](req, res); return;
     }
     const name = route === '/' ? 'index.html' : route.slice(1);
-    if (!['index.html', 'instructor.html', 'launch.html', 'faculty-workspace.js', 'faculty-workspace.css'].includes(name)) return json(res, 404, { error: 'not_found' });
+    if (!['index.html', 'instructor.html', 'launch.html', 'faculty-workspace.js', 'faculty-workspace.css', 'midland-debrief.js', 'midland-debrief.css'].includes(name)) return json(res, 404, { error: 'not_found' });
     res.writeHead(200, { 'content-type': name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':'text/html' });
     res.end(await fs.readFile(path.join(root, 'public', name)));
   });

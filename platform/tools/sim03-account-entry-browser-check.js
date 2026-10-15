@@ -40,7 +40,7 @@ async function simRoute(req,res,url) {
   let pathname=url.pathname.replace(/^\/sim03(?=\/|$)/,'')||'/';
   if(pathname.startsWith('/api/')) return invoke(pathname.slice(5),req,res,url);
   if(pathname==='/')pathname='/launch.html';
-  if(!['/launch.html','/index.html','/instructor.html','/faculty-workspace.js','/faculty-workspace.css'].includes(pathname)){res.statusCode=404;return res.end();}
+  if(!['/launch.html','/index.html','/instructor.html','/faculty-workspace.js','/faculty-workspace.css','/midland-debrief.js','/midland-debrief.css'].includes(pathname)){res.statusCode=404;return res.end();}
   return file(res,'sim03/public'+pathname);
 }
 async function page(name) {
