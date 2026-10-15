@@ -9,7 +9,8 @@ const path = require('path');
 
 const targets = [
   ['the built bundle', path.join(__dirname, '../public/index.html')],
-  ['the session console', path.join(__dirname, '../public/faculty.html')]
+  // The faculty pages are the shared RapidSims kit, served beside each sim as kit/.
+  ['the session console', path.join(__dirname, '../../platform/public/kit/faculty-session.js')]
 ];
 let bad = 0;
 
@@ -26,6 +27,7 @@ for (const [name, file] of targets) {
 
   for (const arg of calls) {
     if (arg.startsWith('BASE')) continue;                  // carries the prefix
+    if (/^(PLATFORM_LAUNCH_PATH|\(facultyDashboard)/.test(arg)) continue; // the platform's own pages, on purpose
     if (/^['"`]https?:/.test(arg)) continue;               // somewhere else entirely
     if (/^['"`](?!\/)/.test(arg)) continue;                // relative already
     if (/^\/\//.test(arg)) continue;

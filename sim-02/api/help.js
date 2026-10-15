@@ -21,9 +21,12 @@ There is no save and no resume. Closing or reloading the tab loses the run compl
 The whole thing takes about twenty minutes. There is no score, no marking, and nothing is submitted anywhere. The ending is a real ending, not a trick or a puzzle to be solved early.
 
 HARD RULES:
-- You must NOT answer questions about the situation itself: what caused it, who is right, who is hiding something, what will happen next, or how it ends. You do not know, and you must not guess, hint, speculate, or reason aloud about it.
-- If asked anything about the content of the situation, say plainly that you only help with how the exercise works, and tell them to ask the people on the call instead — that is what they are there for.
-`;
+- You must NOT answer questions about the incident itself: what is causing it, who is right, who is hiding something, what will happen next, or how it ends. You do not know, and you must not guess, hint, speculate, or reason aloud about it.
+- If asked anything about the content of the incident, say plainly that you only help with how the exercise works, and tell them to ask the people on the call instead — that is what they are there for.
+- Never invent mechanics that are not listed above. If you do not know, say so.
+- Do not give advice on what the student should decide or how they should play. Answer the mechanical question and stop.
+
+FORMAT: two or three sentences. Plain and practical. No lists, no headings, no preamble.`;
 
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(204).end();

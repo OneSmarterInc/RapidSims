@@ -19,7 +19,9 @@ module.exports = async (req, res) => {
       intro: S.CAST_INTRO,
       actions: S.ACTIONS,
       readings: S.READINGS,
-      labels: S.PHASES.map(p => ({ label: p.label, clock: p.clock, day: p.day }))
+      labels: S.PHASES.map(p => ({ label: p.label, clock: p.clock, day: p.day })),
+      lessonQuestions: S.LESSON_QUESTIONS,
+      reviewQuestions: S.REVIEW_QUESTIONS
     });
   }
 

@@ -163,9 +163,9 @@ TIER 0 — default. Anyone asking loosely ("anything change on your side?", "is 
 
 TIER 1 — they ask about escalation, routing or what reaches a human, in general terms ("did the change affect what gets escalated?", "what decides whether a person sees it?"). You concede that the tuning moved the boundary, that some inquiry types which previously escalated now resolve in-platform, and that rating questions may well sit near that line. You invite a sharper question. You do NOT yet say what the change was made for, and you do NOT mention a target or a number.
 
-At the end of a Tier 1 answer given PRIVATELY, you may offer one hand-up — tell them what they should probably ask you next. Not on the bridge, and not more than once. You are not trying to be caught, but privately, to someone who has asked a real question, you would rather they got there than didn't.
+At the end of a Tier 1 answer given PRIVATELY, you may offer one hand-up — tell them what they should probably ask you next. Not on the call, and not more than once. You are not trying to be caught, but privately, to someone who has asked a real question, you would rather they got there than didn't.
 
-TIER 2 — they earn it. This requires a question that already understands the shape of the problem: asking what the change was made FOR, who approved it, whether anyone reviewed it against inquiry type, what you were being measured on, or asking you directly what you are not saying. Being taken aside privately also counts, because it costs you less to say it where Joanna and the vendor can't hear. At Tier 2 you tell the truth plainly: it was your call, made in week three of Q3 against a 70% deflection target, and nobody reviewed it because nothing required anyone to. ON THE BRIDGE keep it factual and impersonal — state what was changed and when, without self-blame, because Joanna and Grant are listening. PRIVATELY, with only the VP, you go further: you say you have been uneasy about it since the summer, that you never raised it, and that this one is yours.
+TIER 2 — they earn it. This requires a question that already understands the shape of the problem: asking what the change was made FOR, who approved it, whether anyone reviewed it against inquiry type, what you were being measured on, or asking you directly what you are not saying. Being taken aside privately also counts, because it costs you less to say it where Joanna and the vendor can't hear. At Tier 2 you tell the truth plainly: it was your call, made in week three of Q3 against a 70% deflection target, and nobody reviewed it because nothing required anyone to. ON THE CALL keep it factual and impersonal — state what was changed and when, without self-blame, because Joanna and Grant are listening. PRIVATELY, with only the VP, you go further: you say you have been uneasy about it since the summer, that you never raised it, and that this one is yours.
 
 Do not skip tiers. A vague question gets a vague answer. This is not evasiveness for its own sake — it is what it feels like to be asked something that could end your year by someone who has not yet worked out what they are asking.
 
@@ -581,7 +581,27 @@ function sceneFor(phase, state) {
            telemetry, task: ph.task, prompts, beats };
 }
 
+// What students watch for (shown at the start) and the lessons the class debrief draws out (approved Oct 15, 2026).
+const LESSON_QUESTIONS = [
+  'Whose answer did you trust, and what did they stand to lose?',
+  'Did you keep the evidence before you fixed the problem?',
+  'When did you change your mind?',
+  'Did you ask what the Q3 change was for?'
+];
+const LESSONS = [
+  { head: 'Every adviser tells the truth they can afford.', text: 'Joanna and Devin were each right about their half, and each found the other half more persuasive.' },
+  { head: 'Keep the evidence before you fix.', text: 'Preserve cost nothing. The 2:00 rebuild erased the record of what Relay served.' },
+  { head: 'Change course when the evidence changes.', text: 'At Hour 7, nine rating questions answered with no escalation pointed past the document.' },
+  { head: 'Ask what a change was for.', text: '"Did anything change?" gets a yes. "What was it for?" gets the deflection target.' }
+];
+// The two questions every student answers after the debrief.
+const REVIEW_QUESTIONS = [
+  'At Hour 1, whose account did you trust most, and what did that person stand to lose if they were wrong?',
+  'Now that you know it was both, which one decision would you change, and what question would have told you sooner?'
+];
+
 module.exports = {
+  LESSON_QUESTIONS, LESSONS, REVIEW_QUESTIONS,
   META,
   GROUND_TRUTH, CAST, CAST_PUBLIC, CAST_INTRO, CAST_ORDER, KNOWLEDGE, PHASES,
   ACTIONS, READINGS, FALLBACK, FORK, LADDER, fallbackFor,

@@ -281,8 +281,8 @@ function render() {
 /* ── left menu and Midland's session status ─────────────────────────────── */
 const MIDLAND = 'rapid-03-midland';
 // Sims on the shared faculty pages (kit): sessions, results and debrief in the class page, plus Rehearse.
-const KIT_SIMS = ['rapid-03-midland', 'rapid-01-disaster'];
-const PRACTICE_N = { 'rapid-03-midland': 3, 'rapid-01-disaster': 1 };
+const KIT_SIMS = ['rapid-03-midland', 'rapid-01-disaster', 'rapid-02-relay'];
+const PRACTICE_N = { 'rapid-03-midland': 3, 'rapid-01-disaster': 1, 'rapid-02-relay': 1 };
 const isKit = id => KIT_SIMS.includes(id);
 // The sim Rehearse is for: the one asked for, or the class's first sim on the kit.
 function rehearseSim() { return F.rehearseSim || (F.course?.sims || []).map(x => x.sim_id).find(isKit) || MIDLAND; }

@@ -2,7 +2,7 @@
 // sets the flag directly and never comes here.
 //
 // Runs once at the close of each of the first two moments, over that moment's
-// bridge and private transcripts. One narrow question, deliberately: did the VP
+// call and private transcripts. One narrow question, deliberately: did the VP
 // instruct anyone to stop the scheduled re-index, or to preserve the index as it
 // stands. Two lines have to be drawn explicitly because both are common:
 // a question is not an instruction, and holding something else is not holding
