@@ -241,8 +241,10 @@ function render() {
   if (F.view === 'sim-results' && F.simResults) renderSimResults();
   else if (F.view === 'played' && F.progress) renderPlayed();
   else if (F.view === 'student-results' && F.studentResults) renderStudentResults();
+  else if (F.view === 'sim' && F.course && F.frame) renderFrame();
   else if (F.view === 'course' && F.course) renderCourse();
   else renderHome();
+  document.body.classList.toggle?.('rs-framed', F.view === 'sim');
   drawMenu();
 }
 
@@ -259,11 +261,23 @@ function drawMenu() {
   const classes = (F.data.courses || []).map(c => ({ id:c.id, title:c.title, href:`/faculty.html?view=course&course=${encodeURIComponent(c.id)}` }));
   const c = menuCourse();
   const sims = c && F.course?.course?.id === c.id ? F.course.sims : [];
-  const current = F.view === 'home' ? 'classes' : F.view === 'sim-results' ? `${F.simResults?.sim?.id}:all-results` : 'class';
+  const current = F.view === 'home' ? 'classes' : F.view === 'sim-results' ? `${F.simResults?.sim?.id}:all-results`
+    : F.view === 'sim' && F.frame ? `${F.frame.sim}:${F.frame.session ? (F.frame.tab || 'teams') : 'sessions'}` : 'class';
   FacultyMenu.mount({ classes, classesHref:'/faculty.html', current,
     course: c ? { id:c.id, title:c.title, href:`/faculty.html?view=course&course=${encodeURIComponent(c.id)}` } : null,
+    onNavigate: (key) => {
+      const [sim, what] = key.split(':');
+      if (!c || sim !== MIDLAND || !['sessions', 'teams', 'results', 'debrief', 'session'].includes(what)) return false;
+      const frame = document.getElementById('simFrame');
+      if (F.view === 'sim' && frame && F.frame?.sim === sim) { frame.contentWindow.postMessage({ type:'rs-nav', to:what === 'session' ? 'teams' : what }, location.origin); return true; }
+      const open = F.midland?.courseId === c.id ? F.midland.open : null;
+      openFrame(sim, c.id, what === 'sessions' ? '' : open?.code || '', what === 'sessions' ? '' : what === 'session' ? 'teams' : what);
+      return true;
+    },
     sims: (sims || []).map(x => {
-      const open = x.sim_id === MIDLAND && F.midland?.courseId === c.id ? F.midland.open : null;
+      const framed = F.view === 'sim' && F.frame?.sim === x.sim_id;
+      const open = framed ? (F.frame.session && F.frame.info ? { code:F.frame.session, name:F.frame.info.label, state:F.frame.info.state === 'paused' ? 'running' : F.frame.info.state, paused:F.frame.info.state === 'paused', mode:F.frame.info.team ? 'team' : 'individual' } : null)
+        : x.sim_id === MIDLAND && F.midland?.courseId === c.id ? F.midland.open : null;
       return { id:x.sim_id, title:x.title,
         links:{ sessions:launchHref(x.sim_id, c.id, '&mode=session'), play:launchHref(x.sim_id, c.id),
           results:F.me?.role === 'faculty' ? `/faculty.html?view=sim-results&course=${encodeURIComponent(c.id)}&sim=${encodeURIComponent(x.sim_id)}` : null,
@@ -274,6 +288,32 @@ function drawMenu() {
             debrief:launchHref(x.sim_id, c.id, `&mode=session&session=${encodeURIComponent(open.code)}&tab=debrief`) } } : null };
     }) });
 }
+// Midland's pages inside the class page. The frame is created once per class and sim;
+// moving between Sessions, Teams, Results and Debrief happens inside it.
+function frameSrc(f, courseId) {
+  return launchHref(f.sim, courseId, `&mode=session${f.session ? `&session=${encodeURIComponent(f.session)}` : ''}${f.tab ? `&tab=${encodeURIComponent(f.tab)}` : ''}`);
+}
+function renderFrame() {
+  const c = F.course.course, f = F.frame, key = `${c.id}|${f.sim}`;
+  const existing = document.getElementById('simFrame');
+  if (existing && existing.dataset.key === key) return;
+  const sim = F.course.sims.find(x => x.sim_id === f.sim);
+  app.innerHTML = `<div class="sim-frame-wrap"><iframe id="simFrame" class="sim-frame" data-key="${esc(key)}" src="${esc(frameSrc(f, c.id))}"
+    title="${esc(sim ? sim.title : 'Simulation')} sessions" allow="fullscreen; clipboard-write"></iframe></div>`;
+}
+function openFrame(simId, courseId, session = '', tab = '') {
+  return navigation.go({ view:'sim', course:courseId, sim:simId, session:session || null, tab:tab || null }, false);
+}
+window.addEventListener?.('message', e => {
+  const frame = document.getElementById('simFrame');
+  if (e.origin !== location.origin || !frame || e.source !== frame.contentWindow || e.data?.type !== 'rs-frame' || !F.frame) return;
+  const d = e.data, before = JSON.stringify([F.frame.session, F.frame.tab, F.frame.info]);
+  F.frame.session = d.session?.code || '';
+  F.frame.tab = d.session ? (d.tab || 'teams') : '';
+  F.frame.info = d.session ? { label:String(d.session.label || '').slice(0, 80), state:d.session.state, team:d.session.team !== false } : null;
+  if (JSON.stringify([F.frame.session, F.frame.tab, F.frame.info]) === before) return;
+  drawMenu(); navigation?.record('replace');
+});
 // Midland's open session (or the last one) for the course row and the menu. Loaded after the page draws.
 let midlandAsking = '';
 async function loadMidlandStatus(courseId) {
@@ -453,8 +493,9 @@ function wireSims() {
 function renderCourse() {
   const { course, sims, catalogue, enrolUrl } = F.course;
   // Students of earlier sessions moved into Results when those sessions closed.
-  const earlier = F.course.roster.filter(r => r.archived_at && !r.dropped);
-  const roster = F.showEarlier ? earlier : F.course.roster.filter(r => !r.archived_at);
+  // Students from earlier sessions and removed students sit together under Show earlier students.
+  const earlier = F.course.roster.filter(r => r.archived_at || r.dropped);
+  const roster = F.showEarlier ? earlier : F.course.roster.filter(r => !r.archived_at && !r.dropped);
   const active = F.course.roster.filter(r => !r.dropped && !r.archived_at);
   const waiting = active.filter(r => !r.paid);
   const q = (F.q.ros||'').toLowerCase().trim();
@@ -544,8 +585,8 @@ function renderCourse() {
           <div class="side faculty-sim-side">
             <div class="faculty-sim-actions">
               ${midland
-                ? `${open ? `<a class="btn pri sm" href="${launchHref(x.sim_id, course.id, `&mode=session&session=${encodeURIComponent(open.code)}`)}">Open session</a>` : ''}
-                   <a class="btn ${open?'':'pri '}sm" href="${launchHref(x.sim_id, course.id, '&mode=session')}">Manage sessions</a>
+                ? `${open ? `<a class="btn pri sm" data-frame="${esc(x.sim_id)}" data-session="${esc(open.code)}" href="/faculty.html?view=sim&course=${encodeURIComponent(course.id)}&sim=${encodeURIComponent(x.sim_id)}&session=${encodeURIComponent(open.code)}">Open session</a>` : ''}
+                   <a class="btn ${open?'':'pri '}sm" data-frame="${esc(x.sim_id)}" href="/faculty.html?view=sim&course=${encodeURIComponent(course.id)}&sim=${encodeURIComponent(x.sim_id)}">Manage sessions</a>
                    <button class="btn sm" data-midland-rehearse>Rehearse</button>`
                 : x.sim_id === 'rapid-05-approve'
                 ? `<a class="btn pri sm" href="${launchHref(x.sim_id, course.id, '&mode=session&play=team')}">Run groups</a>
@@ -578,8 +619,8 @@ function renderCourse() {
     </div>
 
     ${earlier.length || F.showEarlier ? `<div class="faculty-earlier"><span>${F.showEarlier
-      ? `Students from earlier sessions. Their results are under Results. They come back here when they open the class link or a sim again.`
-      : `${earlier.length} student${earlier.length===1?'':'s'} from earlier sessions moved into Results.`}</span>
+      ? `Students from earlier sessions, and students you removed. Results stay under Results. Students from earlier sessions come back here when they open the class link or a sim again.`
+      : `${earlier.length} student${earlier.length===1?'':'s'} from earlier sessions or removed.`}</span>
       <button class="btn sm" id="earlierBtn">${F.showEarlier ? 'Show current students' : 'Show earlier students'}</button></div>` : ''}
     <div class="toolbar faculty-roster-toolbar">
       <div class="search"><input data-q="ros" type="text" placeholder="Search this course's students" value="${esc(F.q.ros||'')}"></div>
@@ -666,6 +707,7 @@ function renderCourse() {
   app.querySelectorAll('[data-prog]').forEach(b => b.onclick = () => openProgress(course.id, b.dataset.prog));
   app.querySelectorAll('[data-sim-results]').forEach(b => b.onclick = () => openSimResults(course.id,b.dataset.simResults));
   app.querySelectorAll('[data-midland-rehearse]').forEach(b => b.onclick = () => startMidlandPractice(course.id, b));
+  app.querySelectorAll('a[data-frame]').forEach(a => a.onclick = e => { if (e.metaKey || e.ctrlKey || e.shiftKey) return; e.preventDefault(); openFrame(a.dataset.frame, course.id, a.dataset.session || ''); });
   // A practice tab's final page links back here with ?practice=1: reopen the practice panel once.
   if (!practiceReopened && practiceAsked) {
     const rb = app.querySelector('[data-midland-rehearse]');
@@ -952,6 +994,7 @@ function wireCommon() {
 function facultyRoute() {
   const course = F.view === 'sim-results' ? F.simResults?.course.id : F.view === 'played' ? F.progress?.course.id
     : F.view === 'student-results' ? F.studentResults?.course.id : F.course?.course.id;
+  if (F.view === 'sim' && F.frame) return {view:'sim', course:F.course?.course.id, sim:F.frame.sim, session:F.frame.session||null, tab:F.frame.tab||null};
   return {view:F.view,tab:F.tab,course:F.view==='home'?null:course,
     sim:F.view==='sim-results'?F.simResults?.sim.id:F.view==='played'?F.progress?.sim.id:null,
     sort:F.view==='sim-results'?F.resultsSort:null,
@@ -961,8 +1004,8 @@ function facultyRoute() {
 }
 async function restoreFaculty(params,current) {
   const courseId=PortalNavigation.id(params,'course'), simId=PortalNavigation.id(params,'sim'), studentId=PortalNavigation.id(params,'student');
-  const view=['home','course','played','student-results','sim-results'].includes(params.get('view')) ? params.get('view') : courseId ? 'course' : 'home';
-  if (view!=='home' && (!courseId || (['played','sim-results'].includes(view) && !simId) || (view==='student-results' && !studentId))) {
+  const view=['home','course','played','student-results','sim-results','sim'].includes(params.get('view')) ? params.get('view') : courseId ? 'course' : 'home';
+  if (view!=='home' && (!courseId || (['played','sim-results','sim'].includes(view) && !simId) || (view==='student-results' && !studentId))) {
     throw Object.assign(new Error('Incomplete link'),{status:404});
   }
   if (view==='sim-results' && F.me?.role!=='faculty') throw Object.assign(new Error('Faculty access required'),{status:403});
@@ -977,7 +1020,10 @@ async function restoreFaculty(params,current) {
     page:lists.page.simResults||1,filter:lists.filter.simResults||'all',sort:params.get('sort'),search:F.q.simResults||''}):null;
   if(!current())return;
   if(simResults){lists.page.simResults=simResults.page;lists.filter.simResults=simResults.filter;}
-  Object.assign(F,{data,tab,view,course,progress,studentResults,simResults,resultsSort:simResults?.sort||'name',simsOverview,err:null,
+  // The sessions frame: Midland's pages inside the class page, so the menu stays put.
+  const frame=view==='sim'?{sim:simId,session:(params.get('session')||'').replace(/[^A-Za-z0-9]/g,'').slice(0,8),tab:['teams','results','debrief'].includes(params.get('tab'))?params.get('tab'):'',info:null}:null;
+  if(frame&&F.frame&&F.frame.sim===frame.sim&&F.course?.course.id===courseId&&document.getElementById('simFrame'))frame.keep=true;
+  Object.assign(F,{data,tab,view,course,progress,frame,studentResults,simResults,resultsSort:simResults?.sort||'name',simsOverview,err:null,
     ...lists,
     newCourse:view==='home' && params.get('new')==='1',editCourse:view==='course' && params.get('edit')==='1',
     addSim:view==='course' && params.get('add')==='1',showEarlier:false,looking:PortalNavigation.id(params,'look') || null,help:null});
@@ -998,7 +1044,7 @@ async function restoreFaculty(params,current) {
     root:app, read:facultyRoute, restore:restoreFaculty,
     beforeRestore:()=>{document.getElementById('lookSheet')?.remove();document.body.classList.remove('sheet-open');},
     render:()=>{render();drawLook();}, search:()=>F.q, setSearch:q=>{F.q=q;},
-    navigation:'.fr-back,[data-tab],[data-open],#back,#backCourse,[data-prog],[data-sim-results],[data-student-results],[data-f],[data-page-key],[data-look],#lookClose,#nc,#ce,#as'
+    navigation:'.fr-back,[data-frame],[data-tab],[data-open],#back,#backCourse,[data-prog],[data-sim-results],[data-student-results],[data-f],[data-page-key],[data-look],#lookClose,#nc,#ce,#as'
   });
   await navigation.start(F.me.id);
 })();

@@ -72,9 +72,10 @@ function html() {
       out += '</div>';
     }
   }
-  if (opts.classes && opts.classes.length) {
+  const others = (opts.classes || []).filter(k => !c || k.id !== c.id);
+  if (others.length) {
     out += `<div class="rs-h">${c ? 'Other classes' : 'Your classes'}</div>`;
-    for (const k of opts.classes) if (!c || k.id !== c.id) out += link(`class:${k.id}`, k.href, k.title);
+    for (const k of others) out += link(`class:${k.id}`, k.href, k.title);
   }
   out += `<div class="rs-foot">${link('classes', opts.classesHref || '/faculty.html', 'Your classes')}</div>`;
   return out;
