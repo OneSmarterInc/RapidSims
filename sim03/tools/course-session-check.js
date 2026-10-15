@@ -57,7 +57,13 @@ async function invoke(endpoint, body, lt) {
   check(individual.status, 200, 'Faculty creates an individual session');
   check((await invoke(handler, { action: 'course_session' }, student)).body, { code: null }, 'Individual sessions do not capture direct launches');
 
-  const team = await invoke(handler, { action: 'create', mode: 'team' }, faculty);
+  const refused = await invoke(handler, { action: 'create', mode: 'team' }, faculty);
+  check([refused.status, refused.body.error, refused.body.open.map(x => x.code)], [409, 'other_session_open', [individual.body.session.code]],
+    'Starting a new session while one is open asks first');
+  const team = await invoke(handler, { action: 'create', mode: 'team', closeOpen: true }, faculty);
+  check(team.status, 200, 'After confirming, the new session starts');
+  check([sessions.get(individual.body.session.code).state, sessions.get(individual.body.session.code).closedFrom], ['closed', 'new-session'],
+    'The open session is closed, and the record says why');
   const code = team.body.session.code;
   check((await invoke(handler, { action: 'course_session' }, student)).body, { code }, 'Student is routed to the course team session');
   check((await invoke(handler, { action: 'course_session' }, otherCourse)).body, { code: null }, 'Another course is not routed');
@@ -83,8 +89,17 @@ async function invoke(endpoint, body, lt) {
   check((await invoke(handler, { action: 'course_session' }, student)).body, { code }, 'Students are routed to the reopened class');
   check((await invoke(handler, { action: 'control', code, set: 'reopen' }, faculty)).status, 409, 'Only a closed class reopens');
   check((await invoke(handler, { action: 'control', code, set: 'close' }, faculty)).status, 200, 'Close it again');
+  const later = await invoke(handler, { action: 'create', mode: 'team' }, faculty);
+  check(later.status, 200, 'With nothing open, a new session starts at once');
+  const laterCode = later.body.session.code;
+  const ask = await invoke(handler, { action: 'control', code, set: 'reopen' }, faculty);
+  check([ask.status, ask.body.error, ask.body.open.map(x => x.code)], [409, 'other_session_open', [laterCode]], 'Reopening while another session is open asks first');
+  check((await invoke(handler, { action: 'control', code, set: 'reopen', closeOpen: true }, faculty)).status, 200, 'After confirming, the old session reopens');
+  check([sessions.get(laterCode).state, sessions.get(laterCode).closedFrom, sessions.get(code).state, pointers.get('crs_A')], ['closed', 'reopen-other', 'lobby', code],
+    'The other session closed; the reopened one is the course session');
+  check((await invoke(handler, { action: 'control', code, set: 'close' }, faculty)).status, 200, 'Close it once more');
   const listed = (await invoke(handler, { action: 'course_sessions' }, faculty)).body.sessions;
-  check(listed.map(x => [x.code, x.mode, x.state]).sort(), [[code, 'team', 'closed'], [individual.body.session.code, 'individual', 'lobby']].sort(), 'Faculty see every session for the course');
+  check(listed.map(x => [x.code, x.mode, x.state]).sort(), [[code, 'team', 'closed'], [laterCode, 'team', 'closed'], [individual.body.session.code, 'individual', 'closed']].sort(), 'Faculty see every session for the course');
   const otherFaculty = token({ sub: 'fac-2', name: 'Other', role: 'faculty', course: 'crs_A', mode: 'session' });
   check((await invoke(handler, { action: 'course_sessions' }, otherFaculty)).body.sessions, [], 'Another faculty member sees only their own sessions');
   check((await invoke(handler, { action: 'course_sessions' }, student)).status, 401, 'Students cannot list sessions');

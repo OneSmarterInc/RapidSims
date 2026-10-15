@@ -9,6 +9,45 @@ const { accountJoinUrl, participantLaunch, participantError, openTeamSessionFor,
 async function pointCourse(fn) {
   try { await fn(); } catch (e) { console.error('course session pointer update failed', e.code || e.message); }
 }
+
+// One open session per course. Finds the course's other open sessions (practice excluded).
+async function otherOpenSessions(courseId, except) {
+  if (!courseId) return [];
+  let codes = [];
+  try {
+    codes = (await store.listCourseSessions(courseId)) || [];
+    const pointer = await store.getCourseTeamSession(courseId);
+    if (pointer && !codes.includes(pointer)) codes.push(pointer);
+  } catch (e) { console.error('course session list failed', e.code || e.message); return []; }
+  const out = [];
+  for (const c of codes) {
+    if (c === except) continue;
+    const s = await store.getSession(c).catch(() => null);
+    if (s && !s.practice && s.state !== 'closed') out.push(s);
+  }
+  return out;
+}
+
+// Close those sessions after faculty confirmed. Teams keep their saved decisions and results.
+async function closeSessions(list, who, from) {
+  for (const s of list) {
+    for (let i = 0; i < 5; i++) {
+      const prev = await store.getSession(s.code);
+      if (!prev || prev.state === 'closed') break;
+      const next = { ...structuredClone(prev), state: 'closed', closedAt: Date.now(), closedBy: who.name || null, closedFrom: from };
+      if (await store.compareAndSetSession(s.code, prev, next)) {
+        if (next.courseId) await pointCourse(() => store.clearCourseTeamSession(next.courseId, s.code));
+        break;
+      }
+    }
+  }
+}
+
+function otherOpenReply(res, list, verb) {
+  const first = list[0];
+  return res.status(409).json({ error: 'other_session_open', open: list.map(s => ({ code: s.code, name: s.name || 'Midland Equipment' })),
+    message: `${verb} closes the open session "${first.name || 'Midland Equipment'}". Submitted teams keep their results. Unfinished teams keep their saved decisions.` });
+}
 const { leadOf, runnerOf, revisionOf, screenOf } = require('../lib/team-runner.js');
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -278,6 +317,11 @@ module.exports = async (req, res) => {
         }
         const thresholdCheck = S.validateThresholds(b.thresholds);
         if (!thresholdCheck.ok) return res.status(400).json(thresholdCheck);
+        if (who.platformAuth && who.courseId) {
+          const open = await otherOpenSessions(who.courseId, null);
+          if (open.length && !b.closeOpen) return otherOpenReply(res, open, 'Starting a new session');
+          if (open.length) await closeSessions(open, who, 'new-session');
+        }
         const c = newCode();
         const sess = {
           code: c,
@@ -544,11 +588,10 @@ module.exports = async (req, res) => {
         // Reopen a class closed by mistake: teams continue from their saved decisions.
         if (b.set === 'reopen') {
           if (sess.state !== 'closed') return res.status(409).json({ error: 'session_not_closed' });
-          if (!sess.practice && sess.mode === 'team' && sess.courseId) {
-            const current = await store.getCourseTeamSession(sess.courseId).catch(() => null);
-            const other = current && current !== code ? await store.getSession(current) : null;
-            if (other && other.state !== 'closed') return res.status(409).json({ error: 'other_session_open',
-              message: 'Another class is open for this course. Close it first, then reopen this one.' });
+          if (!sess.practice && sess.courseId) {
+            const open = await otherOpenSessions(sess.courseId, code);
+            if (open.length && !b.closeOpen) return otherOpenReply(res, open, 'Reopening this session');
+            if (open.length) await closeSessions(open, who, 'reopen-other');
           }
           sess.state = sess.startedAt ? 'running' : 'lobby';
           sess.paused = false;
