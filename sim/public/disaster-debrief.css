@@ -1,0 +1,45 @@
+/* Disaster or Breach debrief bodies. Sizes in em off the shared slide base (kit/debrief.css). */
+.md-root{--hw:#5B9BF8;--hw-t:#7FB0FA;--bo:#36C9BB;--br:#F483BE;--un:#9EA6B5}
+.dd-names{display:flex;flex-wrap:wrap;gap:.4em;margin-top:.5em}
+.dd-names span{font:500 1.1em var(--serif);background:var(--panel2);border-radius:4px;padding:.15em .55em}
+.dd-h{font:600 .7em var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.dd-hb{color:var(--bo)}
+.dd-fork{display:grid;grid-template-columns:15em repeat(2,minmax(0,1fr));gap:.8em;align-items:stretch}
+.dd-row{display:flex;flex-direction:column;justify-content:center;gap:.3em}
+.dd-row b{font:500 1.3em var(--serif)}.dd-row small{font-size:.8em;color:var(--dim)}
+.dd-cell{border:1px solid var(--line);border-radius:6px;padding:.9em 1.1em;font:400 1.05em/1.4 var(--serif)}
+.dd-dim{opacity:.55}
+.dd-good{background:var(--g-bg);border-color:var(--g-bd)}
+.dd-bad{background:var(--l-bg);border-color:var(--l-bd)}
+.dd-bars{display:flex;flex-direction:column;gap:.8em}
+.dd-bar{display:grid;grid-template-columns:11em minmax(0,1fr) 3em;gap:.9em;align-items:center}
+.dd-lab{font:600 .8em var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.dd-track{height:2.4em;border:1px dashed var(--line2);border-radius:4px}
+.dd-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding:0 .7em;font:500 1em var(--serif);color:#0E1524;white-space:nowrap;overflow:hidden}
+.dd-n{font:600 1.4em var(--mono);text-align:right}
+.dd-r-hardware{color:var(--hw-t)}.dd-r-both{color:var(--bo)}.dd-r-unknown{color:var(--un)}.dd-r-breach{color:var(--br)}
+.dd-f-hardware{background:rgba(91,155,248,.16);border:1px solid rgba(91,155,248,.6);color:var(--hw-t)}
+.dd-fill.dd-f-hardware{background:var(--hw);color:#0E1524}
+.dd-f-both{background:var(--bo);color:#0E1524}
+.dd-f-unknown{border:1px dashed #6B7385;color:var(--un)}
+.dd-fill.dd-f-unknown{background:var(--un);border:0;color:#0E1524}
+.dd-f-breach{background:var(--br);color:#0E1524}
+.dd-grid{display:grid;grid-template-columns:7em repeat(3,minmax(0,1fr));gap:.55em;align-items:center}
+.dd-grid5{grid-template-columns:7em repeat(3,minmax(0,1fr)) 12em}
+.dd-nm{font:500 1.2em var(--serif)}
+.dd-mv,.dd-rd{min-height:2.4em;border-radius:4px;display:flex;align-items:center;padding:0 .7em;font:500 .9em var(--sans)}
+.dd-rd{font:600 .8em var(--mono);letter-spacing:.04em;text-transform:uppercase}
+.dd-ok{border:1px solid rgba(54,201,187,.6);color:#7FE0D6}
+.dd-irr{background:var(--l);color:#0E1524;font-weight:600}
+.dd-late{border:1px solid var(--line2);color:var(--dim)}
+.dd-when{font-size:.85em;color:var(--soft)}
+.dd-cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.8em}
+.dd-col{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:1em 1.1em;display:flex;flex-direction:column;gap:.5em}
+.dd-col b{font:600 2.6em/1 var(--mono)}
+.dd-c0{border-color:var(--g-bd)}.dd-c0 b,.dd-c0 .dd-h{color:var(--g-t)}
+.dd-c1 b,.dd-c1 .dd-h{color:var(--y-t)}.dd-c2 b,.dd-c2 .dd-h{color:var(--o-t)}.dd-c3 b,.dd-c3 .dd-h{color:var(--l-t)}
+.dd-worked{margin-top:1em;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:.8em 1.1em;display:flex;gap:1.4em;align-items:center;flex-wrap:wrap}
+.dd-worked em{font:italic 400 1.3em var(--serif)}.dd-worked small{color:var(--dim)}
+.dd-q{display:block;font:600 .65em var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-top:.6em}
+.md-head em.hw{color:var(--hw-t)}.md-head em.bo{color:var(--bo)}.md-head em.no{color:var(--l-t)}
+.md-t-both{color:var(--bo)}

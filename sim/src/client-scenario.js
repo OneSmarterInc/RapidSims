@@ -8,4 +8,5 @@ let CAST_ORDER = [];
 let CAST_INTRO = {};
 let ACTIONS = [];
 let READINGS = [];
+let LESSON_QUESTIONS = [], REVIEW_QUESTIONS = [];
 let PHASES = [];        // labels only until a phase is reached

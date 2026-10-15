@@ -15,7 +15,7 @@ const teacher = {id:'f1',name:'Test Teacher',email:'teacher@example.test',accept
 const students = Array.from({length:12},(_,i)=>({id:'s'+(i+1),student_id:'s'+(i+1),enrolment_id:'e'+(i+1),course_id:'c1',name:'Student '+(i+1),email:`student${i+1}@example.test`,paid:true,dropped:false,courses:1,with_access:1,launches:1,starts:1,completions:1,finished:1,completed_at:'2026-10-01T12:00:00Z',metrics:{score:80}}));
 let role='faculty', signedIn=true, failAction='', delayCourse='', changed=0, requestLog=[];
 const user = () => ({id:role==='faculty'?'f1':role==='student'?'s1':'a1',role,name:'Test User',email:'user@example.test'});
-const readActions = new Set(['me','overview','faculty_detail','sim_access_list','all_students','all_courses','catalogue_fields','course_detail','sims_overview','sim_progress','student_results','catalogue','course_lookup','invite_check','reset_check']);
+const readActions = new Set(['me','session_status','practice_status','overview','faculty_detail','sim_access_list','all_students','all_courses','catalogue_fields','course_detail','sims_overview','sim_progress','student_results','catalogue','course_lookup','invite_check','reset_check']);
 function reply(url,b) {
   const action=b.action; requestLog.push(action);
   if(action===failAction)return {status:503,body:{error:'temporary_failure'}};

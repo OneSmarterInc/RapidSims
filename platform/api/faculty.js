@@ -61,7 +61,10 @@ module.exports = async (req, res) => {
         return res.status(200).json({ resetUrl: `${baseUrl(req)}/reset.html?t=${token}`, who: student.name, expiresAt: expires });
       }
 
-      // Rehearse Midland with practice students, outside the course's real classes.
+      // Sims on the shared faculty pages: the session status for the class row and menu, and
+      // Rehearse with practice students, outside the class's real sessions. simId picks the sim
+      // (Midland when absent; the midland_* names stay for older pages).
+      case 'session_status': case 'practice_start': case 'practice_status': case 'practice_finish':
       case 'midland_status':
       case 'midland_practice_start':
       case 'midland_practice_status':
@@ -70,12 +73,15 @@ module.exports = async (req, res) => {
         const course = await ownCourse(s, me.id, String(b.courseId || ''));
         if (!course) return res.status(404).json({ error:'no_such_course' });
         const M = require('../lib/midland-sessions.js');
+        const simId = String(b.simId || M.SIM);
+        if (!M.KIT_SIMS[simId]) return res.status(404).json({ error:'no_such_simulation' });
         const sim = (await s`SELECT si.id, si.launch_url FROM course_sims cs
-          JOIN sims si ON si.id=cs.sim_id WHERE cs.course_id=${course.id} AND cs.sim_id=${M.SIM}`)[0];
+          JOIN sims si ON si.id=cs.sim_id WHERE cs.course_id=${course.id} AND cs.sim_id=${simId}`)[0];
         if (!sim) return res.status(404).json({ error:'no_such_simulation' });
-        if (b.action === 'midland_status') { const r = await M.courseStatus(me, course, sim); return res.status(r.status).json(r.data); }
-        const r = b.action === 'midland_practice_start' ? await M.practiceStart(me, course, sim, b.startOver === true)
-          : b.action === 'midland_practice_status' ? await M.practiceStatus(me, course, sim)
+        const act = b.action.replace(/^midland_/, '').replace(/^status$/, 'session_status');
+        if (act === 'session_status') { const r = await M.courseStatus(me, course, sim); return res.status(r.status).json(r.data); }
+        const r = act === 'practice_start' ? await M.practiceStart(me, course, sim, b.startOver === true)
+          : act === 'practice_status' ? await M.practiceStatus(me, course, sim)
           : await M.practiceFinish(me, course, sim);
         return res.status(r.status).json(r.data);
       }

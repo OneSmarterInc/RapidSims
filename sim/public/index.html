@@ -334,6 +334,7 @@ let CAST_ORDER = [];
 let CAST_INTRO = {};
 let ACTIONS = [];
 let READINGS = [];
+let LESSON_QUESTIONS = [], REVIEW_QUESTIONS = [];
 let PHASES = [];        // labels only until a phase is reached
 
 </script>
@@ -448,6 +449,7 @@ async function loadInit() {
   const d = await api('/api/scene', { init: true });
   CAST = d.cast; CAST_ORDER = d.castOrder; CAST_INTRO = d.intro;
   ACTIONS = d.actions; READINGS = d.readings;
+  LESSON_QUESTIONS = d.lessonQuestions || []; REVIEW_QUESTIONS = d.reviewQuestions || [];
   PHASES = d.labels.map(l => Object.assign({ telemetry: [], beats: [], prompts: [], task: '', heading: '' }, l));
   CAST_ORDER.forEach(id => { if (!S.threads[id]) S.threads[id] = []; });
 }
@@ -485,7 +487,7 @@ function showBanner() {
   const bar = el(`<div id="keybar" style="position:fixed;left:0;right:0;bottom:0;z-index:60;border-top:1px solid var(--sophia);background:#1A1420;padding:12px 18px">
     <div style="max-width:1100px;margin:0 auto">
       <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:7px">
-        <span style="font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sophia)">${needCode ? 'Access code needed' : 'Bridge unreachable'}</span>
+        <span style="font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sophia)">${needCode ? 'Access code needed' : 'Call unreachable'}</span>
         <span style="font-size:13px;color:#C4C1B9;line-height:1.5">${needCode
           ? 'Enter the code you were given and the characters will come live.'
           : 'The server didn\'t answer. Anything you\'ve already done is still here.'}</span>
@@ -572,7 +574,7 @@ function railHTML() {
     <h2>The room</h2>
     <button class="who ${S.channel === 'room' ? 'on' : ''}" data-ch="room">
       <div class="who-top"><div class="av" style="color:var(--sys);border-color:#5E908955">⌘</div>
-      <div><div class="who-name">Incident bridge</div><div class="who-role">Everyone is listening</div></div></div>
+      <div><div class="who-name">Incident call</div><div class="who-role">Everyone is listening</div></div></div>
     </button>
     ${cards}
     <div class="rail-note"><b>The bar is who each answer indicts.</b> Both of these people are competent and honest. Neither can fully separate what they think from what it would cost them to be wrong.</div>
@@ -599,7 +601,7 @@ function playHTML() {
 
   return `
   <header>
-    <div class="brand"><h1>Disaster or Breach?</h1><div class="sub">Northbeam Data Services · incident bridge</div></div>
+    <div class="brand"><h1>Disaster or Breach?</h1><div class="sub">Northbeam Data Services · incident call</div></div>
     <div class="phases">${pills}</div>
     <div class="clock"><span class="t">${ph.clock}</span><span class="d">${ph.day}</span></div>
   </header>
@@ -609,21 +611,21 @@ function playHTML() {
       <div class="chan">
         ${priv
           ? `<span class="priv mono">Private</span><span class="lab">One to one with ${esc(c.name)} — the room can't hear this</span>
-             <button class="back" data-ch="room">← Back to the bridge</button>`
-          : `<span class="lab">Incident bridge · ${esc(ph.heading)}</span>
+             <button class="back" data-ch="room">← Back to the call</button>`
+          : `<span class="lab">Incident call · ${esc(ph.heading)}</span>
              ${S.playing ? '' : '<button class="back" id="commit-open">Record position &amp; advance →</button>'}`}
       </div>
       <div class="stream" id="stream"><div class="stream-in" id="streamIn">
         ${priv ? '' : `<div class="task"><div class="tl2">Your job</div><div class="tt">${esc(ph.task)}</div></div>
         <div class="tele"><h3>Telemetry</h3><ul>${ph.telemetry.map(t => `<li>${esc(t)}</li>`).join('')}</ul></div>`}
         ${thread.map(msgHTML).join('')}
-        ${priv && thread.length === 0 ? `<div class="msg sys"><div class="tx">You pull ${esc(c.name.split(' ')[0])} off the bridge</div></div>` : ''}
+        ${priv && thread.length === 0 ? `<div class="msg sys"><div class="tx">You take ${esc(c.name.split(' ')[0])} aside</div></div>` : ''}
         <div id="typing"></div>
       </div></div>
       <div class="composer"><div class="composer-in">
         <div class="crow">
           <textarea id="input" rows="1" ${S.playing ? 'disabled' : ''} placeholder="${S.playing
-            ? 'The bridge is talking…'
+            ? 'The call is talking…'
             : (priv ? `Say anything to ${esc(c.name.split(' ')[0])} — the room can't hear you` : 'Type anything you\'d actually ask this room at 02:14…')}"></textarea>
           <button class="btn" id="send" ${S.playing ? 'disabled' : ''}>Send</button>
           <button class="cmp-toggle ${S.composerOpen ? '' : 'shut'}" id="cmp-toggle"
@@ -638,7 +640,7 @@ function playHTML() {
         ${(!S.playing && priv && S.threads[S.channel].length === 0)
           ? `<div class="chips-lab">Examples · or say whatever you like</div>
              <div class="chips">
-               <button class="chip" data-q="Off the bridge — what aren't you saying in front of the others?">Off the bridge — what aren't you saying in front of the others?</button>
+               <button class="chip" data-q="Just us — what aren't you saying in front of the others?">Just us — what aren't you saying in front of the others?</button>
                <button class="chip" data-q="What would you be worried about if this weren't your call to defend?">What would you be worried about if this weren't your call to defend?</button>
              </div>`
           : ''}
@@ -650,8 +652,8 @@ function playHTML() {
           <span class="h" style="${S.composerOpen ? '' : 'display:none'}">${S.playing
             ? 'You joined at 02:14. Catching up on what you missed.'
             : (priv
-              ? 'What would they say here that they wouldn\'t say on the bridge?'
-              : 'Pick a name from the room panel to take them aside — they say different things off the bridge.')}</span>
+              ? 'What would they say here that they wouldn\'t say on the call?'
+              : 'Pick a name from the room panel to take them aside — they say different things in private.')}</span>
           ${S.playing
             ? `<button class="btn" id="skip">Skip ahead</button>`
             : `<button class="btn pri" id="commit-open2">Record position · ${esc(ph.label)}</button>`}
@@ -763,7 +765,7 @@ async function doSend() {
   } catch (e) {
     clearTyping();
     showBanner();
-    const fb = { who: 'system', text: 'The bridge dropped out — see the note at the bottom of the screen.' };
+    const fb = { who: 'system', text: 'The call dropped out — see the note at the bottom of the screen.' };
     push(ch, 'system', fb.text); appendLive(fb);
   }
   S.busy = false;
@@ -773,13 +775,13 @@ async function doSend() {
 
 // ---------- commitment ----------
 const GUIDE = {
-  what: `<p><b>Submitting this ends the current moment.</b> The clock jumps forward, new evidence lands, and you cannot come back and ask anyone anything about this hour again. Say what you need to say on the bridge first.</p>
+  what: `<p><b>Submitting this ends the current moment.</b> The clock jumps forward, new evidence lands, and you cannot come back and ask anyone anything about this hour again. Say what you need to say on the call first.</p>
     <p>This is your position on the record, not a quiz answer. You're being asked to say what you believe <b>while you still don't know</b> — which is the only time it costs anything to say it.</p>
     <p>It locks when you submit. You can't come back and tidy it up once the next evidence arrives, and that's deliberate: the whole point is to capture the reasoning you had at the time rather than the reasoning you wish you'd had.</p>
     <p>Nothing here is scored right or wrong. What gets read back to you at the end is whether your three positions hang together.</p>`,
   reading: `<p><b>What we're looking for:</b> a position you're willing to be wrong about, stated plainly.</p>
     <p>"Genuinely undetermined" is a legitimate answer and sometimes the honest one. But it only counts as thinking if the action you pair it with keeps both branches alive. Undetermined plus an irreversible action isn't caution — it's a guess wearing a hedge.</p>`,
-  action: `<p><b>What we're looking for:</b> one action, because on a real bridge at 02:14 you get one.</p>
+  action: `<p><b>What we're looking for:</b> one action, because on a real incident call at 02:14 you get one.</p>
     <p>We're not watching which option you pick. Every one of these has been the right call in a real incident somewhere. We're watching the <b>order</b> you take them in across the three moments — specifically whether the things you can't take back come before or after the things you can.</p>
     <p>The reversible / irreversible tag on each option is doing real work. Read it.</p>`,
   tripwire: `<p><b>What we're looking for:</b> something specific enough that you'd recognise it the moment it happened, and that could actually happen tonight.</p>
@@ -808,7 +810,7 @@ function openCommit() {
     </div>
     <p class="lede">Three things, and the third one matters most.</p>
     <div style="border-left:2px solid var(--amber);padding:9px 13px;margin:0 0 20px;background:rgba(240,166,60,.06);font-size:13.5px;line-height:1.55;color:#D8D4CA">
-      This locks when you submit, and it <b>moves the incident forward</b> — you won't be able to question anyone about this moment again. Finish on the bridge before you commit.
+      This locks when you submit, and it <b>moves the incident forward</b> — you won't be able to question anyone about this moment again. Finish on the call before you commit.
     </div>
     <div class="guide" id="g-what" style="display:${first ? 'block' : 'none'}">${GUIDE.what}</div>
 
@@ -930,7 +932,7 @@ function buildTranscript() {
   L.push('Characters: ' + (OFFLINE ? 'scripted fallback' : 'live'));
   L.push('');
   L.push('='.repeat(60));
-  L.push('INCIDENT BRIDGE');
+  L.push('INCIDENT CALL');
   L.push('='.repeat(60));
   S.threads.room.forEach(m => {
     if (m.who === 'system') L.push('\n-- ' + m.text + ' --\n');
@@ -961,7 +963,7 @@ function buildTranscript() {
   });
   L.push('');
   L.push('Coverage gap obtained: ' + (S.coverageEarnedAt === null ? 'never'
-    : PHASES[S.coverageEarnedAt].label + (S.coverageEarnedPrivately ? ' (privately)' : ' (on the bridge)')));
+    : PHASES[S.coverageEarnedAt].label + (S.coverageEarnedPrivately ? ' (privately)' : ' (on the call)')));
   L.push('Private conversations opened: ' + Object.keys(S.privateOpened).length);
   return L.join('\n');
 }
@@ -979,7 +981,7 @@ function downloadTranscript() {
 
 // ---------- facilitated session ----------
 const SESSION = {
-  code: (location.search.match(/[?&]s=([A-Za-z0-9]+)/) || [])[1] || null,
+  code: ((location.search.match(/[?&](?:s|session)=([A-Za-z0-9]+)/) || [])[1] || '').toUpperCase() || null,
   participantId: null,
   name: null,
   groupId: null,
@@ -1021,9 +1023,27 @@ async function pushPosition(done) {
     await sessionApi({
       action: 'submit', groupId: SESSION.groupId, participantId: SESSION.participantId,
       positions: S.positions, phase: S.phase, done: !!done,
-      coverageEarnedAt: S.coverageEarnedAt, privateCount: Object.keys(S.privateOpened).length
+      coverageEarnedAt: S.coverageEarnedAt, coveragePrivate: !!S.coverageEarnedPrivately, privateCount: Object.keys(S.privateOpened).length
     });
   } catch (e) { /* the run continues regardless */ }
+}
+
+// A student from the class link joins as their signed account: no name to type.
+async function joinWithAccount() {
+  app.innerHTML = `<div class="doc"><div class="doc-in"><div class="eyebrow">Flexee RapidSim 01</div><h1>Joining your class session…</h1></div></div>`;
+  try {
+    const d = await sessionApi({ action: 'join' });
+    SESSION.participantId = d.participantId; SESSION.name = d.name; SESSION.groupId = d.participantId;
+    SESSION.state = d.session.state; SESSION.paused = d.session.paused; SESSION.revealed = d.session.revealed; SESSION.holdReveal = d.session.holdReveal;
+    S.screen = SESSION.state === 'running' ? 'brief' : 'lobby'; S.briefStep = 0;
+    render();
+    if (!SESSION.poll) SESSION.poll = setInterval(sessionPoll, 4000);
+  } catch (e) {
+    const closed = /410|session_closed/.test(e.message || '');
+    app.innerHTML = `<div class="doc"><div class="doc-in"><div class="eyebrow">Flexee RapidSim 01</div>
+      <h1>${closed ? 'This session has closed' : 'Could not join the session'}</h1>
+      <p>${closed ? 'Your instructor closed this session. Open the class link again when the next one starts.' : esc(LAST_ERROR || e.message || '')}</p></div></div>`;
+  }
 }
 
 function renderJoin() {
@@ -1063,14 +1083,10 @@ function renderJoin() {
 }
 
 function renderLobby() {
-  const grouped = !!SESSION.groupId;
-  app.innerHTML = `<div class="doc"><div class="doc-in">
-    <div class="eyebrow">Session ${esc(SESSION.code)} · you're in</div>
-    <h1>${grouped ? esc(SESSION.groupId) : 'Waiting for the room'}</h1>
-    ${grouped
-      ? `<p>You're with <b>${esc(SESSION.mates.join(', ') || SESSION.name)}</b>. One screen between you — whoever is driving should keep this tab open and not reload it.</p>
-         <p>The incident starts when your facilitator starts it.</p>`
-      : `<p>You're joined as <b>${esc(SESSION.name)}</b>. Your facilitator is still putting people into groups.</p>`}
+    app.innerHTML = `<div class="doc"><div class="doc-in">
+    <div class="eyebrow">Class session · you're in</div>
+    <h1>You're in, ${esc(SESSION.name || '')}</h1>
+    <p>The incident starts when your instructor starts the session. This page moves on by itself.</p>
     <p style="color:var(--dimmer);font-size:14px;margin-top:22px">Don't close or reload this tab — there's no save, and reloading loses your run.</p>
   </div></div>`;
 }
@@ -1119,7 +1135,7 @@ function openHelp() {
   const sheet = el(`<div class="scrim help"><div class="sheet" style="max-width:600px">
     <div class="eyebrow">How this works</div>
     <h2>Questions about the exercise</h2>
-    <p class="lede">This answers questions about how the sim works. It knows nothing about the incident itself — for that, ask the people on the bridge.</p>
+    <p class="lede">This answers questions about how the sim works. It knows nothing about the incident itself — for that, ask the people on the call.</p>
     <div id="faq">${FAQ.map((f, i) => `<button class="faq-q" data-i="${i}">${esc(f[0])}</button>`).join('')}</div>
     <div id="faq-a" class="faq-a" style="display:none"></div>
     <div class="field" style="margin-top:22px;margin-bottom:8px">
@@ -1131,7 +1147,7 @@ function openHelp() {
       </div>
       <div id="hans" class="faq-a" style="display:none;margin-top:11px"></div>
     </div>
-    <div class="sheet-foot"><button class="btn" id="hclose">Back to the bridge</button></div>
+    <div class="sheet-foot"><button class="btn" id="hclose">Back to the call</button></div>
   </div></div>`);
   document.body.appendChild(sheet);
 
@@ -1207,7 +1223,7 @@ function openSettings() {
   const sheet = el(`<div class="scrim settings"><div class="sheet" style="max-width:560px">
     <div class="eyebrow">Settings</div>
     <h2>Characters</h2>
-    <p class="lede">The four people on the bridge are generated live on the server. If it can't be reached, they fall back to a small bank of prepared lines — the sim still runs through, but they can't answer anything unanticipated.</p>
+    <p class="lede">The four people on the call are generated live on the server. If it can't be reached, they fall back to a small bank of prepared lines — the sim still runs through, but they can't answer anything unanticipated.</p>
 
     <div class="field">
       <label>Status</label>
@@ -1289,13 +1305,17 @@ function briefStory() {
     <div class="tl">
       <div class="tl-row"><div class="tl-time">Mon 23:40</div><div class="tl-text">A ticket comes in from a claims client. One report won't reconcile. The overnight analyst reruns it, it fails the same way, and she notes it as a data issue for the morning team. <b>Nobody escalates.</b> Nothing about this looks like a bad night yet.</div></div>
       <div class="tl-row"><div class="tl-time">01:12</div><div class="tl-text">Two more applications start returning corruption errors. The overnight team restarts them, which is the right first move, and the errors come straight back. That's the moment the shape of this changes — corruption that survives a restart is on disk, not in memory.</div></div>
-      <div class="tl-row"><div class="tl-time">01:58</div><div class="tl-text">An incident bridge opens. Kate Sullivan joins from home, then Sophia Kim, then the vendor. Ben Carter is woken up because three of his clients are down. <b>The word "disaster recovery" is used within four minutes.</b></div></div>
+      <div class="tl-row"><div class="tl-time">01:58</div><div class="tl-text">An incident call opens. Kate Sullivan joins from home, then Sophia Kim, then the vendor. Ben Carter is woken up because three of his clients are down. <b>The word "disaster recovery" is used within four minutes.</b></div></div>
       <div class="tl-row now"><div class="tl-time">02:14</div><div class="tl-text">Your phone goes. You join a call that has been running for sixteen minutes, where four people already have opinions, and where the first thing you'll be asked is how long the restore will take.</div></div>
     </div>
 
     <p>You are walking in on the middle of something. That's not an accident of the design — it's the job. Almost nobody senior arrives at the start of an incident, and the assumptions the room made in the first sixteen minutes are the ones you will have to notice and undo.</p>
 
-    <div class="center"><button class="btn pri" id="nx" style="padding:13px 28px">Who's on the bridge →</button></div>
+    ${LESSON_QUESTIONS.length ? `<div class="card" style="margin:24px 0"><div class="ct">Four questions to keep in mind</div>
+      <p style="margin:6px 0 10px">You will come back to these in the class debrief.</p>
+      <ol style="margin:0;padding-left:20px">${LESSON_QUESTIONS.map(q => `<li style="margin:6px 0">${esc(q)}</li>`).join('')}</ol></div>` : ''}
+
+    <div class="center"><button class="btn pri" id="nx" style="padding:13px 28px">Who's on the call →</button></div>
   </div></div>`;
   document.getElementById('nx').onclick = () => { S.briefStep = 1; render(); topOfDoc(); };
 }
@@ -1325,7 +1345,7 @@ function briefRoom() {
     <h1>The room</h1>
     <p>Everyone here is competent and everyone here is tired. Nobody is your enemy and nobody is lying to you. Read what each of them stands to lose, because it's going to shape what they tell you tonight — and it will do that without any of them noticing it happening.</p>
     <div class="castgrid">${cards}</div>
-    <p>There's a fifth voice on the bridge: <b>Priya Narayana</b>, the on-call engineer who has been awake since the first ticket. She isn't senior enough to be in the decision, and she's about to say something anyway.</p>
+    <p>There's a fifth voice on the call: <b>Priya Narayana</b>, the on-call engineer who has been awake since the first ticket. She isn't senior enough to be in the decision, and she's about to say something anyway.</p>
     <div class="center"><button class="btn pri" id="nx" style="padding:13px 28px">One more thing before you join →</button></div>
   </div></div>`;
   document.getElementById('nx').onclick = () => { S.briefStep = 2; render(); topOfDoc(); };
@@ -1341,11 +1361,11 @@ function briefRules() {
     <p>We're telling you upfront because this isn't a test of whether you notice. It's a test of what you do about it. One warning: discounting for interest is not the same as ignoring the interested party. The person with the most to lose may still be right, and dismissing them for being exposed is its own way of getting this wrong.</p>
 
     <h3>How it runs</h3>
-    <p>Three moments — Hour 4, Hour 20, Day 3. Between them you can question anyone on the bridge, and you can pull any of them aside into a private channel the room can't hear. Nobody in that room knows the answer, because at Hour 4 nobody would.</p>
+    <p>Three moments — Hour 4, Hour 20, Day 3. Between them you can question anyone on the call, and you can pull any of them aside into a private channel the room can't hear. Nobody in that room knows the answer, because at Hour 4 nobody would.</p>
     <p>At each moment you record a position: <b>what you think is happening</b>, <b>the one action you're taking now</b>, and <b>the evidence that would change your mind</b>. Ask everything you want to ask before you do it, because recording moves the incident forward and you can't return to that hour. All three come back to you at the end.</p>
     <p>So when do you commit? Not when you feel certain — certainty isn't coming, and you can wait all night for it while clients stay dark. Commit when you've stopped learning things. If the last two answers haven't changed your read, you have what this hour is going to give you, and the decision is yours to make on your own understanding of it.</p>
 
-    <div class="center"><button class="btn pri" id="go" style="padding:14px 30px">Join the bridge · 02:14</button></div>
+    <div class="center"><button class="btn pri" id="go" style="padding:14px 30px">Join the call · 02:14</button></div>
   </div></div>`;
   document.getElementById('go').onclick = async () => {
     const btn = document.getElementById('go');
@@ -1354,7 +1374,7 @@ function briefRules() {
       await seedPhase();
       S.screen = 'play'; S.phase = 0; render(); topOfDoc();
     } catch (e) {
-      btn.textContent = 'Join the bridge · 02:14'; btn.disabled = false;
+      btn.textContent = 'Join the call · 02:14'; btn.disabled = false;
       showBanner();
     }
   };
@@ -1414,10 +1434,14 @@ function renderDebrief(D) {
     <p>${esc(D.coverageIntro || '')}</p>
     <p class="verdict ${D.coverage.tone}" style="font-size:15.5px">${esc(D.coverage.text)}</p>
     <p>${priv
-      ? `You went off the bridge ${priv === 1 ? 'once' : priv === 2 ? 'twice' : priv + ' times'}. People say different things when the room isn't listening, and knowing when to take someone off the bridge is most of this job.`
-      : 'You never took anyone off the bridge. Everything you heard, you heard in front of the people it would cost. That is the single cheapest thing you left on the table tonight.'}</p>
+      ? `You took someone aside ${priv === 1 ? 'once' : priv === 2 ? 'twice' : priv + ' times'}. People say different things when the room isn't listening, and knowing when to take someone aside is most of this job.`
+      : 'You never took anyone aside. Everything you heard, you heard in front of the people it would cost. That is the single cheapest thing you left on the table tonight.'}</p>
 
     ${D.arc ? `<div class="rule"></div><h3>Taken together</h3><p>${esc(D.arc)}</p>` : ''}
+
+    <div class="rule"></div>
+    <h3>Your review</h3>
+    <div id="review">${reviewHTML()}</div>
 
     <div class="rule"></div>
     <h3>Carry this forward</h3>
@@ -1432,11 +1456,43 @@ function renderDebrief(D) {
   </div></div>`;
   document.getElementById('again').onclick = () => location.reload();
   document.getElementById('dl').onclick = downloadTranscript;
+  wireReview();
+}
+
+// Two review questions, answered after the debrief. Your instructor sees them under each question.
+function reviewHTML() {
+  if (S.reviewSent) return `${REVIEW_QUESTIONS.map((q, i) => `<div class="card"><div class="ct">${esc(q)}</div><p>${esc(S['reflection' + (i + 1)] || '')}</p></div>`).join('')}
+    <p style="color:var(--dimmer);font-size:14px">Your review is saved. Your instructor will see it in the class debrief.</p>`;
+  return `<p>Answer both questions in a few sentences. Your instructor sees your answers in the class debrief.</p>
+    ${REVIEW_QUESTIONS.map((q, i) => `<label for="rv${i + 1}" style="display:block;margin:16px 0 6px;font-weight:600">${i + 1}. ${esc(q)}</label>
+      <textarea id="rv${i + 1}" maxlength="1500" rows="4" style="width:100%;background:var(--night);border:1px solid var(--line2);padding:10px 12px;font:15px var(--serif);color:inherit">${esc(S['reflection' + (i + 1)] || '')}</textarea>`).join('')}
+    <div id="rverr" style="color:var(--sophia);font-size:14px;margin-top:8px"></div>
+    <button class="btn pri" id="rvgo" style="padding:12px 24px;margin-top:12px">Submit my review</button>`;
+}
+function wireReview() {
+  const go = document.getElementById('rvgo'); if (!go) return;
+  go.onclick = async () => {
+    const a = document.getElementById('rv1').value.trim(), b = document.getElementById('rv2').value.trim();
+    S.reflection1 = a; S.reflection2 = b;
+    if (!a || !b) { document.getElementById('rverr').textContent = 'Answer both questions, then submit.'; return; }
+    go.disabled = true; go.textContent = 'Saving…';
+    try {
+      await api('/api/review', { code: SESSION.code, participantId: SESSION.participantId, reflection1: a, reflection2: b,
+        positions: S.positions, coverageEarnedAt: S.coverageEarnedAt, coveragePrivate: S.coverageEarnedPrivately,
+        privateCount: Object.keys(S.privateOpened).length });
+      S.reviewSent = true;
+      document.getElementById('review').innerHTML = reviewHTML();
+    } catch (e) {
+      document.getElementById('rverr').textContent = LAST_ERROR || 'Your review was not saved. Try again.';
+      go.disabled = false; go.textContent = 'Submit my review';
+    }
+  };
 }
 
 async function loadDebrief() {
   try {
     const d = await api('/api/debrief', {
+      code: SESSION.code, participantId: SESSION.participantId,
       positions: S.positions,
       coverageEarnedAt: S.coverageEarnedAt,
       coveragePrivate: S.coverageEarnedPrivately,
@@ -1463,17 +1519,23 @@ mountHelp();
   // a class. The platform says which; only the second belongs in the console.
   if (LAUNCH && (LAUNCH.role === 'faculty' || LAUNCH.role === 'faculty_preview')
       && LAUNCH.mode === 'session') {
-    location.replace(BASE + '/faculty.html?lt=' + encodeURIComponent(LAUNCH_TOKEN));
+    location.replace(BASE + '/instructor.html#lt=' + encodeURIComponent(LAUNCH_TOKEN));
     return;
   }
   app.innerHTML = `<div class="doc"><div class="doc-in">
     <div class="eyebrow">Flexee RapidSim 01</div>
     <h1>Disaster, or <em>breach</em>?</h1>
-    <p style="color:var(--dimmer)">Opening the bridge…</p>
+    <p style="color:var(--dimmer)">Opening the call…</p>
   </div></div>`;
   try {
     await loadInit();
-    if (inSession()) {
+    // A student from the class link belongs in the class's open session, when there is one.
+    if (!inSession() && LAUNCH && LAUNCH.role === 'student' && LAUNCH.course) {
+      try { const c = await api('/api/session', { action: 'course_session' }); if (c.code) SESSION.code = c.code; } catch (e) { /* play on their own */ }
+    }
+    if (inSession() && LAUNCH) {
+      await joinWithAccount();
+    } else if (inSession()) {
       S.screen = 'join';
       render();
       if (!SESSION.poll) SESSION.poll = setInterval(sessionPoll, 4000);

@@ -66,7 +66,7 @@ function wirePager() {
   });
 }
 
-// Rehearse Midland: three practice students on one team, each in its own tab.
+// Rehearse: practice students (three on one team for Midland, one for a solo sim), each in its own tab.
 function practicePanel(courseId, d) {
   const box = app.querySelector('[data-midland-practice]');
   if (!box) return;
@@ -74,7 +74,7 @@ function practicePanel(courseId, d) {
   box.innerHTML = `<div class="faculty-practice-head"><b data-practice-title>${d.complete ? 'Practice session complete. Every practice student has finished.' : d.resumed ? 'Your practice session from earlier is still open.' : 'Your practice session is open.'}</b>
       <span>Open each practice student in its own tab. Practice students stay out of your roster, counts and results.</span></div>
     <div class="faculty-practice-grid">${d.students.map(x => `<div class="faculty-practice-card">
-      <b>${esc(x.name)}</b><span>${x.entersDecisions ? 'Enters the decisions' : 'Follows and reviews'}</span><span class="faculty-practice-status${x.finished ? ' done' : ''}" data-practice-status="${esc(x.name)}" aria-live="polite">${esc(x.status || '')}</span>
+      <b>${esc(x.name)}</b><span>${d.students.length === 1 ? 'Plays the whole run' : x.entersDecisions ? 'Enters the decisions' : 'Follows and reviews'}</span><span class="faculty-practice-status${x.finished ? ' done' : ''}" data-practice-status="${esc(x.name)}" aria-live="polite">${esc(x.status || '')}</span>
       <a class="btn sm ${x.finished ? 'faculty-practice-done' : x.entersDecisions ? 'pri' : ''}" data-practice-open="${esc(x.name)}" href="${esc(x.url)}" target="_blank" rel="noopener">${x.finished ? 'Completed' : 'Open'}</a></div>`).join('')}</div>
     <div class="faculty-practice-actions"><a class="btn sm" href="${esc(d.classUrl)}" target="_blank" rel="noopener">See the faculty view</a>
       <button class="btn sm" data-practice-over>Start over</button>
@@ -85,7 +85,7 @@ function practicePanel(courseId, d) {
   watchPractice(courseId);
   box.querySelector('[data-practice-finish]').onclick = async e => {
     const done = acting(e.currentTarget, 'Finishing…');
-    try { await api('/api/faculty', { action:'midland_practice_finish', courseId }); practiceIdle(courseId); }
+    try { await api('/api/faculty', { action:'practice_finish', courseId, simId:rehearseSim() }); practiceIdle(courseId); }
     catch (err) { if (err.stale) return; done(); alert('Practice is still running. ' + (err.message || 'Try again.')); }
   };
 }
@@ -96,7 +96,7 @@ function watchPractice(courseId) {
   async function refresh() {
     const box = app.querySelector('[data-midland-practice]');
     if (!box || box.hidden || !box.isConnected) { clearInterval(practiceTimer); return; }
-    let d; try { d = await api('/api/faculty', { action:'midland_practice_status', courseId }); } catch { return; }
+    let d; try { d = await api('/api/faculty', { action:'practice_status', courseId, simId:rehearseSim() }); } catch { return; }
     if (!d.code) return;
     for (const x of d.students) {
       const el = [...box.querySelectorAll('[data-practice-status]')].find(n => n.dataset.practiceStatus === x.name);
@@ -112,17 +112,20 @@ function watchPractice(courseId) {
 // The Rehearse page: its own page in the main area, marked in the menu.
 function renderRehearse() {
   const { course, sims } = F.course;
-  const has = sims.some(x => x.sim_id === MIDLAND);
+  const sim = sims.find(x => x.sim_id === rehearseSim()) || null;
+  const title = sim ? sim.title : 'this simulation', solo = PRACTICE_N[rehearseSim()] === 1;
+  const has = !!sim && isKit(sim.sim_id);
   app.innerHTML = `
-    <div class="crumb"><a data-crumb-class>${esc(course.title)}</a> › Midland Equipment › Rehearse</div>
-    <div class="head"><div><h1>Rehearse Midland Equipment</h1>
-      <p class="hint" style="margin-top:6px;max-width:720px">Play as three practice students to see what your class will see. One practice student enters the decisions. The other two follow each step and write their own reviews.</p></div></div>
+    <div class="crumb"><a data-crumb-class>${esc(course.title)}</a> › ${esc(title)} › Rehearse</div>
+    <div class="head"><div><h1>Rehearse ${esc(title)}</h1>
+      <p class="hint" style="margin-top:6px;max-width:720px">${solo ? 'Play as a practice student to see what your class will see, from the brief to the review.'
+        : 'Play as three practice students to see what your class will see. One practice student enters the decisions. The other two follow each step and write their own reviews.'}</p></div></div>
     ${has ? '<div class="panel faculty-practice faculty-practice-page" data-midland-practice><div class="empty">Checking for a practice session…</div></div>'
-      : '<div class="panel"><div class="empty">Add Midland Equipment to this class to rehearse it.</div></div>'}`;
+      : `<div class="panel"><div class="empty">Add ${esc(title)} to this class to rehearse it.</div></div>`}`;
   app.querySelector('[data-crumb-class]').onclick = () => openCourse(course.id);
   if (!has) return;
   const courseId = course.id;
-  api('/api/faculty', { action:'midland_practice_status', courseId })
+  api('/api/faculty', { action:'practice_status', courseId, simId:rehearseSim() })
     .then(d => { if (F.view !== 'rehearse') return; if (d && d.code) startMidlandPractice(courseId, null); else practiceIdle(courseId); })
     .catch(e => { if (!e.stale && F.view === 'rehearse') practiceIdle(courseId); });
 }
@@ -131,13 +134,13 @@ function practiceIdle(courseId) {
   const box = app.querySelector('[data-midland-practice]');
   if (!box) return;
   box.innerHTML = `<div class="faculty-practice-head"><b>No practice session is open.</b>
-      <span>Start one to get three practice students. Each opens in its own tab. Practice students stay out of your roster, counts and results.</span></div>
+      <span>${PRACTICE_N[rehearseSim()] === 1 ? 'Start one to get a practice student. It opens in its own tab. Practice students stay out of your roster, counts and results.' : 'Start one to get three practice students. Each opens in its own tab. Practice students stay out of your roster, counts and results.'}</span></div>
     <div class="faculty-practice-actions"><button class="btn pri" data-practice-start>Start practice</button></div>`;
   box.querySelector('[data-practice-start]').onclick = e => startMidlandPractice(courseId, e.currentTarget);
 }
 async function startMidlandPractice(courseId, btn, startOver = false) {
   const done = acting(btn, 'Preparing…');
-  try { const d = await api('/api/faculty', { action:'midland_practice_start', courseId, startOver }); done(); practicePanel(courseId, d); return true; }
+  try { const d = await api('/api/faculty', { action:'practice_start', courseId, startOver, simId:rehearseSim() }); done(); practicePanel(courseId, d); return true; }
   catch (err) { if (err.stale) return false; done(); alert('Practice could not start. ' + (err.message || 'Try again.')); return true; }
 }
 
@@ -242,8 +245,8 @@ function renderSimResults() {
   FacultyResults.mount(app,F.simResults,{
     back:()=>openCourse(F.simResults.course.id),
     // Midland sessions open in the class page's frame: Results or Debrief for that session.
-    sessionLink:F.simResults.sim.id===MIDLAND?(code,tab)=>`/faculty.html?view=sim&course=${encodeURIComponent(F.simResults.course.id)}&sim=${MIDLAND}&session=${encodeURIComponent(code)}&tab=${tab}`:null,
-    openSession:(code,tab)=>openFrame(MIDLAND,F.simResults.course.id,code,tab),
+    sessionLink:isKit(F.simResults.sim.id)?(code,tab)=>`/faculty.html?view=sim&course=${encodeURIComponent(F.simResults.course.id)}&sim=${encodeURIComponent(F.simResults.sim.id)}&session=${encodeURIComponent(code)}&tab=${tab}`:null,
+    openSession:(code,tab)=>openFrame(F.simResults.sim.id,F.simResults.course.id,code,tab),
     change:options=>{
       F.q.simResults=options.search;
       navigation.record('replace');
@@ -277,6 +280,15 @@ function render() {
 
 /* ── left menu and Midland's session status ─────────────────────────────── */
 const MIDLAND = 'rapid-03-midland';
+// Sims on the shared faculty pages (kit): sessions, results and debrief in the class page, plus Rehearse.
+const KIT_SIMS = ['rapid-03-midland', 'rapid-01-disaster'];
+const PRACTICE_N = { 'rapid-03-midland': 3, 'rapid-01-disaster': 1 };
+const isKit = id => KIT_SIMS.includes(id);
+// The sim Rehearse is for: the one asked for, or the class's first sim on the kit.
+function rehearseSim() { return F.rehearseSim || (F.course?.sims || []).map(x => x.sim_id).find(isKit) || MIDLAND; }
+// Each kit sim's open or last session, per class: F.status['<course>|<sim>'].
+const statusOf = (courseId, simId) => (F.status || {})[courseId + '|' + simId] || null;
+const staleStatus = (courseId, simId) => { const x = statusOf(courseId, simId); return !x || Date.now() - (x.at || 0) > 15000; };
 const launchHref = (sim, course, extra = '') => `/api/launch?sim=${encodeURIComponent(sim)}&course=${encodeURIComponent(course)}${extra}`;
 const sessionLabel = x => x ? (x.name || (x.createdAt ? new Date(x.createdAt).toLocaleString(undefined, { weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit' }) : 'Session')) : '';
 function menuCourse() {
@@ -288,9 +300,9 @@ function drawMenu() {
   const classes = (F.data.courses || []).map(c => ({ id:c.id, title:c.title, href:`/faculty.html?view=course&course=${encodeURIComponent(c.id)}` }));
   const c = menuCourse();
   const sims = c && F.course?.course?.id === c.id ? F.course.sims : [];
-  // Every class page shows Midland's open session in the menu, not only Class home.
-  if (c && F.view !== 'course' && (sims || []).some(x => x.sim_id === MIDLAND) && (F.midland?.courseId !== c.id || Date.now() - (F.midland.at || 0) > 15000)) loadMidlandStatus(c.id);
-  const current = F.view === 'home' ? 'classes' : F.view === 'rehearse' ? `${MIDLAND}:rehearse` : F.view === 'sim-results' ? `${F.simResults?.sim?.id}:all-results`
+  // Every class page shows each kit sim's open session in the menu, not only Class home.
+  if (c && F.view !== 'course') for (const x of sims || []) if (isKit(x.sim_id) && staleStatus(c.id, x.sim_id)) loadSessionStatus(c.id, x.sim_id);
+  const current = F.view === 'home' ? 'classes' : F.view === 'rehearse' ? `${rehearseSim()}:rehearse` : F.view === 'sim-results' ? `${F.simResults?.sim?.id}:all-results`
     : F.view === 'sim' && F.frame ? `${F.frame.sim}:${F.frame.session ? (F.frame.tab || 'teams') : 'sessions'}` : 'class';
   FacultyMenu.mount({ classes, classesHref:'/faculty.html', current,
     course: c ? { id:c.id, title:c.title, href:`/faculty.html?view=course&course=${encodeURIComponent(c.id)}` } : null,
@@ -301,24 +313,24 @@ function drawMenu() {
       if (sim === 'class' && what) { navigation.go({ view:'course', course:what }, false); return true; }
       if (c && key === 'class') { navigation.go({ view:'course', course:c.id }, false); return true; }
       if (c && what === 'all-results') { navigation.go({ view:'sim-results', course:c.id, sim }, false); return true; }
-      if (c && what === 'rehearse') { navigation.go({ view:'rehearse', course:c.id }, false); return true; }
-      if (!c || sim !== MIDLAND || !['sessions', 'teams', 'results', 'debrief', 'session'].includes(what)) return false;
+      if (c && what === 'rehearse') { navigation.go({ view:'rehearse', course:c.id, sim }, false); return true; }
+      if (!c || !isKit(sim) || !['sessions', 'teams', 'results', 'debrief', 'session'].includes(what)) return false;
       const frame = document.getElementById('simFrame');
       if (F.view === 'sim' && frame && F.frame?.sim === sim) { frame.contentWindow.postMessage({ type:'rs-nav', to:what === 'session' ? 'teams' : what }, location.origin); return true; }
-      const open = F.midland?.courseId === c.id ? F.midland.open : null;
+      const open = statusOf(c.id, sim)?.open || null;
       openFrame(sim, c.id, what === 'sessions' ? '' : open?.code || '', what === 'sessions' ? '' : what === 'session' ? 'teams' : what);
       return true;
     },
     sims: (sims || []).map(x => {
       const framed = F.view === 'sim' && F.frame?.sim === x.sim_id;
       // The open session, or else the last one, so its results and debrief are one click away.
-      const known = x.sim_id === MIDLAND && F.midland?.courseId === c.id ? (F.midland.open || F.midland.last) : null;
+      const st = isKit(x.sim_id) ? statusOf(c.id, x.sim_id) : null, known = st ? (st.open || st.last) : null;
       const open = framed && F.frame.session && F.frame.info ? { code:F.frame.session, name:F.frame.info.label, state:F.frame.info.state === 'paused' ? 'running' : F.frame.info.state, paused:F.frame.info.state === 'paused', mode:F.frame.info.team ? 'team' : 'individual' }
         : known;
       return { id:x.sim_id, title:x.title,
         links:{ sessions:launchHref(x.sim_id, c.id, '&mode=session'), play:launchHref(x.sim_id, c.id),
           results:F.me?.role === 'faculty' ? `/faculty.html?view=sim-results&course=${encodeURIComponent(c.id)}&sim=${encodeURIComponent(x.sim_id)}` : null,
-          rehearse:x.sim_id === MIDLAND ? `/faculty.html?view=rehearse&course=${encodeURIComponent(c.id)}` : null },
+          rehearse:isKit(x.sim_id) ? `/faculty.html?view=rehearse&course=${encodeURIComponent(c.id)}&sim=${encodeURIComponent(x.sim_id)}` : null },
         session: open ? { label:sessionLabel(open), state:open.paused ? 'paused' : open.state, team:open.mode === 'team',
           links:{ teams:launchHref(x.sim_id, c.id, `&mode=session&session=${encodeURIComponent(open.code)}&tab=teams`),
             results:launchHref(x.sim_id, c.id, `&mode=session&session=${encodeURIComponent(open.code)}&tab=results`),
@@ -351,17 +363,20 @@ window.addEventListener?.('message', e => {
   if (JSON.stringify([F.frame.session, F.frame.tab, F.frame.info]) === before) return;
   drawMenu(); navigation?.record('replace');
 });
-// Midland's open session (or the last one) for the course row and the menu. Loaded after the page draws.
-let midlandAsking = '';
-async function loadMidlandStatus(courseId) {
-  if (midlandAsking === courseId || F.me?.role !== 'faculty') return;
-  midlandAsking = courseId;
+// Each kit sim's open session (or the last one) for the class row and the menu. Loaded after the page draws.
+const statusAsking = new Set();
+async function loadSessionStatus(courseId, simId) {
+  const key = courseId + '|' + simId;
+  if (statusAsking.has(key) || F.me?.role !== 'faculty') return;
+  statusAsking.add(key);
+  let next;
   try {
-    const r = await fetch('/api/faculty', { method:'POST', cache:'no-store', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:'midland_status', courseId }) });
+    const r = await fetch('/api/faculty', { method:'POST', cache:'no-store', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:'session_status', courseId, simId }) });
     const d = await r.json().catch(() => ({}));
-    F.midland = r.ok ? { courseId, at:Date.now(), ...d } : { courseId, at:Date.now(), available:false };
-  } catch { F.midland = { courseId, at:Date.now(), available:false }; }
-  midlandAsking = '';
+    next = r.ok ? { courseId, simId, at:Date.now(), ...d } : { courseId, simId, at:Date.now(), available:false };
+  } catch { next = { courseId, simId, at:Date.now(), available:false }; }
+  F.status = { ...(F.status || {}), [key]: next };
+  statusAsking.delete(key);
   if (F.view === 'course' && F.course?.course.id === courseId) render(); else drawMenu();
 }
 
@@ -599,21 +614,21 @@ function renderCourse() {
     <div class="panel" style="margin-bottom:26px">
       ${sims.length ? sims.map(x => {
         const runPct = Number(x.started_runs) ? Math.min(100, Math.round(Number(x.finished_runs)/Number(x.started_runs)*100)) : 0;
-        const midland = x.sim_id === MIDLAND;
-        const M = midland && F.midland?.courseId === course.id ? F.midland : null;
+        const midland = isKit(x.sim_id);
+        const M = midland ? statusOf(course.id, x.sim_id) : null;
         const open = M?.open, last = M?.last;
         const finishedWord = x => x.mode === 'team'
           ? (x.teams && x.submitted === x.teams ? (x.teams === 2 ? 'both teams finished' : x.teams === 1 ? 'the team finished' : `all ${x.teams} teams finished`) : `${x.submitted || 0} of ${x.teams || 0} teams finished`)
-          : `${x.students} student${x.students===1?'':'s'}`;
+          : x.submitted ? `${x.submitted} of ${x.students} student${x.students===1?'':'s'} finished` : `${x.students} student${x.students===1?'':'s'}`;
         const status = !midland ? '' : !M ? '<div class="faculty-session-line"><span class="hint">Checking sessions…</span></div>'
           : open ? `<div class="faculty-session-line"><span class="faculty-state ${open.state==='running'&&!open.paused?'run':'set'}">${open.state==='lobby'?'Setting up':open.paused?'Paused':'Running'}</span>
-              <span>${esc(sessionLabel(open))} · ${open.mode==='team'?`${open.teams} team${open.teams===1?'':'s'} · `:''}${open.students} student${open.students===1?'':'s'}${open.state!=='lobby'&&open.mode==='team'?` · ${esc(finishedWord(open))}`:''}</span></div>`
+              <span>${esc(sessionLabel(open))} · ${open.mode==='team'?`${open.teams} team${open.teams===1?'':'s'} · `:''}${open.students} student${open.students===1?'':'s'}${open.state!=='lobby'&&(open.mode==='team'||open.submitted)?` · ${esc(finishedWord(open))}`:''}</span></div>`
           : `<div class="faculty-session-line faculty-session-line-plain"><span>${last ? `No session open. Last session: ${esc(sessionLabel(last))} · ${esc(finishedWord(last))}.` : 'No sessions yet. Start one when your class is ready.'}</span></div>`;
         const sessionsHref = `/faculty.html?view=sim&course=${encodeURIComponent(course.id)}&sim=${encodeURIComponent(x.sim_id)}`;
         const item = (html, hint) => `${html}<span class="faculty-more-hint">${hint}</span>`;
         const moreItems = [
           midland && open ? item(`<a class="btn sm" data-frame="${esc(x.sim_id)}" href="${sessionsHref}">All sessions</a>`, 'Start a new session or see earlier ones.') : '',
-          midland ? item(`<button class="btn sm" data-midland-rehearse>Rehearse</button>`, 'Play as three practice students before class.') : '',
+          midland ? item(`<button class="btn sm" data-midland-rehearse="${esc(x.sim_id)}">Rehearse</button>`, PRACTICE_N[x.sim_id] === 1 ? 'Play as a practice student before class.' : 'Play as three practice students before class.') : '',
           x.sim_id === 'rapid-05-approve' ? item(`<a class="btn sm" href="${launchHref(x.sim_id, course.id, '&mode=session&play=individual')}">Run individual</a>`, 'Every student plays alone.') : '',
           item(`<a class="btn sm" href="${launchHref(x.sim_id, course.id)}" target="_blank" rel="noopener">Play it yourself</a>`, 'Opens in a new tab, as a student sees it.'),
           F.me?.role === 'faculty' ? item(`<button class="btn sm faculty-result-btn" data-sim-results="${esc(x.sim_id)}">Past sessions</button>`, 'Every session’s results, newest first.') : '',
@@ -704,7 +719,7 @@ function renderCourse() {
     </div>
     ${F.err ? `<div class="hint" style="color:var(--rose)">${esc(F.err)}</div>` : ''}`;
 
-  if (sims.some(x => x.sim_id === MIDLAND) && (F.midland?.courseId !== course.id || Date.now() - (F.midland.at || 0) > 15000)) loadMidlandStatus(course.id);
+  for (const x of sims) if (isKit(x.sim_id) && staleStatus(course.id, x.sim_id)) loadSessionStatus(course.id, x.sim_id);
   document.getElementById('back').onclick = loadHome;
   document.getElementById('ce').onclick = () => { F.editCourse = !F.editCourse; render(); };
   const eg = document.getElementById('e_go');
@@ -752,7 +767,7 @@ function renderCourse() {
   };
   app.querySelectorAll('[data-prog]').forEach(b => b.onclick = () => openProgress(course.id, b.dataset.prog));
   app.querySelectorAll('[data-sim-results]').forEach(b => b.onclick = () => openSimResults(course.id,b.dataset.simResults));
-  app.querySelectorAll('[data-midland-rehearse]').forEach(b => b.onclick = () => navigation.go({ view:'rehearse', course:course.id }, false));
+  app.querySelectorAll('[data-midland-rehearse]').forEach(b => b.onclick = () => navigation.go({ view:'rehearse', course:course.id, sim:b.dataset.midlandRehearse }, false));
   app.querySelectorAll('a[data-frame]').forEach(a => a.onclick = e => { if (e.metaKey || e.ctrlKey || e.shiftKey) return; e.preventDefault(); openFrame(a.dataset.frame, course.id, a.dataset.session || ''); });
   app.querySelectorAll('[data-student-results]').forEach(b => b.onclick = () => openStudentResults(course.id, b.dataset.studentResults));
   app.querySelectorAll('[data-seats]').forEach(b => b.onclick = async () => {
@@ -1037,7 +1052,7 @@ function facultyRoute() {
     : F.view === 'student-results' ? F.studentResults?.course.id : F.course?.course.id;
   if (F.view === 'sim' && F.frame) return {view:'sim', course:F.course?.course.id, sim:F.frame.sim, session:F.frame.session||null, tab:F.frame.tab||null};
   return {view:F.view,tab:F.tab,course:F.view==='home'?null:course,
-    sim:F.view==='sim-results'?F.simResults?.sim.id:F.view==='played'?F.progress?.sim.id:null,
+    sim:F.view==='sim-results'?F.simResults?.sim.id:F.view==='played'?F.progress?.sim.id:F.view==='rehearse'?F.rehearseSim||null:null,
     sort:F.view==='sim-results'?F.resultsSort:null,
     student:F.view==='student-results'?F.studentResults?.student.id:null,
     look:F.looking,new:F.view==='home'&&F.newCourse?'1':null,edit:F.view==='course'&&F.editCourse?'1':null,add:F.view==='course'&&F.addSim?'1':null,
@@ -1067,6 +1082,7 @@ async function restoreFaculty(params,current) {
   // The sessions frame: Midland's pages inside the class page, so the menu stays put.
   const frame=view==='sim'?{sim:simId,session:(params.get('session')||'').replace(/[^A-Za-z0-9]/g,'').slice(0,8),tab:['teams','results','debrief'].includes(params.get('tab'))?params.get('tab'):'',info:null}:null;
   if(frame&&F.frame&&F.frame.sim===frame.sim&&F.course?.course.id===courseId&&document.getElementById('simFrame'))frame.keep=true;
+  F.rehearseSim=view==='rehearse'&&simId?simId:null;
   Object.assign(F,{data,tab,view,course,progress,frame,studentResults,simResults,resultsSort:simResults?.sort||'name',simsOverview,err:null,
     ...lists,
     newCourse:view==='home' && params.get('new')==='1',editCourse:view==='course' && params.get('edit')==='1',

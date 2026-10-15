@@ -90,7 +90,9 @@ function groupSessions(rows) {
     const code = v.sessionCode.slice(0, 20);
     if (!sessions.has(code)) {
       if (sessions.size >= SESSION_LIMIT) continue;
-      sessions.set(code, { code, name: v.sessionName || null, createdAt: v.sessionCreatedAt || null, latestAt: row.completed_at, teams: new Map() });
+      sessions.set(code, { code, name: v.sessionName || null, createdAt: v.sessionCreatedAt || null, latestAt: row.completed_at, teams: new Map(),
+        // A sim may send its review questions with each result (they can name the outcome, so they stay out of public pages).
+        questions: Array.isArray(v.reviewQuestions) ? v.reviewQuestions.slice(0, 2).map(q => String(q).slice(0, 300)) : null });
     }
     const sess = sessions.get(code);
     const teamKey = v.teamRunId || `individual:${row.user_id}`;
@@ -100,6 +102,7 @@ function groupSessions(rows) {
         team: !!v.teamRunId, completedBy: v.completedBy || null,
         roster: Array.isArray(v.teamMembers) ? v.teamMembers.slice(0, 30) : null,
         overall: v.result?.overall || null, year3: v.result?.year3?.title || null, year3Band: v.year3Band || v.result?.year3?.band || null,
+        bandLabel: typeof v.bandLabel === 'string' ? v.bandLabel.slice(0, 60) : null, bandTone: ['g', 'y', 'o', 'l'].includes(v.bandTone) ? v.bandTone : null,
         members: []
       });
     }
