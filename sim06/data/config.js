@@ -40,8 +40,10 @@ module.exports = {
   walkthrough: [
     { title: 'What is going on',
       text: [
-        'Card payments are failing in all twelve Harlow Home & Hardware stores.',
-        'You run store operations. You will read reports as they come in and decide what to do about it.',
+        'You run store operations for Harlow Home & Hardware, a chain of twelve stores. It is 11:05, the busiest hour of the trading day.',
+        'Card payments are failing in every store. Some go through after a long wait. Most time out.',
+        'Harlow has two network providers. Northline Fibre carries everything day to day. ClearPath Business is the backup, ready in every store.',
+        'You will read reports as they come in. Then you decide: switch every store to ClearPath, or stay on Northline.',
       ] },
     { title: 'How the reports arrive',
       text: [
@@ -57,7 +59,7 @@ module.exports = {
       ] },
     { title: 'The one decision',
       text: [
-        'Switch to ClearPath moves every store to the backup provider. It takes about eight minutes, and no store can take a card during those eight minutes.',
+        'Switch to ClearPath moves every store to the backup provider. It takes about eight minutes of store time, and no store can take a card during those eight minutes.',
         'Stay on Northline means you commit to the provider Harlow uses now.',
         'Each button asks for one line saying why. You can press one button, once, at any time. You cannot undo it.',
         'If you press neither before the clock ends, that is recorded as no decision.',
@@ -67,7 +69,7 @@ module.exports = {
       text: [
         'Read the briefing. Then open the two documents: the Northline contract and the ClearPath network summary.',
         'You can open both documents again at any time during play.',
-        'Nothing in this simulation is scored.',
+        'Your decision and your reason feed the class discussion.',
       ] },
   ],
 
