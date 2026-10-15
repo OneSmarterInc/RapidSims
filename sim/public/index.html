@@ -376,18 +376,21 @@ let LAST_ERROR = null;
 let OFFLINE = false;
 let NEEDS_CODE = false;
 let BAD_LAUNCH = false;
+// Reads one value from the link. The fragment (#lt=...) and the query (?session=...) are read
+// apart, so a link with both keeps each value whole.
+function linkParam(name) {
+  const h = new URLSearchParams(location.hash.replace(/^#/, '')).get(name);
+  return h || new URLSearchParams(location.search).get(name) || null;
+}
 let ACCESS_CODE = (function () {
-  const m = (location.hash + location.search).match(/code=([^&]+)/);
-  if (m) return decodeURIComponent(m[1]);
-  return null;
+  return linkParam('code');
 })();
 
 // A launch token from the platform. It says who is playing and in what capacity,
 // and stands in for the access code entirely.
 let LAUNCH = null;
 let LAUNCH_TOKEN = (function () {
-  const m = (location.hash + location.search).match(/lt=([^&]+)/);
-  return m ? decodeURIComponent(m[1]) : null;
+  return linkParam('lt');
 })();
 if (LAUNCH_TOKEN) {
   try {
