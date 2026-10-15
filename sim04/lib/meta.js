@@ -7,7 +7,7 @@ const META = Object.freeze({
   tagline: 'Twenty-five minutes to give the board one number.',
   description: 'Ridgeway Dispatch sells scheduling and invoicing software to plumbers, HVAC contractors and landscapers. The quarter has closed, and the board chair wants one figure before the next meeting: customer retention. Each team gets the account records, the support tickets and a definition sheet, and has to commit a number.',
   minutes: config.clockMinutes,
-  catalogueRevision: 'sim04-v3-classroom-groups',
+  catalogueRevision: 'sim04-v4-class-link',
   detail: {
     world: 'Customer retention at a software company for trade businesses',
     seat: 'A team asked to report retention to the board',
@@ -17,7 +17,7 @@ const META = Object.freeze({
     turn: 'Teams cannot see anyone else’s work, and a committed number cannot be changed.',
     after: 'The debrief starts with an argument between two teams and ends with each student writing down the definition behind a number they are judged by. There is no score.',
     discussion: 'Open with two teams defending their numbers, before any explanation.',
-    sessionShape: 'Students join with their email. You set the group size, divide the room at random and adjust, then start the clock. Any number of groups can play, even one. Allow 25 minutes to calculate and time to discuss.',
+    sessionShape: 'Students join from the class link. Choose team or individual play, split the class with Auto split, then start the clock. Any number of teams can play, even one. Allow 25 minutes to calculate and time to discuss.',
     activity: 'Read the account records, the support tickets and the definition sheet. Commit a retention percentage and a confidence from 1 to 5.',
     suitableFor: 'Marketing, accounting, operations and information systems classes, without changes.',
     preparation: 'No advance reading; the data pack is included.',
