@@ -91,7 +91,7 @@ async function api(path, payload) {
       // Almost always a mismatched or missing shared secret between the two.
       BAD_LAUNCH = true;
       NEEDS_CODE = false;
-      LAST_ERROR = 'This sim did not accept the link you arrived on. It may have expired — go back and start it again from your course. If it keeps happening, the two systems are not sharing the same launch secret.';
+      LAST_ERROR = 'Your sign-in link for this sim has expired or was opened outside your class.';
     } else {
       NEEDS_CODE = true;
       LAST_ERROR = 'This sim needs an access code. Enter the one you were given.';
@@ -144,7 +144,8 @@ function goOffline(chosen) {
 }
 
 function showBanner() {
-  if (document.getElementById('keybar')) return;
+  // A refused sign-in link has its own page; the banner is for an unreachable server or a missing code.
+  if (BAD_LAUNCH || document.getElementById('keybar')) return;
   const needCode = NEEDS_CODE && !BAD_LAUNCH;
   const bar = el(`<div id="keybar" style="position:fixed;left:0;right:0;bottom:0;z-index:60;border-top:1px solid var(--sophia);background:#1A1420;padding:12px 18px">
     <div style="max-width:1100px;margin:0 auto">
@@ -295,7 +296,7 @@ function playHTML() {
             aria-label="${S.composerOpen ? 'Collapse' : 'Expand'}">⌄</button>
         </div>
         <div id="cmp-extra" style="display:${S.composerOpen ? 'block' : 'none'}">
-        ${(!S.playing && !priv && S.threads.room.filter(m => m.who === 'you').length < 1)
+        ${(!S.playing && !priv && S.threads.room.filter(m => m.who === 'you' && m.phase === S.phase).length < 1)
           ? `<div class="chips-lab">Your own words work best · click to borrow an example</div>
              <div class="chips">${(ph.prompts || []).map(q => `<button class="chip" data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>`
           : ''}
@@ -376,7 +377,7 @@ function wirePlay() {
   if (send) send.onclick = doSend;
 }
 
-function push(ch, who, text) { S.threads[ch].push({ who, text }); }
+function push(ch, who, text) { S.threads[ch].push({ who, text, phase: S.phase }); }
 
 function showTyping(who) {
   const t = document.getElementById('typing');
@@ -1209,9 +1210,9 @@ mountHelp();
     app.innerHTML = BAD_LAUNCH
       ? `<div class="doc"><div class="doc-in">
           <div class="eyebrow">Flexee RapidSim 01</div>
-          <h1>That link wasn't <em>accepted</em></h1>
+          <h1>Open this sim from <em>your class</em></h1>
           <p>${esc(LAST_ERROR || '')}</p>
-          <p style="color:var(--dimmer);font-size:14px">Nothing is lost — go back to your course and press Start again.</p>
+          <p>Go back to your class page and open the sim again.</p>
         </div></div>`
       : NEEDS_CODE
       ? `<div class="doc"><div class="doc-in">

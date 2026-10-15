@@ -586,3 +586,7 @@ body.rs-has-menu .top{max-width:100%;min-width:0}
 body.rs-has-menu .top .right{flex-wrap:wrap;justify-content:flex-end}
 .faculty-sim-actions{flex-wrap:nowrap}
 .faculty-sim-actions>.btn,.faculty-sim-actions>.faculty-more>summary{white-space:nowrap}
+/* The class page action column fits its buttons. A 40% cap inside an auto grid column
+   resolved against itself and squeezed "Start a session" to 80px. */
+.sim.faculty-sim-card .faculty-sim-side{max-width:none;min-width:max-content}
+@media(max-width:1100px){.sim.faculty-sim-card .faculty-sim-side{min-width:0}}
