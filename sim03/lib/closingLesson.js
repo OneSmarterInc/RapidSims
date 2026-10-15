@@ -124,7 +124,7 @@ function buildClosingLesson(y1,y2,outcomes,thresholds){
       {head:'Technology spending takes time to pay off.',text:'What you fund this year decides what the company can do two or three years from now.'},
       {head:'Some capabilities take years to build.',text:`The $${Number((thresholds&&thresholds.perLineCap)??3)}M yearly limit on each line stands for that time. Money arriving later buys less of it.`},
       {head:'Each executive is right about one part of the company.',text:'The technology leader’s job is to fund the whole company.'},
-      {head:'The quietest line can matter most.',text:'Capacity had only you to speak for it, and in Year 3 it decided whether the data could become a service.'}
+      {head:'Fund the line nobody asks for.',text:'Four executives argued for their own lines. Nobody argued for Capacity, the computing room to use the data. Only you speak for it, and in Year 3 it decided whether the data could become a service.'}
     ].map((t,i)=>({...t,question:questions[i]||''})),
     paragraphs:[
       'You made two years of choices before you knew which tests would come. Good technology planning works that way: you decide which capabilities Midland will already have when the future arrives.',
