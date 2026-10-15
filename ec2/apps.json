@@ -80,5 +80,11 @@
     "port": 3112,
     "prefix": "/simplus02",
     "title": "rapid-sim-plus-02"
+  },
+  "simsahil": {
+    "dir": "simSahil",
+    "port": 3113,
+    "prefix": "/simsahil",
+    "title": "simSahil-service-check"
   }
 }

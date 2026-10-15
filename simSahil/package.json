@@ -1,0 +1,9 @@
+{
+  "name": "simsahil-deployment-test",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Minimal RapidSims systemd CD smoke test",
+  "scripts": {
+    "test": "node -e \"process.exit(0)\""
+  }
+}
