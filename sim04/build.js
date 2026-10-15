@@ -9,7 +9,7 @@ const { META } = require('./lib/meta');
 const root = __dirname;
 const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const pages = ['public/launch.html', 'public/platform-launch.js', 'public/index.html', 'public/student.js',
-  'public/instructor.html', 'public/instructor.js', 'public/private-check.html', 'public/private-check.js'];
+  'public/instructor.html', 'public/whose-faculty.js', 'public/whose-debrief.js'];
 const word = term => new RegExp('\\b' + term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i');
 
 function studentLeaks(value, ownSheetId) {
@@ -35,7 +35,7 @@ const STUDENT_ONLY = [/contested/i, /private sheet/i, /only your group/i];
 function checkSpoilers(contents = Object.fromEntries(pages.map(p => [p, read(p)])), meta = META) {
   const problems = [];
   const student = ['public/launch.html', 'public/index.html', 'public/student.js'].map(p => contents[p] || '').join('\n');
-  const projected = ['public/instructor.html', 'public/instructor.js'].map(p => contents[p] || '').join('\n');
+  const projected = ['public/instructor.html', 'public/whose-faculty.js', 'public/whose-debrief.js'].map(p => contents[p] || '').join('\n');
   const catalogue = JSON.stringify({ tagline: meta.tagline, description: meta.description, detail: meta.detail });
   for (const [where, text, rules] of [['student bundle', student, [...SPOILERS, ...STUDENT_ONLY]],
     ['projected console', projected, SPOILERS], ['catalogue copy', catalogue, [...SPOILERS, ...STUDENT_ONLY]]]) {

@@ -74,8 +74,8 @@ function practicePanel(courseId, d) {
   box.innerHTML = `<div class="faculty-practice-head"><b data-practice-title>${d.complete ? 'Practice session complete. Every practice student has finished.' : d.resumed ? 'Your practice session from earlier is still open.' : 'Your practice session is open.'}</b>
       <span>Open each practice student in its own tab. Practice students stay out of your roster, counts and results.</span></div>
     <div class="faculty-practice-grid">${d.students.map(x => `<div class="faculty-practice-card">
-      <b>${esc(x.name)}</b><span>${d.students.length === 1 ? 'Plays the whole run' : x.entersDecisions ? 'Enters the decisions' : 'Follows and reviews'}</span><span class="faculty-practice-status${x.finished ? ' done' : ''}" data-practice-status="${esc(x.name)}" aria-live="polite">${esc(x.status || '')}</span>
-      <a class="btn sm ${x.finished ? 'faculty-practice-done' : x.entersDecisions ? 'pri' : ''}" data-practice-open="${esc(x.name)}" href="${esc(x.url)}" target="_blank" rel="noopener">${x.finished ? 'Completed' : 'Open'}</a></div>`).join('')}</div>
+      <b>${esc(x.name)}</b><span>${d.students.length === 1 || !PRACTICE_TEAM[rehearseSim()] ? 'Plays the whole run' : x.entersDecisions ? 'Enters the decisions' : 'Follows and reviews'}</span><span class="faculty-practice-status${x.finished ? ' done' : ''}" data-practice-status="${esc(x.name)}" aria-live="polite">${esc(x.status || '')}</span>
+      <a class="btn sm ${x.finished ? 'faculty-practice-done' : x.entersDecisions || !PRACTICE_TEAM[rehearseSim()] ? 'pri' : ''}" data-practice-open="${esc(x.name)}" href="${esc(x.url)}" target="_blank" rel="noopener">${x.finished ? 'Completed' : 'Open'}</a></div>`).join('')}</div>
     <div class="faculty-practice-actions"><a class="btn sm" href="${esc(d.classUrl)}" target="_blank" rel="noopener">See the faculty view</a>
       <button class="btn sm" data-practice-over>Start over</button>
       <button class="btn sm" data-practice-finish>End practice and remove practice students</button></div>`;
@@ -113,13 +113,14 @@ function watchPractice(courseId) {
 function renderRehearse() {
   const { course, sims } = F.course;
   const sim = sims.find(x => x.sim_id === rehearseSim()) || null;
-  const title = sim ? sim.title : 'this simulation', solo = PRACTICE_N[rehearseSim()] === 1;
+  const title = sim ? sim.title : 'this simulation', solo = PRACTICE_N[rehearseSim()] === 1, team = !!PRACTICE_TEAM[rehearseSim()];
   const has = !!sim && isKit(sim.sim_id);
   app.innerHTML = `
     <div class="crumb"><a data-crumb-class>${esc(course.title)}</a> › ${esc(title)} › Rehearse</div>
     <div class="head"><div><h1>Rehearse ${esc(title)}</h1>
       <p class="hint" style="margin-top:6px;max-width:720px">${solo ? 'Play as a practice student to see what your class will see, from the brief to the review.'
-        : 'Play as three practice students to see what your class will see. One practice student enters the decisions. The other two follow each step and write their own reviews.'}</p></div></div>
+        : team ? 'Play as three practice students to see what your class will see. One practice student enters the decisions. The other two follow each step and write their own reviews.'
+        : 'Play as three practice students, each on their own run, to see what your class will see, from the brief to the review.'}</p></div></div>
     ${has ? '<div class="panel faculty-practice faculty-practice-page" data-midland-practice><div class="empty">Checking for a practice session…</div></div>'
       : `<div class="panel"><div class="empty">Add ${esc(title)} to this class to rehearse it.</div></div>`}`;
   app.querySelector('[data-crumb-class]').onclick = () => openCourse(course.id);
@@ -281,8 +282,10 @@ function render() {
 /* ── left menu and Midland's session status ─────────────────────────────── */
 const MIDLAND = 'rapid-03-midland';
 // Sims on the shared faculty pages (kit): sessions, results and debrief in the class page, plus Rehearse.
-const KIT_SIMS = ['rapid-03-midland', 'rapid-01-disaster', 'rapid-02-relay'];
-const PRACTICE_N = { 'rapid-03-midland': 3, 'rapid-01-disaster': 1, 'rapid-02-relay': 1 };
+const KIT_SIMS = ['rapid-03-midland', 'rapid-01-disaster', 'rapid-02-relay', 'rapid-04-whose-number'];
+const PRACTICE_N = { 'rapid-03-midland': 3, 'rapid-01-disaster': 1, 'rapid-02-relay': 1, 'rapid-04-whose-number': 3 };
+// Practice students who form one team (Midland). Elsewhere each practice student plays their own run.
+const PRACTICE_TEAM = { 'rapid-03-midland': true };
 const isKit = id => KIT_SIMS.includes(id);
 // The sim Rehearse is for: the one asked for, or the class's first sim on the kit.
 function rehearseSim() { return F.rehearseSim || (F.course?.sims || []).map(x => x.sim_id).find(isKit) || MIDLAND; }

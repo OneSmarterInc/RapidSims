@@ -35,6 +35,14 @@ store.getSession = async code => sessions.has(code) ? structuredClone(sessions.g
 store.courseSessions = async courseId => [...sessions.values()]
   .filter(session => !session.practice && session.platformAuth && session.courseId === courseId && session.state !== 'complete' && session.stage < 3)
   .map(({ code, name, mode, state, stage }) => ({ code, name, mode, state, stage }));
+const lists = new Map(), practices = new Map();
+store.addCourseSession = async (courseId, code, at) => { const m = lists.get(courseId) || new Map(); m.set(code, at); lists.set(courseId, m); };
+store.listCourseSessions = async courseId => [...(lists.get(courseId) || new Map()).entries()].sort((a, b) => b[1] - a[1]).map(([c]) => c);
+store.indexCourseSession = async () => {};
+store.setPracticeSession = async (c, o, code) => practices.set(c + '|' + o, code);
+store.getPracticeSession = async (c, o) => practices.get(c + '|' + o) || null;
+store.clearPracticeSession = async (c, o) => practices.delete(c + '|' + o);
+store.wipe = async code => sessions.delete(code);
 store.compareAndSetSession = async (code, previous, next) => {
   if (JSON.stringify(sessions.get(code)) !== JSON.stringify(previous)) return false;
   sessions.set(code, structuredClone(next)); return true;
@@ -109,7 +117,10 @@ await check('student course launch lists only open rooms for its course', async 
   const otherCourse = signBack({ kind: 'launch', run: 'fixture-launch', sub: 'other', name: 'other', role: 'student', sim: config.simId,
     course: 'different-course', mode: 'play', iat: now, exp: now + 600000 });
   assert.deepEqual((await call({ action: 'course_sessions' }, otherCourse)).body.sessions, []);
-  assert.equal((await call({ action: 'course_sessions' }, teacher)).status, 403);
+  // Faculty get the class's Sessions page list instead.
+  const faculty = await call({ action: 'course_sessions' }, teacher);
+  assert.equal(faculty.status, 200);
+  assert.deepEqual(faculty.body.sessions.map(session => session.code), [code]);
 });
 await check('registration states explicit identity, number and canonical route', () => {
     const r = requests.find(x => x.url === 'https://platform.test/api/register');
@@ -211,7 +222,7 @@ await check('registration states explicit identity, number and canonical route',
   });
   const complete = await call({ action: 'advance', code });
   await check('completion reports all three launched participants to the platform', () => {
-    assert.equal(complete.body.session.stage, 3);
+    assert.equal(sessions.get(code).stage, 3);
     const completions = requests.filter(x => x.url === 'https://platform.test/api/complete');
     assert.deepEqual(completions.map(x => x.payload.sub).sort(), ['ada', 'ben', 'cy']);
     assert.equal(complete.body.completion.sent, 3);
@@ -219,7 +230,7 @@ await check('registration states explicit identity, number and canonical route',
   });
   await check('build guards catch planted student content', () => {
     const fs = require('node:fs'), path = require('node:path');
-    const pages = ['launch.html','index.html','student.js','instructor.html','instructor.js','private-check.html','private-check.js'];
+    const pages = ['launch.html','index.html','student.js','instructor.html','whose-faculty.js','whose-debrief.js'];
     const source = Object.fromEntries(pages.map(p => ['public/' + p, fs.readFileSync(path.join(__dirname, '../public', p), 'utf8')]));
     source['public/student.js'] += '\n// TODO missing text';
     assert.ok(gate.checkSource(source).some(s => s.includes('placeholder')));
@@ -228,7 +239,7 @@ await check('registration states explicit identity, number and canonical route',
   });
   await check('spoiler guards catch planted wording in student, console and catalogue copy', () => {
     const fs = require('node:fs'), path = require('node:path');
-    const pages = ['launch.html','index.html','student.js','instructor.html','instructor.js','private-check.html','private-check.js'];
+    const pages = ['launch.html','index.html','student.js','instructor.html','whose-faculty.js','whose-debrief.js'];
     const clean = Object.fromEntries(pages.map(p => ['public/' + p, fs.readFileSync(path.join(__dirname, '../public', p), 'utf8')]));
     assert.deepEqual(gate.checkSpoilers(clean), []);
     const plant = (file, text) => ({ ...clean, [file]: clean[file] + '\n' + text });
