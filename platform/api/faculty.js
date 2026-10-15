@@ -103,7 +103,10 @@ module.exports = async (req, res) => {
           SELECT c.*,
             (SELECT count(*) FROM enrolments e WHERE e.course_id = c.id AND e.dropped = false) AS enrolled,
             (SELECT count(*) FROM enrolments e WHERE e.course_id = c.id AND e.dropped = false AND e.paid = true) AS paid,
-            (SELECT count(*) FROM course_sims cs WHERE cs.course_id = c.id) AS sims
+            (SELECT count(*) FROM course_sims cs WHERE cs.course_id = c.id) AS sims,
+            (SELECT count(*) FROM completions c2 WHERE c2.course_id = c.id
+              AND EXISTS (SELECT 1 FROM enrolments e2 WHERE e2.course_id = c.id
+                AND e2.student_id = c2.user_id AND e2.dropped = false)) AS finished_runs
           FROM courses c WHERE c.faculty_id = ${me.id} AND c.archived = false
           ORDER BY c.created_at DESC`;
         const catalogue = await visibleSims(s, me.id);

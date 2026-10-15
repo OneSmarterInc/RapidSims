@@ -33,23 +33,39 @@
       </div></details></article>`;
   }
   // Class sessions, newest first. Each team shows its shared result and each member's own review.
+  // Each sim's two review questions, shown above each member's answers.
+  const REVIEW_QUESTIONS={'rapid-03-midland':[
+    'Dale, Renata, Tom and Sam each wanted more money. Whose line got the least from you, and why?',
+    'Now that you have seen Year 3, which line would you move $1M into in Year 1, and where would you take it from?']};
+  let questions=[];
   function reviewHTML(m) {
-    const answers=[m.reflection1,m.reflection2].filter(t=>typeof t==='string'&&t.trim());
-    return answers.length?answers.map((t,i)=>`<p class="fr-review"><span class="fr-meta">Answer ${i+1}</span>${esc(t)}</p>`).join(''):'<p class="fr-small">Review on its way.</p>';
+    const answers=[m.reflection1,m.reflection2];
+    if(!answers.some(t=>typeof t==='string'&&t.trim()))return '<p class="fr-small">Review on its way.</p>';
+    return answers.map((t,i)=>typeof t==='string'&&t.trim()?`<p class="fr-review"><span class="fr-q">${esc(questions[i]||'Question '+(i+1))}</span>${esc(t)}</p>`:'').join('');
   }
-  // Midland's Year 3 result names, as the debrief shows them.
+  // Midland's Year 3 result names and colours, as the debrief shows them.
   const BANDS={strong:'Strong',pilot:'Pilot',middle:'Middle',data_no_room:'Data without room',weak:'Limited'};
   // A saved team label already reads "Team 1"; a bare number gets the word.
   const teamName=l=>{const x=String(l==null?'':l).replace(/^team:/,'');return /^team\b/i.test(x)?x:'Team '+x;};
-  function sessionsHTML(sessions) {
+  const firstSentence=t=>{const m=String(t||'').match(/^.*?[.!?](\s|$)/);return m?m[0].trim():String(t||'');};
+  const when=t=>t?new Date(t).toLocaleString(undefined,{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'';
+  // Older sessions were named after the sim; their date names them instead.
+  const sessionName=(s,sim)=>{const n=String(s.name||'').trim();return !n||n===sim.title?when(s.createdAt||s.latestAt)||'Class session':n;};
+  function resultHTML(t) {
+    const band=BANDS[t.year3Band], text=t.overall||'Result saved.', short=firstSentence(text);
+    return `${band?`<div class="fr-band fr-band-${esc(t.year3Band)}">${esc(band)}</div>`:''}<p class="fr-outcome">${esc(short)}</p>${short.length<text.length?`<details class="fr-more-text"><summary>More</summary><p class="fr-outcome">${esc(text)}</p></details>`:''}`;
+  }
+  function sessionsHTML(sessions, sim, links) {
     if(!Array.isArray(sessions)||!sessions.length)return '';
-    return `<div class="fr-section"><div><h2>Class sessions</h2><p>Newest first · each team’s result with every member’s own review</p></div></div>
-      ${sessions.map(s=>`<details class="fr-panel fr-session" ${s===sessions[0]?'open':''}><summary class="fr-session-head"><b>${esc(s.name||'Class session')}</b> · ${esc(date(s.createdAt||s.latestAt))} · ${s.teams.length} ${s.teams.some(t=>t.team)?'team':'result'}${s.teams.length===1?'':'s'}</summary>
-        <table class="fr-table fr-session-table"><caption class="fr-sr">${esc(s.name||"Class session")} results</caption><thead><tr><th scope="col">Team</th><th scope="col">Result</th><th scope="col">Members and reviews</th></tr></thead><tbody>
+    return `<div class="fr-section"><div><h2>Sessions</h2><p>Newest first. Click a session to see its teams, their results and each member’s review.</p></div></div>
+      ${sessions.map(s=>{const name=sessionName(s,sim),stamp=when(s.createdAt||s.latestAt),n=s.teams.length,word=s.teams.some(t=>t.team)?'team':'student';
+        return `<details class="fr-panel fr-session"><summary class="fr-session-head"><span class="fr-session-name"><b>${esc(name)}</b>${stamp&&stamp!==name?` <span class="fr-meta">${esc(stamp)}</span>`:''} · ${n} ${word}${n===1?'':'s'}</span>
+          ${links?`<span class="fr-session-links"><a class="btn sm" data-fr-open="${esc(s.code)}" data-fr-tab="results" href="${esc(links(s.code,'results'))}">Results</a><a class="btn sm" data-fr-open="${esc(s.code)}" data-fr-tab="debrief" href="${esc(links(s.code,'debrief'))}">Debrief</a></span>`:''}</summary>
+        <table class="fr-table fr-session-table"><caption class="fr-sr">${esc(name)} results</caption><thead><tr><th scope="col">${word==='team'?'Team':'Student'}</th><th scope="col">Result</th><th scope="col">Members and reviews</th></tr></thead><tbody>
         ${s.teams.map(t=>`<tr><td data-label="Team"><div class="fr-name">${esc(t.team?teamName(t.label):t.label)}</div>${t.completedBy?`<div class="fr-meta">Decisions entered by ${esc(t.completedBy)}</div>`:''}${t.roster?`<div class="fr-meta">${t.roster.length} member${t.roster.length===1?'':'s'}</div>`:''}</td>
-          <td data-label="Result">${BANDS[t.year3Band]?`<div class="fr-badge ${t.year3Band==='strong'?'fr-ok':''}">${esc(BANDS[t.year3Band])}</div>`:''}<p class="fr-outcome">${esc(t.overall||'Result saved.')}</p></td>
+          <td data-label="Result">${resultHTML(t)}</td>
           <td data-label="Members and reviews">${t.members.map(m=>`<div class="fr-member"><b>${esc(m.name)}</b> <span class="fr-meta">${esc(date(m.completedAt))}</span>${reviewHTML(m)}</div>`).join('')}</td></tr>`).join('')}
-        </tbody></table></details>`).join('')}`;
+        </tbody></table></details>`;}).join('')}`;
   }
   const statuses={'completed':'Completed','started':'Started','not-started':'Not started','not-released':'Not released','removed':'Removed'};
   const badge = status => `<span class="fr-badge ${status==='completed'?'fr-ok':status==='started'?'fr-warn':''}">${statuses[status] || 'Unknown'}</span>`;
@@ -57,11 +73,13 @@
     const {course,sim,rows,stats}=data;
     const active=()=>root.querySelector('.faculty-results')===surface;
     const back='/faculty.html?view=course&course='+encodeURIComponent(course.id);
-    root.innerHTML=`<section class="faculty-results"><a class="fr-back" href="${esc(back)}">← ${esc(course.title)} · Course</a>
-      <header class="fr-heading"><div class="fr-meta">${esc(window.RapidSimsIdentity.label(sim))} · ${esc(course.title)}</div><h1>${esc(sim.title)} — Results</h1><p>Every student, every recorded completion. Newest results appear first.</p></header>
-      <div class="fr-stats">${[['students','Active students'],['completed','Students completed'],['completions','Recorded completions'],['repeated','Repeat completers']].map(([key,text])=>`<div><b>${esc(stats[key])}</b><span>${text}</span></div>`).join('')}</div>
+    questions=REVIEW_QUESTIONS[sim.id]||[];
+    const sessions=Array.isArray(data.sessions)?data.sessions:[];
+    root.innerHTML=`<section class="faculty-results"><div class="crumb fr-crumb"><a class="fr-back" href="${esc(back)}">${esc(course.title)}</a> › ${esc(sim.title)} › Past sessions</div>
+      <header class="fr-heading"><h1>Past sessions</h1><p>Every ${esc(sim.title)} session in ${esc(course.title)}, newest first. Each student’s results are further down.</p></header>
+      <div class="fr-stats fr-stats-3">${[[sessions.length,'Sessions'],[stats.students,'Students'],[stats.completed,'Finished']].map(([n,text])=>`<div><b>${esc(n)}</b><span>${text}</span></div>`).join('')}</div>
       ${data.ambiguous_legacy?'<p class="fr-notice">Some older records have no unambiguous course association and are excluded from these course results. Existing records have not been changed.</p>':''}
-      ${sessionsHTML(data.sessions)}
+      ${sessionsHTML(sessions, sim, actions.sessionLink)}
       <div class="fr-section"><div><h2>Student results</h2><p>One row per account · completions stay together</p></div><button class="btn sm" id="frExpand" aria-pressed="false">Expand loaded details</button></div>
       <div class="fr-panel"><form class="fr-toolbar" id="frSearch"><label>Find a student<input name="search" type="search" maxlength="200" placeholder="Search name or email" value="${esc(data.search)}"></label>
       <label>Progress<select name="filter">${[['all','All students'],['completed','Completed'],['started','Started'],['not-started','Not started'],['not-released','Not released'],['repeated','Repeat completers'],['removed','Removed enrolments']].map(([v,l])=>`<option value="${v}" ${data.filter===v?'selected':''}>${l}</option>`).join('')}</select></label>
@@ -77,6 +95,8 @@
       <p class="fr-small fr-notes">Summary counts include active students only. Removed enrolments retain their history. Dates use your browser’s local timezone. Launches and recorded completions are separate counts; callback retries may create separate completion records. No universal score is inferred.</p></section>`;
     const surface=root.querySelector('.faculty-results');
     root.querySelector('.fr-back').onclick=event=>{event.preventDefault();actions.back();};
+    // Results and Debrief open that session's page in the class page, without reloading.
+    root.querySelectorAll('[data-fr-open]').forEach(a=>a.onclick=event=>{if(!actions.openSession||event.metaKey||event.ctrlKey)return;event.preventDefault();event.stopPropagation();actions.openSession(a.dataset.frOpen,a.dataset.frTab);});
     const form=root.querySelector('#frSearch');
     const change = page => actions.change({search:form.elements.search.value,filter:form.elements.filter.value,sort:form.elements.sort.value,page});
     form.onsubmit=e=>{e.preventDefault();change(1);};
