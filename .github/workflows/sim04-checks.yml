@@ -18,5 +18,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      # The tests load shared code (ec2/redis-command.js) that needs the root packages.
+      - name: Install root packages
+        working-directory: .
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npm test
       - run: npm run build
