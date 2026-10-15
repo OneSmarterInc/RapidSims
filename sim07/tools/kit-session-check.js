@@ -134,6 +134,10 @@ const no = 'They lost thirty million last year and nobody would buy their shares
   const m = D.model(F.debrief.input(teams, { state }));
   eq(m.slides.map(s => s.key), ['glance', 'pair', 'stages', 'recognition', 'said', 'lessons'], 'D0 to D5');
   eq(m.slides[0].headline, 'One bought. One declined. One let the offer lapse.', 'D0 counts');
+  // One side empty: the slides say so, and ask for the other side's case.
+  const solo = D.model(F.debrief.input(teams.filter(t => t.band === 'declined'), { state }));
+  eq([solo.slides[0].ask, solo.slides[1].ask], ['Nobody bought. What would have made you buy?', 'Make the case for the other side. What would a buyer have said?'], 'questions when nobody bought');
+  ok(D.bodyHTML(solo.slides[1], { pick: {}, hidden: {} }).includes('Nobody bought.'), 'the empty side says Nobody bought.');
   const pairHtml = D.bodyHTML(m.slides[1], { pick: {}, hidden: {} });
   ok(pairHtml.includes(why) && pairHtml.includes(no) && pairHtml.includes('data-md-pick="bought"'), 'D1 pairs a bought and a declined reason');
   ok(D.bodyHTML(m.slides[2], { pick: {}, hidden: {} }).includes('Netflix'), 'D2 carries the names, from the server');

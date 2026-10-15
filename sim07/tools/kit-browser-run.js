@@ -123,6 +123,9 @@ const token = (sub, name, role) => { const body = Buffer.from(JSON.stringify({ k
     const ana = st.ana;
     await ana.waitForFunction(() => /think about it/i.test(document.body.innerText), null, { timeout: 15000 });
     ok(/Netflix/.test(await ana.locator('body').innerText()), 'The 2010 stage names the companies');
+    const current = await ana.$('.stage.current');
+    await ana.waitForTimeout(4000);
+    ok(await current.evaluate(e => e.isConnected), 'The page keeps the current stage between polls, so it fades in once');
     await ana.fill('#rv1', 'The price against our revenue.'); await ana.fill('#rv2', 'Choosing a major.');
     await ana.locator('#review-send').click();
     await ana.waitForFunction(() => document.body.innerText.includes('Sent to your instructor'));

@@ -196,13 +196,15 @@ function viewLapse(){const d=C.decision,n=words(S.lapseText),min=C.settings.laps
 function viewRecognition(){const d=C.decision;return `<h1>One more question</h1><p>${esc(d.recognitionPrompt)}</p><div class="row">${d.recognitionOptions.map(([v,l])=>`<button class="btn ghost" data-rec="${v}">${esc(l)}</button>`).join('')}</div><div class="err" role="alert">${esc(S.error)}</div>`}
 function memo(){const r=record();const label=r.lapsed?'The offer lapsed':r.choice==='buy'?'You bought':'You declined';return `<div class="memo"><div class="head"><span>Autumn 2000</span><span>${esc(label)}</span></div><q>${esc(r.justification)}</q><div class="who">Your reasoning, as you wrote it</div></div>`}
 function teamLine(){const t=S.state?.team;if(!t)return '';const verb=t.outcome==='buy'?'bought':'declined';return `<p class="dim">${esc(t.label)} ${verb}${t.tie?' on a tie, which counts as declining':''} (${t.buy} buy, ${t.decline} decline).</p>`}
+// A Rehearse practice run has no instructor step: its stages follow on their own.
+const practiceRun=()=>!!S.state?.session?.practice;
 function viewReveal(){
   const st=stages(),n=stageNo();
   let html=memo()+teamLine();
-  if(!st.length)html+=`<p class="waiting">${S.solo?(S.error?'Your decision is recorded.':'Your decision is recorded. Loading the first part…'):esc(C.decision.hold)}</p>`;
+  if(!st.length)html+=`<p class="waiting">${S.solo?(S.error?'Your decision is recorded.':'Your decision is recorded. Loading the first part…'):practiceRun()?'Your decision is recorded. The first part appears in under a minute. This page updates on its own.':esc(C.decision.hold)}</p>`;
   st.forEach(s=>{html+=`<section class="stage ${s.n===n?'current':'past'}"><div class="yr">${esc(s.year)}</div><h2>${esc(s.title)}</h2>${s.body.map(p=>`<p>${esc(p)}</p>`).join('')}${s.names?`<p class="names">${esc(s.names)}</p>`:''}</section>`});
   const close=st.find(s=>s.close)?.close;
-  if(close)html+=`<section class="stage"><h2>${esc(close.title)}</h2><blockquote class="echo">${esc(record().justification)}</blockquote><p>${esc(close.body)}</p><p>${esc(close.handoff)}</p></section>`;
+  if(close)html+=`<section class="stage"><h2>${esc(close.title)}</h2><blockquote class="echo">${esc(record().justification)}</blockquote><p>${esc(close.body)}</p><p>${esc(practiceRun()?'Your instructor goes through this with the class.':close.handoff)}</p></section>`;
   const qs=S.state?.afterReveal||[];
   if(close&&qs.length)html+=`<section class="stage"><h2>Think about it</h2><ol class="how">${qs.map(q=>`<li>${esc(q)}</li>`).join('')}</ol></section>`;
   if(close)html+=reviewHTML(S.state?.review);
@@ -210,7 +212,7 @@ function viewReveal(){
     if(S.error)html+=`<div class="err" role="alert">Unable to load the next part. ${esc(S.error)}</div><button class="btn ghost" id="reveal-retry" ${S.soloLoading?'disabled':''}>Try again now</button>`;
     if(S.demo&&!S.error)html+=`<p class="waiting">Faculty demo: continue whenever you are ready.</p><button class="btn" id="reveal-next" ${S.soloLoading?'disabled':''}>${S.soloLoading?'Loading…':'Next part'}</button>`;
     else html+=`<p class="waiting" id="reveal-progress" role="status"></p>`;
-  }else if(st.length)html+=`<p class="waiting">Wait for your instructor to continue. This page updates automatically.</p>`;
+  }else if(st.length)html+=`<p class="waiting">${practiceRun()?'The next part appears in under a minute. This page updates on its own.':'Wait for your instructor to continue. This page updates automatically.'}</p>`;
   return html;
 }
 // Two questions for the instructor's debrief. Signed-in class students only.
@@ -333,7 +335,9 @@ async function join(name){
   catch(e){S.error=e.message}
   render();
 }
-function startPoll(){clearInterval(S.poll);S.poll=setInterval(async()=>{await refresh();render()},3000)}
+// Repaint only when the state changes, so a stage fades in once rather than on every poll.
+let lastPaint='';
+function startPoll(){clearInterval(S.poll);S.poll=setInterval(async()=>{await refresh();const sig=JSON.stringify({...(S.state||{}),now:0,closesAt:S.state?.closesAt,acceptsDecision:S.state?.acceptsDecision,needsLapseLine:S.state?.needsLapseLine})+'|'+S.error;if(sig===lastPaint)return renderBar();lastPaint=sig;render()},3000)}
 
 function demoGate(message=''){
   if(SESSION_CODE){app.innerHTML=`<h1>Open a separate faculty demo</h1><p>Class sessions keep their own timing and instructor controls.</p><a class="btn" href="${esc(BASE+'/demo')}">Open demo</a>`;return}

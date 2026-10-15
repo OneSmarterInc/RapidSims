@@ -107,6 +107,8 @@ function watchPractice(courseId) {
     const title = box.querySelector('[data-practice-title]');
     if (title && d.complete) title.textContent = 'Practice session complete. Every practice student has finished.';
   }
+  // Show each status straight away, then every four seconds.
+  refresh();
   practiceTimer = setInterval(refresh, 4000);
 }
 // The Rehearse page: its own page in the main area, marked in the menu.

@@ -33,16 +33,16 @@ function model(input) {
       lapsed.length ? `${cap1(word(lapsed.length))} let the offer lapse.` : ''].filter(Boolean).join(' ')),
     sub: `Every ${unit} read the same briefing and the same four advisers.`,
     evidence: `${ofN(declined.length + lapsed.length)} declined or let the offer lapse.`,
-    ask: 'Who bought? What did you see?',
+    ask: bought.length ? 'Who bought? What did you see?' : 'Nobody bought. What would have made you buy?',
     body: { kind: 'tiles', tiles: order.map(b => ({ band: b, rows: by(b) })).filter(x => x.rows.length)
       .map(x => ({ label: B[x.band].label, cls: B[x.band].cls, phrase: B[x.band].phrase, names: x.rows.map(r => r.name) })) } });
 
   // D1 · two reasons side by side, one bought and one declined, chosen by the instructor
   base.slides.push({ key: 'pair', kicker: 'Two reasons, side by side', lesson: 1,
     headline: buyers.length && decliners.length ? 'Same evidence. <em>Opposite</em> calls.' : 'The class reasoned one way.',
-    sub: 'Both were written in 2000, before any of the stages.',
+    sub: buyers.length && decliners.length ? 'Both were written in 2000, before any of the stages.' : 'Every reason was written in 2000, before any of the stages.',
     evidence: `${ofN(rows.filter(r => (r.reasons || []).some(x => words(x.text) >= 8)).length)} wrote a full reason before the clock closed.`,
-    ask: 'Someone who declined: answer the buyer.',
+    ask: buyers.length && decliners.length ? 'Someone who declined: answer the buyer.' : buyers.length ? 'Make the case for the other side. What would someone who declined have said?' : 'Make the case for the other side. What would a buyer have said?',
     body: { kind: 'pair', buyers, decliners, suggest: [longest(buyers), longest(decliners)] } });
 
   // D2 · what happened next: the three stages, with the names
@@ -83,7 +83,7 @@ function bodyHTML(s, ui) {
   if (b.kind === 'tiles') return `<div class="md-tiles">${b.tiles.map(t => `<div class="md-tile"><span class="md-band md-b${t.cls}"></span><div class="md-tin"><span class="md-tband md-t${t.cls}">${esc(t.label)}</span><span class="md-tphrase">${esc(t.phrase)}</span>${chips(t.names)}</div></div>`).join('')}</div>`;
   if (b.kind === 'pair') {
     const side = (name, list, fallback, title) => {
-      if (!list.length) return `<div class="bt-memo"><span class="bt-h">${title}</span><p class="md-note">Nobody wrote this side.</p></div>`;
+      if (!list.length) return `<div class="bt-memo"><span class="bt-h">${title}</span><p class="md-note">Nobody ${title.toLowerCase()}.</p></div>`;
       const cur = list.find(x => x.key === ui.pick[name]) || fallback || list[0];
       return `<div class="bt-memo"><span class="bt-h">${title}</span><select data-md-pick="${name}" aria-label="Choose the reason that ${title.toLowerCase()}">${list.map(x => `<option value="${esc(x.key)}" ${x.key === cur.key ? 'selected' : ''}>${esc(x.who)}</option>`).join('')}</select><p class="bt-quote">${esc(cur.text)}</p></div>`;
     };

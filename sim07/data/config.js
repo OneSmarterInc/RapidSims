@@ -159,7 +159,7 @@ const PRE_REVEAL = {
       'You have {minutes} minutes to read a short briefing, hear from four of your senior people, and decide.',
       'You either buy the company or decline the offer, and you write a sentence or two saying why. Once you submit, you cannot change it.',
       'If the time runs out before you decide, the offer lapses, which counts as declining.',
-      'After that, you will see what happened over the following years, in three parts. Nothing is scored.'
+      'After that, you see what happened over the following years, in three parts. Your reason goes to the class discussion.'
     ],
     soloStart: 'Start the clock',
     lobbyWait: 'Your instructor starts the clock when the class is ready.'
