@@ -88,10 +88,25 @@ function checkVercel(v) {
   return errors;
 }
 
-module.exports = { checkConfig, checkVercel };
+// The faculty settings and debrief files reach every browser, so the outcome stays on the server.
+function checkKitFiles(cfg, read) {
+  const errors = [];
+  const secret = [cfg.hiddenDependency, cfg.reveal.caption, cfg.reveal.map.faultNote, ...cfg.reports.map(r => r.text), ...cfg.reveal.map.nodes.map(n => n.label)];
+  for (const f of ['instructor.html', 'switch-faculty.js', 'switch-debrief.js']) {
+    const text = read(f);
+    if (text == null) { errors.push(`public/${f} is missing`); continue; }
+    for (const x of secret) if (x && text.includes(x)) errors.push(`public/${f} names scenario content: "${x.slice(0, 40)}"`);
+    if (/\b(room|bridge)\b/i.test(text)) errors.push(`public/${f} uses "room" or "bridge"; say "class" or "session"`);
+  }
+  return errors;
+}
+
+module.exports = { checkConfig, checkVercel, checkKitFiles };
 
 if (require.main === module) {
-  const errors = [...checkConfig(require('../data/config')), ...checkVercel(require('../vercel.json'))];
+  const fs = require('fs'), path = require('path');
+  const read = f => { try { return fs.readFileSync(path.join(__dirname, '..', 'public', f), 'utf8'); } catch (e) { return null; } };
+  const errors = [...checkConfig(require('../data/config')), ...checkVercel(require('../vercel.json')), ...checkKitFiles(require('../data/config'), read)];
   if (errors.length) {
     console.error(`Build gate FAILED (${errors.length}):`);
     errors.forEach(e => console.error(`  - ${e}`));

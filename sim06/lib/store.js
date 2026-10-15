@@ -52,5 +52,22 @@ module.exports = {
     return Number(await cmd(['EVAL', CAS_FIELD, '2', K(code), `${K(code)}:run`,
       runId, previous ? JSON.stringify(previous) : '', JSON.stringify(next), String(TTL)])) === 1;
   },
+  // One open session per class: the class link lands in it.
+  async setCourseSession(courseId, code) { await cmd(['SET', `m06:course:${courseId}`, code, 'EX', String(TTL)]); },
+  async getCourseSession(courseId) { return (await cmd(['GET', `m06:course:${courseId}`])) || null; },
+  async clearCourseSession(courseId, code) {
+    if ((await cmd(['GET', `m06:course:${courseId}`])) === code) await cmd(['DEL', `m06:course:${courseId}`]);
+  },
+  // Every session created for a class, newest first, for the faculty Sessions page.
+  async addCourseSession(courseId, code, createdAt) {
+    const key = `m06:course:${courseId}:sessions`;
+    await cmd(['ZADD', key, String(Number(createdAt) || Date.now()), code]);
+    await cmd(['EXPIRE', key, String(60 * 60 * 24 * 30)]);
+  },
+  async listCourseSessions(courseId) { return (await cmd(['ZREVRANGE', `m06:course:${courseId}:sessions`, '0', '19'])) || []; },
+  // One practice run per faculty member and class (Rehearse).
+  async setPracticeSession(courseId, ownerId, code) { await cmd(['SET', `m06:practice:${courseId}:${ownerId}`, code, 'EX', String(TTL)]); },
+  async getPracticeSession(courseId, ownerId) { return (await cmd(['GET', `m06:practice:${courseId}:${ownerId}`])) || null; },
+  async clearPracticeSession(courseId, ownerId) { await cmd(['DEL', `m06:practice:${courseId}:${ownerId}`]); },
   async wipe(code) { await cmd(['DEL', K(code), `${K(code)}:p`, `${K(code)}:run`]); },
 };

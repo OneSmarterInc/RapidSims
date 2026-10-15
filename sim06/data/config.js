@@ -46,7 +46,7 @@ module.exports = {
     { title: 'How the reports arrive',
       text: [
         'When your instructor starts the clock, a new report appears about every 45 seconds. There are twelve.',
-        'Everyone in the room gets each report at the same moment.',
+        'Every student in your class gets each report at the same moment.',
         'The clock runs ten minutes. That is one hour of store time, from 11:05 to 12:05.',
         'A red counter at the top shows the card sales Harlow has lost so far.',
       ],

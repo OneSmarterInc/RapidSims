@@ -5,7 +5,7 @@
   "description": "Flexee RapidSim 06 \u2014 Do We Switch?",
   "scripts": {
     "gate": "node tools/build-gate.js",
-    "test": "node tools/build-gate.js && node test/run.js && node test/api.js",
+    "test": "node tools/build-gate.js && node test/run.js && node test/api.js && node tools/kit-session-check.js",
     "test:lua": "node test/store-lua.js",
     "test:dom": "node test/dom-student.js && node test/dom-instructor.js && node test/dom-solo.js"
   },

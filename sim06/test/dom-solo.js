@@ -16,7 +16,7 @@ const {JSDOM}=require('jsdom');
   assert.ok(text().includes('What is going on'),'walkthrough 1');
   $('#next').click();await wait(50);
   assert.ok(text().includes('When you press Start simulation'),'solo wording on screen 2');
-  assert.ok(!text().includes('Everyone in the room'),'no room line for solo');
+  assert.ok(!text().includes('Every student in your class'),'no class line for solo');
   $('#skip').click();await wait(300);
   $('#begin').click();await wait(300);
   addClock(50000);await wait(1700);

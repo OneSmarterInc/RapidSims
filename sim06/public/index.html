@@ -46,7 +46,7 @@ textarea{min-height:70px;resize:vertical}
 .choice button:hover{border-color:var(--a)}.choice b{display:block;font-weight:500;font-size:17px}.choice span{font-size:13px;color:var(--d)}
 .notice{border-left:2px solid var(--a);background:rgba(240,166,60,.06);padding:10px 13px;margin:10px 0;color:#cbc8c0}
 .bad{border-left-color:var(--r);color:#e1afba}
-.play-grid{grid-template-areas:"reports actions"}.play-reports{grid-area:reports}.play-actions{grid-area:actions}.status-title{font-size:21px;margin:0 0 8px}.status-box{border-left:3px solid var(--a);background:var(--p2);padding:12px 14px;margin:12px 0}.status-box p:last-child{margin-bottom:0}
+.play-grid{grid-template-areas:"reports actions"}.play-reports{grid-area:reports}.play-actions{grid-area:actions}.think{margin:0;padding-left:20px;line-height:1.6}.field label.review-q{font:inherit;font-size:15px;letter-spacing:0;text-transform:none;color:inherit}.status-title{font-size:21px;margin:0 0 8px}.status-box{border-left:3px solid var(--a);background:var(--p2);padding:12px 14px;margin:12px 0}.status-box p:last-child{margin-bottom:0}
 .modal{position:fixed;inset:0;z-index:20;background:rgba(6,10,18,.8);display:grid;place-items:center;padding:16px}
 .doc{width:min(720px,100%);max-height:88vh;overflow:auto;background:#F4F1EA;color:#1d1d1d;padding:26px 28px;font-family:Georgia,serif}
 .doc h4{margin:14px 0 4px;font-size:15px}.doc .sub{font-style:italic;color:#555;margin-bottom:12px}
@@ -131,6 +131,10 @@ async function boot(){
       if(launch)return join();
       if(PID){try{await api('state');await refresh();startPoll();return}catch{PID=null;localStorage.removeItem(pidKey())}}
     }else{
+      // A student from the class link lands in the class's open session, when there is one.
+      if(launch?.sub&&launch.role==='student'&&launch.course){
+        try{const c=await api('course_session');if(c.code){location.replace(location.pathname+'?session='+encodeURIComponent(c.code)+'#lt='+encodeURIComponent(LT));return}}catch{}
+      }
       let saved=null;try{saved=JSON.parse(sessionStorage.getItem(soloKey)||'null')}catch{}
       if(saved){
         CODE=saved.code;PID=saved.pid;
@@ -238,7 +242,7 @@ function render(){
   if(s.phase==='lobby'){
     app.innerHTML=`<div class="grid"><div><div class="card"><div class="ey">Briefing</div>${CFG.briefing.map(p=>`<p>${esc(p)}</p>`).join('')}${who}</div></div>
     <div><div class="card"><div class="ey">Documents</div><p class="muted">Open them now or during play.</p><div class="row">${docButtons()}</div></div>
-    ${s.solo?'<div class="notice">Read the briefing and documents, then start your ten-minute run.</div><button class="btn pri" id="begin">Start simulation</button><div id="begin-error"></div>':'<div class="notice">Waiting for your instructor to start the clock. Every report arrives at the same moment for the whole room.</div>'}<div class="row"><button class="btn" id="rewt">See the introduction again</button></div></div></div>`;
+    ${s.solo?'<div class="notice">Read the briefing and documents, then start your ten-minute run.</div><button class="btn pri" id="begin">Start simulation</button><div id="begin-error"></div>':'<div class="notice">Waiting for your instructor to start the clock. Every report arrives at the same moment for every student.</div>'}<div class="row"><button class="btn" id="rewt">See the introduction again</button></div></div></div>`;
     wireDocs();
     document.getElementById('rewt').onclick=()=>{localStorage.removeItem(wtKey());wtStep=0;sig='';render()};
     if(s.solo)document.getElementById('begin').onclick=async()=>{
@@ -308,8 +312,26 @@ async function showReveal(){
   <div><div class="card"><div class="ey">Your decision</div><p>${esc(r.decisionLine)}</p></div>
   <div class="card"><div class="ey">${esc(r.readingLabel)}</div>${reading}</div>
   <div class="card"><div class="ey">Card sales lost by 12:05</div><h2>${fmt(r.lostTotal)}</h2>${win}</div>
-  <div class="card"><div class="ey">The documents again</div><p class="muted">The lines about Meridian are marked.</p><div class="row">${r.documents.map(d=>`<button class="btn" data-rdoc="${esc(d.id)}">${esc(d.title)}</button>`).join('')}</div></div></div></div>`;
+  <div class="card"><div class="ey">The documents again</div><p class="muted">The lines about Meridian are marked.</p><div class="row">${r.documents.map(d=>`<button class="btn" data-rdoc="${esc(d.id)}">${esc(d.title)}</button>`).join('')}</div></div></div></div>
+  ${(r.afterReveal||[]).length?`<div class="card"><div class="ey">Think about it</div><ol class="think">${r.afterReveal.map(q=>`<li>${esc(q)}</li>`).join('')}</ol></div>`:''}
+  ${reviewHTML(r.review)}`;
   app.querySelectorAll('[data-rdoc]').forEach(b=>b.onclick=()=>openDoc(b.dataset.rdoc,r.documents,true));
+  const send=document.getElementById('review-send');
+  if(send)send.onclick=async()=>{
+    const a1=document.getElementById('rv1').value.trim(),a2=document.getElementById('rv2').value.trim(),out=document.getElementById('review-error');
+    if(!a1||!a2){out.textContent='Answer both questions, then submit.';return}
+    send.disabled=true;out.textContent='';
+    try{await api('review',{reflection1:a1,reflection2:a2});revealed.review={...revealed.review,sent:true};showReveal()}
+    catch(e){out.textContent=e.message;send.disabled=false}
+  };
+}
+// Two questions for the instructor's debrief. Signed-in class students only.
+function reviewHTML(rv){
+  if(!rv||!rv.open)return '';
+  if(rv.sent)return `<div class="card" id="review"><div class="ey">Your review</div><p>Sent to your instructor. Thank you.</p></div>`;
+  return `<div class="card" id="review"><div class="ey">Your review</div><p class="muted">Your instructor reads these in the class debrief.</p>
+  ${rv.questions.map((q,i)=>`<div class="field"><label class="review-q" for="rv${i+1}">${esc(q)}</label><textarea id="rv${i+1}" rows="3" maxlength="1500"></textarea></div>`).join('')}
+  <div class="row"><button class="btn pri" id="review-send">Submit review</button></div><div id="review-error" class="muted"></div></div>`;
 }
 metricTimer=setInterval(updateMetrics,1000);
 window.addEventListener('pagehide',()=>{clearInterval(poll);clearInterval(metricTimer);clearTimeout(completionTimer)});

@@ -1,0 +1,22 @@
+/* Do We Switch? debrief bodies. Sizes in em off the shared slide base (kit/debrief.css). */
+.sw-names{display:flex;flex-wrap:wrap;gap:.4em;margin-top:.5em}
+.sw-names span{font:1em var(--mono);padding:.2em .55em;border:1px solid var(--line2);border-radius:.3em;color:var(--soft)}
+.sw-bars{display:flex;gap:.6em;align-items:flex-end;height:11em;margin:.6em 0 .4em}
+.sw-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:.3em;height:100%}
+.sw-col span{font:1em var(--mono);color:var(--dim)}
+.sw-stack{flex:1;width:100%;display:flex;flex-direction:column-reverse;background:var(--panel2);border:1px solid var(--line2);border-radius:.3em;overflow:hidden}
+.sw-stack i{display:block;width:100%}.sw-s{background:var(--o)}.sw-h{background:var(--g)}
+.sw-split{display:flex;gap:1.4em}
+.sw-colx{flex:1;display:flex;flex-direction:column;gap:.6em;padding:1em 1.2em;border:1px solid var(--line2);border-radius:.4em;background:var(--panel)}
+.sw-cs{border-top:.3em solid var(--o)}.sw-ch{border-top:.3em solid var(--g)}
+.sw-h2{font:600 1.1em var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.sw-reason b{font:1em var(--mono);color:var(--soft)}
+.sw-map{display:block;width:100%;max-width:44em;margin:0 auto}
+.sw-edge{stroke:var(--line2);stroke-width:2}
+.sw-node rect{fill:var(--panel2);stroke:var(--line2)}.sw-node text{fill:var(--ink);font:11px var(--sans)}
+.sw-fault rect{fill:var(--l-bg);stroke:var(--l);stroke-width:2}.sw-fault text{fill:var(--l-t);font:600 11px var(--sans)}
+.sw-read{display:flex;gap:1.4em}
+.sw-rg{flex:1;display:flex;flex-direction:column;gap:.4em;padding:1em 1.2em;border:1px solid var(--line2);border-radius:.4em;background:var(--panel)}
+.sw-rg b{font:600 3.2em var(--mono);line-height:1;color:var(--ink)}.sw-rg small{color:var(--dim)}
+.sw-q{display:block;color:var(--dim);font-size:1em;margin-top:.5em}
+@media(max-width:700px){.sw-split,.sw-read{flex-direction:column}}
