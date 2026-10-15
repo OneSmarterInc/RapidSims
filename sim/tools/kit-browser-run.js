@@ -96,7 +96,12 @@ function token({ sub, name, role, course, mode = 'play' }) {
     // Two finished runs arrive (positions and reviews), as the student pages send them.
     const ana = token({ sub: 'ana', name: 'Ana Lopez', role: 'student', course: 'crs_A' }), ben = token({ sub: 'ben', name: 'Ben Ode', role: 'student', course: 'crs_A' });
     const post = (ep, body, lt) => fetch(`${origin}/sim01/api/${ep}`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-launch-token': lt }, body: JSON.stringify(body) }).then(r => r.json());
-    await post('session', { action: 'join', code }, ben);
+    // Rehearse links carry the session in the query and the launch in the fragment.
+    const benPage = await open('student-ben');
+    await benPage.goto(`${origin}/sim01/?session=${code}#lt=${encodeURIComponent(ben)}`);
+    await benPage.locator('#nx').waitFor({ timeout: 15000 });
+    ok(!/wasn't accepted/.test(await benPage.locator('body').innerText()), 'The link is accepted');
+    ok(true, 'A link with ?session= and #lt= opens the sim signed in');
     const P = (r1, a1, r2, a2, r3, a3) => [{ reading: r1, action: a1, tripwire: 'If a second array fails.' }, { reading: r2, action: a2, tripwire: 'If it crosses arrays.' }, { reading: r3, action: a3, tripwire: 'If the audit is clean.' }];
     const anaRun = P('hardware', 'image_first', 'both', 'isolate', 'both', 'notify'), benRun = P('hardware', 'restore_now', 'hardware', 'restore_clean', 'hardware', 'restore_clean');
     await post('session', { action: 'submit', code, groupId: 'platform:ana', participantId: 'platform:ana', positions: anaRun, phase: 3, done: true, coverageEarnedAt: 0, coveragePrivate: true, privateCount: 1 }, ana);
