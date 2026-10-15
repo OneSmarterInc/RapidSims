@@ -231,7 +231,17 @@ async function init(){
     // Always bind to the signed account; a shared browser may remember another
     // student's participant ID. The server reuses this account's existing place.
     try{
-      const d=await sessionApi({action:'join',code:INITIAL_SESSION});
+      let d;
+      try{d=await sessionApi({action:'join',code:INITIAL_SESSION})}
+      catch(e){
+        // An old link to a closed class: join the course's current class instead.
+        if(e.code!=='session_closed'||LAUNCH.role!=='student'||!LAUNCH.course)throw e;
+        const now=await sessionApi({action:'course_session'}).catch(()=>({}));
+        if(!now.code||now.code===INITIAL_SESSION)throw Object.assign(new Error('This class has closed. Your instructor has your team’s saved decisions.'),{code:'session_closed'});
+        INITIAL_SESSION=now.code;S.sessionCode=now.code;
+        const p=new URLSearchParams(location.search);p.set('session',now.code);history.replaceState(null,'',location.pathname+'?'+p.toString());
+        d=await sessionApi({action:'join',code:INITIAL_SESSION});
+      }
       S.participantId=d.participantId;S.session=d.session;S.me=d.me;
       localStorage.setItem('m03-pid',S.participantId);
     }catch(e){S.error=e.message;renderJoin();return}
