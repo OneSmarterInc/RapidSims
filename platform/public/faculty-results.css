@@ -73,8 +73,8 @@
 .faculty-results .fr-session-links{display:flex;gap:6px}
 .faculty-results .fr-q{display:block;font:italic 13px/1.4 var(--serif);color:var(--fr-muted);margin-bottom:2px}
 .faculty-results .fr-band{display:inline-block;font:600 11px/1.5 var(--mono);letter-spacing:.04em;padding:3px 8px;border-radius:2px;margin-bottom:7px;border:1px solid}
-.faculty-results .fr-band-strong{background:#E7F5EC;border-color:#9FD1B3;color:#1F6B43}
-.faculty-results .fr-band-pilot,.faculty-results .fr-band-middle{background:#FBF2DC;border-color:#E6C77A;color:#7A5300}
-.faculty-results .fr-band-data_no_room{background:#FCEBDF;border-color:#EAB08B;color:#8A4317}
-.faculty-results .fr-band-weak{background:#F9E9EC;border-color:#E3B5C0;color:#8E3449}
+.faculty-results .fr-tone-g{background:#E7F5EC;border-color:#9FD1B3;color:#1F6B43}
+.faculty-results .fr-tone-y{background:#FBF2DC;border-color:#E6C77A;color:#7A5300}
+.faculty-results .fr-tone-o{background:#FCEBDF;border-color:#EAB08B;color:#8A4317}
+.faculty-results .fr-tone-l{background:#F9E9EC;border-color:#E3B5C0;color:#8E3449}
 .faculty-results .fr-more-text summary{cursor:pointer;font:11px var(--mono);color:var(--amber)}

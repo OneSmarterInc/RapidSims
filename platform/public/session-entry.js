@@ -7,6 +7,7 @@
   const q = new URLSearchParams(location.search);
   const sim = q.get('sim') || '';
   const sessionTitles = {
+    'rapid-01-disaster': 'Disaster or Breach?',
     'rapid-03-midland': 'Midland Equipment',
     'rapid-04-whose-number': 'Whose Number Is Right?',
     'rapid-05-approve': 'Would You Approve This?',

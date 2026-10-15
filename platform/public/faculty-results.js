@@ -51,14 +51,15 @@
   const when=t=>t?new Date(t).toLocaleString(undefined,{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'';
   // Older sessions were named after the sim; their date names them instead.
   const sessionName=(s,sim)=>{const n=String(s.name||'').trim();return !n||n===sim.title?when(s.createdAt||s.latestAt)||'Class session':n;};
+  const TONE={strong:'g',pilot:'y',middle:'y',data_no_room:'o',weak:'l'};
   function resultHTML(t) {
-    const band=BANDS[t.year3Band], text=t.overall||'Result saved.', short=firstSentence(text);
-    return `${band?`<div class="fr-band fr-band-${esc(t.year3Band)}">${esc(band)}</div>`:''}<p class="fr-outcome">${esc(short)}</p>${short.length<text.length?`<details class="fr-more-text"><summary>More</summary><p class="fr-outcome">${esc(text)}</p></details>`:''}`;
+    const band=t.bandLabel||BANDS[t.year3Band], tone=t.bandTone||TONE[t.year3Band]||'', text=t.overall||'Result saved.', short=firstSentence(text);
+    return `${band?`<div class="fr-band fr-tone-${esc(tone)}">${esc(band)}</div>`:''}<p class="fr-outcome">${esc(short)}</p>${short.length<text.length?`<details class="fr-more-text"><summary>More</summary><p class="fr-outcome">${esc(text)}</p></details>`:''}`;
   }
   function sessionsHTML(sessions, sim, links) {
     if(!Array.isArray(sessions)||!sessions.length)return '';
     return `<div class="fr-section"><div><h2>Sessions</h2><p>Newest first. Click a session to see its teams, their results and each member’s review.</p></div></div>
-      ${sessions.map(s=>{const name=sessionName(s,sim),stamp=when(s.createdAt||s.latestAt),n=s.teams.length,word=s.teams.some(t=>t.team)?'team':'student';
+      ${sessions.map(s=>{questions=s.questions||REVIEW_QUESTIONS[sim.id]||[];const name=sessionName(s,sim),stamp=when(s.createdAt||s.latestAt),n=s.teams.length,word=s.teams.some(t=>t.team)?'team':'student';
         return `<details class="fr-panel fr-session"><summary class="fr-session-head"><span class="fr-session-name"><b>${esc(name)}</b>${stamp&&stamp!==name?` <span class="fr-meta">${esc(stamp)}</span>`:''} · ${n} ${word}${n===1?'':'s'}</span>
           ${links?`<span class="fr-session-links"><a class="btn sm" data-fr-open="${esc(s.code)}" data-fr-tab="results" href="${esc(links(s.code,'results'))}">Results</a><a class="btn sm" data-fr-open="${esc(s.code)}" data-fr-tab="debrief" href="${esc(links(s.code,'debrief'))}">Debrief</a></span>`:''}</summary>
         <table class="fr-table fr-session-table"><caption class="fr-sr">${esc(name)} results</caption><thead><tr><th scope="col">${word==='team'?'Team':'Student'}</th><th scope="col">Result</th><th scope="col">Members and reviews</th></tr></thead><tbody>

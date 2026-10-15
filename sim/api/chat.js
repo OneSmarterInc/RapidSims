@@ -26,7 +26,7 @@ module.exports = async (req, res) => {
 
   const messages = [
     { role: 'user', content: `Room transcript so far:\n${roomText || '(nothing yet)'}\n\n---` },
-    { role: 'assistant', content: 'Understood. I am on the bridge.' }
+    { role: 'assistant', content: 'Understood. I am on the call.' }
   ];
   thread.forEach(m => messages.push({
     role: m.who === 'you' ? 'user' : 'assistant',
@@ -34,7 +34,7 @@ module.exports = async (req, res) => {
   }));
   messages.push({
     role: 'user',
-    content: (priv ? '[Privately, just the two of you] ' : '[On the bridge, in front of everyone] ') + message
+    content: (priv ? '[Privately, just the two of you] ' : '[On the call, in front of everyone] ') + message
   });
 
   try {

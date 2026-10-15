@@ -1,7 +1,7 @@
 // The whole debrief, including the resolution. None of this exists in the
 // browser until the student has finished all three decisions.
 const { checkAccess, requireKey, anthropic, body } = require('../lib/guard.js');
-const { reportCompletion } = require('../lib/launch.js');
+const { report } = require('../lib/completion.js');
 const S = require('../lib/scenario.js');
 
 const EVIDENCE = [
@@ -93,7 +93,7 @@ ${arcText}`;
   // --- coverage branch ---
   let coverage;
   if (coverageEarnedAt === 0) {
-    coverage = { tone: 'ok', text: `You got it at Hour 4${coveragePrivate ? ', and you took her aside to do it' : ', on the bridge, in front of the people it embarrassed'}. Almost nobody does. That admission was available all night and it required a question that already understood what it was looking for — not "are we secure", but where the silence was worth less. From that moment you weren't reasoning from her reassurance, you were reasoning from the shape of what she couldn't see. When corruption turned up on a second array sixteen hours later, you were the only person in the room who wasn't surprised.` };
+    coverage = { tone: 'ok', text: `You got it at Hour 4${coveragePrivate ? ', and you took her aside to do it' : ', on the call, in front of the people it embarrassed'}. Almost nobody does. That admission was available all night and it required a question that already understood what it was looking for — not "are we secure", but where the silence was worth less. From that moment you weren't reasoning from her reassurance, you were reasoning from the shape of what she couldn't see. When corruption turned up on a second array sixteen hours later, you were the only person in the room who wasn't surprised.` };
   } else if (coverageEarnedAt === 1) {
     coverage = { tone: '', text: `You got it at Hour 20 — but by then she was volunteering it, because a second array had lit up and withholding it would have been indefensible. That's information arriving because events forced it, not because you went and found it. Worth asking what you'd have done differently with those sixteen hours.` };
   } else if (coverageEarnedAt === 2) {
@@ -108,21 +108,8 @@ ${arcText}`;
   // response is sent, so a fire-and-forget request may never leave the machine.
   // The wait is one round trip and the student is reading the debrief anyway.
   if (req.launch) {
-    const readingAtEnd = label(S.READINGS, positions[positions.length - 1].reading);
-    const firedAndIgnored = verdicts.filter(v => v.verdict && !v.ok).length;
-    await reportCompletion({
-      launch: req.launch,
-      summary: `Finished all three decisions. Final reading: ${readingAtEnd}.`,
-      metrics: {
-        'Final reading': readingAtEnd,
-        'Sequencing': anyIrreversibleEarly ? 'Acted irreversibly before Day 3' : 'Kept options open',
-        'Coverage admission': coverageEarnedAt === null ? 'Never obtained'
-          : (S.PHASES[coverageEarnedAt] ? S.PHASES[coverageEarnedAt].label : 'Obtained')
-            + (coveragePrivate ? ' (privately)' : ''),
-        'Went off the bridge': privateCount,
-        'Tripwires not acted on': firedAndIgnored
-      }
-    });
+    await report(req.launch, b, { positions, coverageEarnedAt, coveragePrivate, privateCount,
+      firedAndIgnored: verdicts.filter(v => v.verdict && !v.ok).length, revision: 1 });
   }
 
   return res.status(200).json({

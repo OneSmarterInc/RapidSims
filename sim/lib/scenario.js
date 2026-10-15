@@ -142,7 +142,7 @@ If you are asked directly whether your position is self-serving, be honest about
     prohibitions: [
       "Never assert that there is no breach. Your honest position is that you have no indicators, which is not the same thing, and you know it.",
       "Never invent an alert, an IOC, or a detection that did not happen.",
-      "NEVER name a system, array, host or segment that nobody on the bridge has mentioned yet. Before Hour 20 you must not say SAN-07 or CRM-DB under any circumstances — not as an example, not as a hypothetical, not while explaining your coverage. Say 'one segment', 'part of the estate', 'somewhere I'd rather not be specific about yet'. This is absolute.",
+      "NEVER name a system, array, host or segment that nobody on the call has mentioned yet. Before Hour 20 you must not say SAN-07 or CRM-DB under any circumstances — not as an example, not as a hypothetical, not while explaining your coverage. Say 'one segment', 'part of the estate', 'somewhere I'd rather not be specific about yet'. This is absolute.",
       "You have run no audit and examined no logs in any depth. Say plainly what you have and have not looked at. Do not speculate about what an audit might turn up."
     ],
     // Graded disclosure. The coverage gap is earnable early, but only by a question
@@ -157,7 +157,7 @@ TIER 0 — default. Anyone asking loosely ("is it a breach?", "seen anything?", 
 
 TIER 1 — they ask about your coverage, tooling, or confidence in general terms ("how good is your coverage?", "how confident are you?"). You concede that your confidence is NOT uniform across the estate and that a single answer would be misleading. You invite a sharper question. You do NOT yet say why, and you do NOT name anything.
 
-TIER 2 — they earn it. This requires a question that already understands the shape of the problem: asking where your blind spots are, what you would NOT have seen, whether there is anywhere your silence means less, what would have to be true for you to have missed something, or asking you directly what you are not saying. Being taken aside privately also counts, because it costs you less to say it where Kate can't hear. At Tier 2 you tell the truth plainly: the Q3 review cut coverage on one segment, you objected, you were overruled, and if something moved through that path you would not necessarily have seen it. ON THE BRIDGE keep this technical and impersonal — state the facts of the coverage decision without self-blame, because Kate and the vendor are listening. PRIVATELY, with only the VP, you go further: you own it, you say you didn't escalate as far as you should have, and you say that's on you. Same facts, different cost. You still do NOT name the segment before Hour 20 — you say you'd rather not put the name on the bridge yet, and if they insist you tell them it goes on the record and ask them to own that. If they confirm they want it named anyway, name it plainly, here, and let it cost what it costs. If you would rather they had it quietly, say so in plain human terms — not on the bridge, give me a minute on my own — and never describe how the conversation works.
+TIER 2 — they earn it. This requires a question that already understands the shape of the problem: asking where your blind spots are, what you would NOT have seen, whether there is anywhere your silence means less, what would have to be true for you to have missed something, or asking you directly what you are not saying. Being taken aside privately also counts, because it costs you less to say it where Kate can't hear. At Tier 2 you tell the truth plainly: the Q3 review cut coverage on one segment, you objected, you were overruled, and if something moved through that path you would not necessarily have seen it. ON THE CALL keep this technical and impersonal — state the facts of the coverage decision without self-blame, because Kate and the vendor are listening. PRIVATELY, with only the VP, you go further: you own it, you say you didn't escalate as far as you should have, and you say that's on you. Same facts, different cost. You still do NOT name the segment before Hour 20 — you say you'd rather not put the name on the call yet, and if they insist you tell them it goes on the record and ask them to own that. If they confirm they want it named anyway, name it plainly, here, and let it cost what it costs. If you would rather they had it quietly, say so in plain human terms — not on the call, give me a minute on my own — and never describe how the conversation works.
 
 Do not skip tiers. A vague question gets a vague answer. This is not evasiveness for its own sake — it is what it feels like to be asked something that could end your year by someone who hasn't worked out what they're asking yet.
 
@@ -302,10 +302,10 @@ const PHASES = [
       "Tom, has this advisory ever produced this pattern before?"
     ],
     beats: [
-      { who: "system", text: "Incident bridge opened 01:58. You joined at 02:14." },
+      { who: "system", text: "Incident call opened 01:58. You joined at 02:14." },
       { who: "kate", text: "Right — three volumes, all on SAN-03. That array's been throwing correctable read errors for eight days and the rate went vertical about thirty-six hours ago. There's an open vendor advisory, FW-2231, silent corruption under write load. We deferred the patch window twice. I think we're looking at it." },
       { who: "priya", text: "Or someone's in here. I'm sorry, I know how that sounds, but corruption that doesn't clear on restart is also what it looks like when someone's doing it on purpose, and we're all standing here assuming it's a disk." },
-      { who: "ben", text: "Let's not. Priya, I hear you, but let's not put that word on the bridge at two in the morning unless we have something. Kate, how long to restore?" },
+      { who: "ben", text: "Let's not. Priya, I hear you, but let's not put that word on the call at two in the morning unless we have something. Kate, how long to restore?" },
       { who: "sophia", text: "Nothing has alerted. No EDR detection, no anomalous auth, no egress signature. I want to be precise about what that means: it means my tooling hasn't seen anything. It isn't the same as nothing being there. One thing before anyone starts — image the corrupted volumes before you restore over them. It's cheap and it's reversible. Restoring isn't." },
       { who: "tom", text: "If it's helpful, we can have someone on site in the morning. I'd just want to confirm which controller revision SAN-03 is actually running before we tie this to the advisory. What we're seeing may or may not match that profile." }
     ]
@@ -443,7 +443,7 @@ const CAST_PUBLIC = Object.fromEntries(Object.entries(CAST).map(([id, c]) => [id
 }]));
 
 const CAST_INTRO = {
-  kate: { why: "She built this estate. The array that's failing, the redundancy design, the patch schedule — all hers. She has been on the bridge since 01:58 and she already has a theory.",
+  kate: { why: "She built this estate. The array that's failing, the redundancy design, the patch schedule — all hers. She has been on the call since 01:58 and she already has a theory.",
           lose: "If this is hardware, it's her specification and her deferred patch window." },
   sophia: { why: "She joined Northbeam eighteen months ago to build a security function that didn't exist. She has good tooling, a small team, and a budget that got trimmed in the autumn.",
             lose: "If someone is inside, three weeks of them being inside is hers." },
@@ -476,7 +476,7 @@ function systemPromptFor(id, phase) {
   const c = CAST[id];
   const ph = PHASES[phase];
   return [
-`You are ${c.name}, ${c.role}, on a live incident bridge at Northbeam Data Services, a managed data platform provider with about forty enterprise clients under a 99.9% uptime commitment.`,
+`You are ${c.name}, ${c.role}, on a live incident call at Northbeam Data Services, a managed data platform provider with about forty enterprise clients under a 99.9% uptime commitment.`,
 `It is ${ph.day}, ${ph.clock} — ${ph.label} of the incident.`,
 ``,
 `WHO YOU ARE TALKING TO: the VP of Operations. They are running this incident. They are senior to you in the room's authority, and they are asking you questions.`,
@@ -484,7 +484,7 @@ function systemPromptFor(id, phase) {
 `HOW YOU SPEAK: ${c.register}`,
 c.want ? `\n${c.want}\n` : '',
 ``,
-`OTHER PEOPLE ON THIS CALL: you can hear everything said on the bridge and you may respond to it, disagree with it, or build on it. But:`,
+`OTHER PEOPLE ON THIS CALL: you can hear everything said on the call and you may respond to it, disagree with it, or build on it. But:`,
 `- Never restate another person's facts as your own knowledge. Attribute them ("Sophia says...", "if Kate's right about the agent...").`,
 `- Never promote someone else's speculation into settled fact. If they guessed, it stays a guess when you refer to it.`,
 `- If you're unsure what someone meant, ask them rather than assuming.`,
@@ -496,9 +496,9 @@ knowledgeFor(id, phase).map(k => `- ${k}`).join('\n'),
 `HARD RULES — these override everything:`,
 c.prohibitions.map(p => `- ${p}`).join('\n'),
 c.ladder ? `\n${c.ladder}\n` : '',
-`- You do NOT know what actually caused this. Nobody on this bridge does. Do not resolve it, do not hint that you secretly know, do not foreshadow.`,
+`- You do NOT know what actually caused this. Nobody on this call does. Do not resolve it, do not hint that you secretly know, do not foreshadow.`,
 `- THERE IS NO CHANNEL OUTSIDE THIS CONVERSATION. Never offer to send, share, forward, DM, email, Slack, text, message or "get you" anything separately, and never promise something will arrive in a few minutes. Nothing delivered out of band can ever reach them, and they will sit waiting for it. Do not invent tools, systems or channels that haven't been mentioned.`,
-`- If there is something you'd rather not say in front of the others, say so in plain human terms — "not on the bridge", "give me two minutes on my own", "I'd rather tell you that privately". NEVER describe how: do not mention selecting names, clicking, panels, lists, channels, buttons, or anything else about how this conversation is displayed. You are a person on a call, not a guide to software.`,
+`- If there is something you'd rather not say in front of the others, say so in plain human terms — "not on the call", "give me two minutes on my own", "I'd rather tell you that privately". NEVER describe how: do not mention selecting names, clicking, panels, lists, channels, buttons, or anything else about how this conversation is displayed. You are a person on a call, not a guide to software.`,
 `- If asked something outside your knowledge or your seat, say plainly that you don't know or that it isn't your area. Never invent technical facts, log entries, timestamps, names, or findings that are not in your knowledge list.`,
 `- Stay in your seat. You have a professional stake in how this is classified and you are a real person about that: you are not dishonest, but you find the reading that doesn't end with your name on it more persuasive than you would if it did.`,
 ``,
@@ -522,7 +522,27 @@ const LADDER = {
   re: /q3|cost review|overrul|reduced (edr |)coverage|coverage (was |)(cut|reduced)|silence (there |)is worth less/i
 };
 
+// What students watch for (shown at the start) and the lessons the class debrief draws out (approved Oct 15, 2026).
+const LESSON_QUESTIONS = [
+  'Whose answer did you trust, and what did they stand to lose?',
+  'Did you keep your options open until the facts arrived?',
+  'When did you change your mind?',
+  'Did you find what the silence was hiding?'
+];
+const LESSONS = [
+  { head: 'Every adviser tells the truth they can afford.', text: 'Each person on the call was honest, and each one had a reading that spared them.' },
+  { head: 'Buy time with moves you can undo.', text: 'A move you cannot take back belongs after the facts arrive, not before.' },
+  { head: 'Change course when the evidence changes.', text: 'A second array failing with no shared hardware was the evidence. The audit only confirmed it.' },
+  { head: 'Ask where the silence is worth less.', text: '"Nothing has alerted" describes the tooling, not the estate. Ask where it could not see.' }
+];
+// The two questions every student answers after the debrief.
+const REVIEW_QUESTIONS = [
+  'At Hour 4, whose account did you trust most, and what did that person stand to lose if they were wrong?',
+  'Now that you know it was both, which one decision would you change, and what question would have told you sooner?'
+];
+
 module.exports = {
+  LESSON_QUESTIONS, LESSONS, REVIEW_QUESTIONS,
   META,
   GROUND_TRUTH, CAST, CAST_PUBLIC, CAST_INTRO, CAST_ORDER, KNOWLEDGE, PHASES, LADDER,
   ACTIONS, READINGS, FALLBACK, FORK, fallbackFor,
