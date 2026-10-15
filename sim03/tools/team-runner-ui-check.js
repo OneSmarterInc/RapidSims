@@ -40,7 +40,7 @@ function data({ runner = 'ann', lead = 'ann', pid = 'ann', revision = 0, state =
 run("C={annualBudget:9,runMinimum:3,lineMaximum:3,lines:['run','uptime','capacity','connect','features'].map(id=>({id,label:id})),coldOpen:['Fixture company'],reflectionPrompts:['First reflection','Second reflection'],buyers:{authored:true}}; S.participantId='ann';");
 (async () => {
   response = data({ state: 'lobby' }); await run('pollSession(true)');
-  assert(html.includes('Who will run the simulation for your team?'));
+  assert(html.includes('Who enters the decisions for your team?'));
   assert(html.includes('id="assignRunnerBtn"'));
   const select = document.getElementById('runnerSelect'); select.value = 'ben'; select.onchange();
   response = req => req.action === 'set_runner' ? { ok: true } : data({ runner: 'ben', revision: 1, state: 'lobby' });

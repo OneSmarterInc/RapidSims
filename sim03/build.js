@@ -100,7 +100,7 @@ if (!index.includes("location.assign(BASE+'/launch.html')")) {
 
 for (const marker of ['runSessionEntry','Run a facilitated session',"platform+'/api/launch?'","mode:'session'","LAUNCH.role==='faculty'"]) if (!index.includes(marker)) refuse('faculty session-entry marker missing: ' + marker);
 for (const marker of [
-  'Join a facilitated session', 'Waiting for team assignment', 'function safeToRerender()', 'Team mode · read-only',
+  'Join a facilitated session', 'Your instructor is placing you on a team.', 'function safeToRerender()', 'Team mode · read-only',
   "if(S.session&&!member)await saveRun({reflection1:S.reflection1,reflection2:S.reflection2,done:true})",
   "C.buyers?.authored===false", "const committed=!!(S.viewCommitted||S.teamRun?.strategicView||S.year1Outcome)"
 ]) if (!index.includes(marker)) refuse('team/conformance student marker missing: ' + marker);

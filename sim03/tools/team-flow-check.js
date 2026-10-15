@@ -11,7 +11,7 @@ assert(finish.includes('beforeRun?.done'));
 assert(!finish.includes('await store.setRun('), 'completion must not bypass the shared transaction');
 assert(outcome.includes("'runner_only'"));
 assert(outcome.includes('runnerOf('));
-for(const marker of ['Join a facilitated session', 'Waiting for team assignment', 'your team can decide which one student will run the simulation', 'Who will run the simulation for your team?', 'Assign runner', 'Team mode · read-only', 'same team result will appear here', 'safeToRerender', 'viewCommitted', 'expectedRunnerId', 'runnerRevision']) assert(student.includes(marker), marker);
+for(const marker of ['Join a facilitated session', 'Your instructor is placing you on a team.', 'who enters your team’s decisions', 'Who enters the decisions for your team?', 'Change who enters the decisions', 'Team mode · read-only', 'Your team’s result appears here', 'safeToRerender', 'viewCommitted', 'expectedRunnerId', 'runnerRevision']) assert(student.includes(marker), marker);
 assert(!student.includes('I will run this team'), 'ordinary members must not silently change team leadership');
 for(const marker of ['Resume session code', 'startPresent', "classList.contains('present')", 'dotcount', 'const savedCode=', 'Classroom readiness', 'Pilot calibration and debrief notes', 'not a correct answer or a grade', 'rehearse one Team-mode run']) assert(instructor.includes(marker), marker);
 const workspace=fs.readFileSync(path.join(root,'public','faculty-workspace.js'),'utf8');

@@ -127,23 +127,23 @@ const STEPS=['Brief','People','Position','View','Year 1','Outcome','Year 2','Eve
 function friendlyError(code,status){
   const m={
     strategic_view_locked:'Your Year 1 sentence was committed with the Year 1 budget and stays as written.',
-    year1_locked:'Year 1 has already been committed and cannot be changed after its outcome is revealed.',
-    year2_locked:'Year 2 has already been committed and cannot be changed after its events are revealed.',
+    year1_locked:'Year 1 is committed. Its outcome is now part of Midland’s story.',
+    year2_locked:'Year 2 is committed. Its events are now part of Midland’s story.',
     session_not_running:'Your instructor has not started the session yet.',
     session_paused:'Your instructor has paused the session.',
-    captain_only:'Only the selected simulation runner can commit this choice.',
-    runner_only:'Only the selected simulation runner can submit or advance the shared run.',
-    runner_changed:'Runner control changed. Review the current selection before continuing.',
+    captain_only:'Your teammate who enters the decisions commits this choice.',
+    runner_only:'Your teammate who enters the decisions moves the team forward.',
+    runner_changed:'Your team changed who enters the decisions. Check the new choice, then carry on.',
     runner_must_be_teammate:'Choose a member of your own team.',
-    team_lead_only:'Only your team lead can assign the simulation runner.',
+    team_lead_only:'Your team lead chooses who enters the decisions.',
     run_already_completed:'The shared team run is complete.',
-    team_run_not_complete:'Wait for your team runner to reach the close before submitting your reflection.',
+    team_run_not_complete:'Your review for Tom opens when your team reaches the end.',
     not_joined:'Rejoin the session before continuing.',
     team_session_open:'Your instructor has set this simulation up for teams. Reload the page to join your team.'
   };
   if(/^budget_must_equal_\d+$/.test(code))return `The allocation must equal exactly $${code.split('_').pop()}M.`;
-  if(/^run_minimum_\d+$/.test(code))return `Run cannot be below $${code.split('_').pop()}M.`;
-  if(/^(uptime|capacity|connect|features)_maximum_\d+$/.test(code))return `That line cannot exceed $${code.split('_').pop()}M per year.`;
+  if(/^run_minimum_\d+$/.test(code))return `Run needs at least $${code.split('_').pop()}M.`;
+  if(/^(uptime|capacity|connect|features)_maximum_\d+$/.test(code))return `That line takes at most $${code.split('_').pop()}M a year.`;
   return m[code]||'';
 }
 
@@ -180,11 +180,11 @@ function teamBanner(){
   if(!S.session)return '';
   const mode=S.session.mode==='team'?'Team':'Individual';
   if(S.session.mode!=='team')return `<div class="team"><b>${mode} session ${esc(S.session.code)}</b><br>You can commit this run.</div>`;
-  if(!S.me?.groupId)return `<div class="team"><b>Waiting for team assignment · session ${esc(S.session.code)}</b><br>Your instructor will place you on a team. Once assigned, your team can decide which one student will run the simulation. Stay on this page; it updates automatically.</div>`;
+  if(!S.me?.groupId)return `<div class="team"><b>Your instructor is placing you on a team.</b><br>This page updates by itself. When your team is set, you will see who enters your team’s decisions.</div>`;
   const teamName=esc(S.me?.teamLabel||'Your team');
-  const roster=S.mates.length?S.mates.map(x=>esc(x.name)+(x.isCaptain?' (team lead)':'')+(x.isRunner?' (runner)':'')).join(' · '):'Waiting for teammates';
+  const roster=S.mates.length?S.mates.map(x=>esc(x.name)+(x.isCaptain?' (team lead)':'')+(x.isRunner?' (enters the decisions)':'')).join(' · '):'Waiting for teammates';
   const commit=S.teamRun?.year1?`Year 1 committed${S.teamRun.updatedAt?' · '+new Date(S.teamRun.updatedAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):''}`:'Year 1 not committed yet';
-  const control=S.canSubmit?'You are the selected runner. Only you can submit and advance this shared simulation.':`${teamRunner()?.name||'The selected runner'} is operating the simulation. Your screen follows the shared decisions and results.`;
+  const control=S.canSubmit?'You enter the decisions for your team. Your teammates see each step on their screens.':`${teamRunner()?.name||'Your teammate'} enters the decisions for your team. Your screen follows each step.`;
   return `<div class="team"><b>${teamName} · session ${esc(S.session.code)}</b><br>${roster}<br>${esc(commit)} · ${esc(control)}${runnerPicker()}</div>`;
 }
 function notice(msg,bad=false){return `<div class="notice ${bad?'error':''}">${esc(msg)}</div>`}
@@ -334,7 +334,7 @@ function blocked(){return !!(S.session&&(S.session.state!=='running'||S.session.
 async function saveRun(patch){
   if(!S.session)return {ok:true};
   const shared=['strategicView','year1','year2','screen','year2Event'].some(k=>patch[k]!==undefined);
-  if(!S.canSubmit&&shared)throw new Error('Only the selected simulation runner can submit or advance the shared run.');
+  if(!S.canSubmit&&shared)throw new Error('Your teammate who enters the decisions moves the team forward.');
   try{
     const d=await sessionApi({action:'submit',code:S.sessionCode,participantId:S.participantId,runnerRevision:S.runnerRevision,...patch});
     S.stateApplied=++S.stateRequest; // Ignore state reads started before this write.
@@ -357,19 +357,19 @@ function teamLead(){return (S.mates||[]).find(x=>x.isCaptain)||null}
 function teamProgressText(){
   const r=S.teamRun||{};
   if((r.phase||0)>=3)return 'The shared run is complete. The same team result is ready here.';
-  if(r.year2)return 'Year 2 is committed. Your runner is moving through the final consequences.';
-  if(r.year1)return 'Year 1 is committed. Your runner is continuing the shared run.';
-  if(r.strategicView)return 'The Year 1 sentence is committed. Your runner is continuing the shared run.';
-  return 'Your runner is reading the brief and setting the Year 1 budget.';
+  if(r.year2)return 'Year 2 is committed. Your team is moving through the final consequences.';
+  if(r.year1)return 'Year 1 is committed. Your team is moving on to Year 2.';
+  if(r.strategicView)return 'Your Year 1 sentence is in. Your team is setting the Year 1 budget.';
+  return 'Your team is reading the brief and setting the Year 1 budget.';
 }
 function teamRunner(){return S.mates.find(x=>x.id===S.runnerId)||null}
 function runnerPicker(){
   if(!S.canAssignRunner)return '';
   const value=S.runnerChoice||S.runnerId;
-  return `<div class="field"><label for="runnerSelect">Who will run the simulation for your team?</label>
+  return `<div class="field"><label for="runnerSelect">Who enters the decisions for your team?</label>
     <select id="runnerSelect">${S.mates.map(m=>`<option value="${esc(m.id)}" ${m.id===value?'selected':''}>${esc(m.name)}${m.isCaptain?' (team lead)':''}</option>`).join('')}</select>
-    <div class="hint">Agree as a team; the team lead assigns the runner. Changing the runner keeps all submitted decisions and progress. Unsubmitted drafts stay on the previous device.</div>
-    <div class="actions"><button type="button" class="btn" id="assignRunnerBtn" ${value===S.runnerId?'disabled':''}>Assign runner</button></div></div>`;
+    <div class="hint">Agree as a team; the team lead makes the change. Every committed decision and all progress carry over.</div>
+    <div class="actions"><button type="button" class="btn" id="assignRunnerBtn" ${value===S.runnerId?'disabled':''}>Change who enters the decisions</button></div></div>`;
 }
 function wireRunnerPicker(){
   const select=document.getElementById('runnerSelect'),button=document.getElementById('assignRunnerBtn');
@@ -393,16 +393,16 @@ function renderUnassignedLobby(){
   shell(`<div class="eyebrow">Waiting for group assignment</div><h2>You are in the session. The instructor creates the teams.</h2>
     <p class="lede">${esc(teamText)}</p>
     ${sessionGate()}
-    <div class="card" style="margin-top:22px"><h3>What happens next</h3><p>1. Faculty releases access from the course page.</p><p>2. Students open the class link and appear as joined.</p><p>3. Faculty creates teams and chooses the team lead / runner.</p><p>4. Only that runner advances the simulation. Other team members watch and discuss.</p></div>
-    ${notice('Do not start a separate run. Your group will appear here after the instructor assigns teams.')}`);
+    <div class="card" style="margin-top:22px"><h3>What happens next</h3><p>1. Faculty releases access from the course page.</p><p>2. Students open the class link and appear as joined.</p><p>3. Your instructor makes the teams and chooses who enters each team’s decisions.</p><p>4. That teammate enters the decisions. Everyone sees each step and helps decide.</p></div>
+    ${notice('Your team appears here when your instructor sets the teams.')}`);
 }
 function renderTeamLobby(){
   const runner=teamRunner(),lead=teamLead(),teamName=S.me?.teamLabel||'Your team';
   const runnerName=runner?.name||lead?.name||'your team lead';
   shell(`<div class="eyebrow">Team lobby</div><h2>${esc(teamName)} has one shared run.</h2>
-    <p class="lede">The team lead / runner will run the simulation on one screen. Everyone else should discuss decisions with that person, not start a separate run.</p>
-    <div class="card" style="margin-top:22px"><h3>Selected runner</h3><p>${runner?`<b>${esc(runner.name)}</b> will run the simulation for this team.`:'Waiting for the instructor to choose a team lead / runner.'}</p><p class="hint">Only the selected runner gets the Start/Continue controls after faculty starts the session.</p></div>
-    ${!S.canSubmit?notice(`Your team lead / runner is ${runnerName}. Contact ${runnerName} and play together on that person's screen.`):''}
+    <p class="lede">One teammate enters the decisions. Everyone sees each step on their own screen and helps decide.</p>
+    <div class="card" style="margin-top:22px"><h3>Selected runner</h3><p>${runner?`<b>${esc(runner.name)}</b> enters the decisions for this team.`:'Your instructor is choosing who enters your team’s decisions.'}</p><p class="hint">When your instructor starts the session, the teammate who enters the decisions gets the Start button.</p></div>
+    ${!S.canSubmit?notice(`${runnerName} enters the decisions for your team. Sit with ${runnerName} and decide together; your screen follows each step.`):''}
     ${sessionGate()}`);
 }
 function sharedResultsHTML(){
@@ -418,9 +418,9 @@ function briefQuestionsHTML(){return Array.isArray(C?.lessonQuestions)&&C.lesson
 function renderTeamMemberWaiting(){
   const runner=teamRunner(),teamName=S.me?.teamLabel||'Your team',runnerName=runner?.name||'your team lead';
   shell(`<div class="eyebrow">Team mode · read-only</div><h2>${esc(runnerName)} will run the simulation for ${esc(teamName)}.</h2>
-    <p class="lede">Contact ${esc(runnerName)} and make decisions together on that person's screen. This page is read-only so the team does not accidentally create separate results.</p>
+    <p class="lede">${esc(runnerName)} enters the decisions for your team. Talk it through together; this page follows each step so your team keeps one result.</p>
     ${sessionGate()}${notice(teamProgressText())}
-    <div class="card"><h3>Your role</h3><p>Discuss, challenge, and help decide. The same team result will appear here after the runner completes the shared run.</p></div>
+    <div class="card"><h3>Your role</h3><p>Discuss, challenge, and help decide. Your team’s result appears here when your team finishes.</p></div>
     ${briefQuestionsHTML()}
     ${sharedResultsHTML()}`);
 }
@@ -532,12 +532,12 @@ function year2BreakdownHTML(y1,y2,year2Label='Year 2 draft'){
   const rows=C.lines.map(l=>{const a=Number(y1[l.id]||0),b=Number(y2[l.id]||0);return `<div class="year2-breakdown-row"><div class="year2-breakdown-name">${esc(l.label)}</div><div class="year2-breakdown-num">$${a}M</div><div class="year2-breakdown-num">$${b}M</div><div class="year2-breakdown-num year2-breakdown-total">$${a+b}M</div></div>`}).join('');
   return `<details class="year2-history"><summary>Year 1 + Year 2 split · open to compare</summary><div class="year2-breakdown"><div class="year2-breakdown-row year2-breakdown-head"><div>Line</div><div>Year 1 committed</div><div>${esc(year2Label)}</div><div>Cumulative</div></div>${rows}</div></details>`;
 }
-function allocationConfirmation(year,a){const text=C.lines.map(l=>`${l.label}: $${a[l.id]}M`).join('\n');return window.confirm(`Commit Year ${year}?\n\n${text}\n\nYou cannot change this allocation after the outcome is revealed.`)}
+function allocationConfirmation(year,a){const text=C.lines.map(l=>`${l.label}: $${a[l.id]}M`).join('\n');return window.confirm(`Commit Year ${year}?\n\n${text}\n\nCommitting locks this budget and reveals the outcome.`)}
 function renderView(){
   const committed=!!(S.viewCommitted||S.teamRun?.strategicView||S.year1Outcome);
   shell(`<div class="eyebrow">Commit a view</div><h2>What should this company become?</h2><p class="lede">You have heard four reasonable, incompatible answers about what Midland needs. Write one sentence that picks a side — or states a fifth position — before you see the first allocation outcome.</p>
   <div class="field"><label>Your sentence</label><textarea id="viewText" maxlength="500" placeholder="${esc(C.viewPrompt)}" ${committed?'readonly':''}>${esc(S.strategicView)}</textarea><div class="hint">${committed?'This opening view is already committed.':esc(C.viewDisclosure)}</div></div>
-  ${nav({nextLabel:committed?'Continue':(S.canSubmit?'Commit view':'Waiting for runner'),disabled:blocked()||(!S.canSubmit&&!S.teamRun?.strategicView)})}`);
+  ${nav({nextLabel:committed?'Continue':(S.canSubmit?'Commit view':'Waiting for your team'),disabled:blocked()||(!S.canSubmit&&!S.teamRun?.strategicView)})}`);
   wireNav(async()=>{
     if(committed)return next();
     const v=document.getElementById('viewText').value.trim();
@@ -623,8 +623,8 @@ function changeAlloc(key,line,delta){
 function validateClient(a){
   const total=Object.values(a).reduce((x,y)=>x+y,0);
   if(total!==C.annualBudget)return `The allocation must equal exactly $${C.annualBudget}M.`;
-  if(a.run<C.runMinimum)return `Run cannot be below $${C.runMinimum}M.`;
-  if(['uptime','capacity','connect','features'].some(k=>a[k]>C.lineMaximum))return `Uptime, Capacity, Connect and Features cannot exceed $${C.lineMaximum}M in a year.`;
+  if(a.run<C.runMinimum)return `Run needs at least $${C.runMinimum}M.`;
+  if(['uptime','capacity','connect','features'].some(k=>a[k]>C.lineMaximum))return `Uptime, Capacity, Connect and Features each take at most $${C.lineMaximum}M a year.`;
   return '';
 }
 function runningTotals(a,b){const o={};C.lines.forEach(l=>o[l.id]=(a[l.id]||0)+(b[l.id]||0));return o}
@@ -719,7 +719,7 @@ function renderClose(){
       </div>
     </div>
     ${b?`<div class="result-section"><div class="eyebrow">The three buyers</div><div class="buyers">${[b.carrolton,b.ridge_hollow,b.corven].filter(Boolean).map(x=>buyerCard(x,false)).join('')}</div></div>`:''}
-    ${teamMode?`<div class="result-section"><div class="eyebrow">Team submission</div><div class="card"><p>The selected runner submitted this shared result for the whole team. Every team member sees the same outcome.</p></div></div>`:''}
+    ${teamMode?`<div class="result-section"><div class="eyebrow">Team submission</div><div class="card"><p>Your team submitted this result together. Every member sees the same outcome.</p></div></div>`:''}
     ${closingLessonHTML()}
     <div class="result-section"><div class="eyebrow">Your reason for the Year 1 budget</div><div class="card"><p>${esc(S.strategicView||'—')}</p></div></div>
     ${`<div class="result-section"><div class="eyebrow">Your review for Tom</div>
