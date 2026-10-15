@@ -217,6 +217,12 @@ async function shot(p,name){await p.screenshot({path:path.join(artifacts,name+'.
   await shell.frameLocator('#simFrame').locator('#debrief-view:not([hidden])').waitFor();
   equal(new URL(shell.url()).searchParams.get('tab'),'debrief','refresh keeps the session and the tab');
   await shot(shell,'07-class-shell-debrief');
+  await shell.evaluate(()=>{window.__samePage=true;});
+  await shell.locator('#rs-menu a[data-rs-key="class"]').click();
+  await shell.waitForFunction(()=>new URL(location.href).searchParams.get('view')==='course');
+  await shell.locator('#rs-menu a[data-rs-key="classes"]').click();
+  await shell.waitForFunction(()=>!new URL(location.href).searchParams.get('course'));
+  equal(await shell.evaluate(()=>window.__samePage===true),true,'Class home and Your classes change the main area only');
   equal(failures,[],'no browser JavaScript errors or unexpected server errors');
   const result={status:'passed',assertions:checks,scope:'Real account, launch and session handlers plus real HTML in Chromium; in-memory SQL/session adapters; no production data'};
   await fs.writeFile(path.join(artifacts,'results.json'),JSON.stringify(result,null,2));

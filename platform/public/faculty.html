@@ -267,6 +267,16 @@ function drawMenu() {
     course: c ? { id:c.id, title:c.title, href:`/faculty.html?view=course&course=${encodeURIComponent(c.id)}` } : null,
     onNavigate: (key) => {
       const [sim, what] = key.split(':');
+      // Class pages change in the main area; the menu stays put.
+      if (key === 'classes') { navigation.go({ view:'home' }, false); return true; }
+      if (sim === 'class' && what) { navigation.go({ view:'course', course:what }, false); return true; }
+      if (c && key === 'class') { navigation.go({ view:'course', course:c.id }, false); return true; }
+      if (c && what === 'all-results') { navigation.go({ view:'sim-results', course:c.id, sim }, false); return true; }
+      if (c && what === 'rehearse') {
+        F.rehearseNext = true;
+        if (F.view === 'course' && F.course?.course.id === c.id) render(); else navigation.go({ view:'course', course:c.id }, false);
+        return true;
+      }
       if (!c || sim !== MIDLAND || !['sessions', 'teams', 'results', 'debrief', 'session'].includes(what)) return false;
       const frame = document.getElementById('simFrame');
       if (F.view === 'sim' && frame && F.frame?.sim === sim) { frame.contentWindow.postMessage({ type:'rs-nav', to:what === 'session' ? 'teams' : what }, location.origin); return true; }
@@ -709,6 +719,12 @@ function renderCourse() {
   app.querySelectorAll('[data-midland-rehearse]').forEach(b => b.onclick = () => startMidlandPractice(course.id, b));
   app.querySelectorAll('a[data-frame]').forEach(a => a.onclick = e => { if (e.metaKey || e.ctrlKey || e.shiftKey) return; e.preventDefault(); openFrame(a.dataset.frame, course.id, a.dataset.session || ''); });
   // A practice tab's final page links back here with ?practice=1: reopen the practice panel once.
+  // Rehearse from the menu opens the practice panel here, without reloading the page.
+  if (F.rehearseNext) {
+    F.rehearseNext = false;
+    const rb = app.querySelector('[data-midland-rehearse]');
+    if (rb) { startMidlandPractice(course.id, rb); rb.scrollIntoView?.({ block:'center' }); }
+  }
   if (!practiceReopened && practiceAsked) {
     const rb = app.querySelector('[data-midland-rehearse]');
     if (rb) { practiceReopened = true; startMidlandPractice(course.id, rb).then(ok => { if (!ok) practiceReopened = false; }); }
