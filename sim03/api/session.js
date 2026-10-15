@@ -541,9 +541,25 @@ module.exports = async (req, res) => {
         }
         if (b.set === 'pause') sess.paused = true;
         if (b.set === 'resume') sess.paused = false;
-        if (b.set === 'close') sess.state = 'closed';
+        // Reopen a class closed by mistake: teams continue from their saved decisions.
+        if (b.set === 'reopen') {
+          if (sess.state !== 'closed') return res.status(409).json({ error: 'session_not_closed' });
+          if (!sess.practice && sess.mode === 'team' && sess.courseId) {
+            const current = await store.getCourseTeamSession(sess.courseId).catch(() => null);
+            const other = current && current !== code ? await store.getSession(current) : null;
+            if (other && other.state !== 'closed') return res.status(409).json({ error: 'other_session_open',
+              message: 'Another class is open for this course. Close it first, then reopen this one.' });
+          }
+          sess.state = sess.startedAt ? 'running' : 'lobby';
+          sess.paused = false;
+          sess.reopenedAt = Date.now();
+        }
+        if (b.set === 'close') { sess.state = 'closed'; sess.closedAt = Date.now(); sess.closedBy = who.name || null; sess.closedFrom = String(b.from || '').slice(0, 20) || null; }
         if (!await store.compareAndSetSession(code, previousSession, sess)) continue;
         if (sess.state === 'closed' && sess.courseId) await pointCourse(() => store.clearCourseTeamSession(sess.courseId, code));
+        if (b.set === 'reopen' && !sess.practice && sess.mode === 'team' && sess.courseId) {
+          await pointCourse(() => store.setCourseTeamSession(sess.courseId, code));
+        }
         return res.status(200).json({ session: sess });
       }
 
