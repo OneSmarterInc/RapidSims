@@ -13,12 +13,14 @@ assert.match(workflow,/DEPLOY_COMMIT: \$\{\{ github.sha \}\}/);
 assert.match(workflow,/npm test/);
 assert(!workflow.includes('git pull'));
 const deploy = read('ec2/deploy.sh');
-for(const requirement of ['npm ci','git_repo archive "$sha"','shared ec2 package.json package-lock.json','trap rollback ERR','check-ready.js']) assert(deploy.includes(requirement),requirement);
+for(const requirement of ['npm ci','git_repo archive "$sha"','trap rollback ERR','check-ready.js','systemctl enable "rapidsims@$app.service"','systemctl restart "rapidsims@$app.service"','systemctl disable "rapidsims@$app.service"','[[ -d "$release/$dir" && -f "$release/$dir/package.json" ]]']) assert(deploy.includes(requirement),requirement);
+assert(deploy.includes('changed+=("$app")'), 'every registered app must be deployed');
+assert(!deploy.includes('git_repo diff --quiet'), 'do not skip unchanged services');
 const routes = execFileSync(process.execPath,[path.join(root,'ec2/render-nginx.js'),'--locations'],{encoding:'utf8'});
 for(const app of Object.values(require('../../ec2/apps.json'))) {
   assert(routes.includes('127.0.0.1:'+app.port));
   for(const prefix of [app.prefix,...(app.aliases||[])].filter(Boolean))assert(routes.includes('location = '+prefix));
 }
 assert(!routes.includes('listen 80'),'managed include must not replace TLS');
-console.log('AWS release checks passed: tested SHA, locked dependencies, scoped service promotion, rollback, manifest routes.');
+console.log('AWS release checks passed: tested SHA, locked dependencies, all registered services restarted, new service rollback, manifest routes.');
 
