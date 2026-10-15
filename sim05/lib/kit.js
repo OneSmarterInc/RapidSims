@@ -73,7 +73,8 @@ function facultyKit(sess, participants, now) {
     aggregate: { rounds: agg.rounds, groups: agg.groups, complete: agg.complete, reached: agg.reached, headline: agg.headline,
       disagreement: agg.disagreement, mostDivided: agg.mostDivided },
     reviewQuestions: REVIEW_QUESTIONS, lessonQuestions: LESSON_QUESTIONS,
-    lessons: C.DEBRIEF.naming.map(n => ({ head: n.term, text: n.line })),
+    // The Lighter setting never names the inference, here or anywhere else.
+    lessons: C.DEBRIEF.naming.map(n => ({ head: n.term, text: intensity === 'lighter' && n.lighter ? n.lighter : n.line })),
     teamPrompt: team ? C.DEBRIEF.teamPrompt : null
   };
   return { participants: people, runs, kit, clock: clk };

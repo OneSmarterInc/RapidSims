@@ -164,5 +164,14 @@ async function playAll(code, plan) {
   eq((await api({ action: 'course_sessions' })).body.sessions.some(s => s.code === ps.body.code), false, 'Practice stays out of the Sessions page');
   eq((await api({ action: 'practice_finish' })).status, 200, 'End practice');
   eq(K.REVIEW_QUESTIONS[1], C.DEBRIEF.turn, 'The closing question is now the second review question');
+  const one = D.model({ kit: { ...fs2.kit, aggregate: { ...fs2.kit.aggregate, mostDivided: null } }, teams: F.debrief.input(TEAMS, { state: fs2 }).teams });
+  eq([one.slides[1].headline, one.slides[1].ask], ['No round divided the class.', 'Who hesitated longest, and at which round?'], 'With no split, slide 2 says so once and asks about hesitation');
+  // The Lighter setting never names the inference: not on the faculty pages, not on the Round screen.
+  const light = (await api({ action: 'create', name: 'Light', mode: 'individual', intensity: 'lighter', closeOpen: true })).body.session.code;
+  await api({ action: 'join', code: light }, st.ana);
+  await api({ action: 'control', code: light, set: 'start' });
+  await playAll(light, { ana: ['approve', 'approve', 'approve', 'approve', 'approve'] });
+  eq(/pregnan/i.test(JSON.stringify((await api({ action: 'faculty_state', code: light })).body)), false, 'A Lighter session never names the inference on the faculty pages');
+  eq(/pregnan/i.test(JSON.stringify((await api({ action: 'state', code: light, participantId: 'platform:ana' }, st.ana)).body)), false, 'Nor on the student page');
   console.log(`PASS kit-session-check: ${n} assertions`);
 })().catch(e => { console.error(e); process.exit(1); });
