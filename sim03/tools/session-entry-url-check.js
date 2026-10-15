@@ -26,7 +26,7 @@ for(const [search,hash] of [
   assert.equal(url.searchParams.get('session'),'ABCDE');
   assert.equal(new URLSearchParams(url.hash.slice(1)).get('lt'),token);
   const faculty=context(search,hash,'/sim03/instructor.html');
-  assert.equal(vm.runInNewContext(script('instructor.html').split('const savedCode=')[0]+';LT',faculty),token);
+  assert.equal(require('../../platform/public/kit/faculty-session.js').launchToken(faculty.location),token);
 }
 const lookalike=context('?session=ABCDE&notlt=untrusted','');
 assert.equal(vm.runInNewContext(script('index.html').split('let C=null;')[0]+';LAUNCH_TOKEN',lookalike),null);

@@ -51,8 +51,9 @@ async function sessionCode(p) {
         if(r.url)res.setHeader('location',r.url);
         res.setHeader('content-type','application/json');return res.end(r.payload?JSON.stringify(r.payload):'');
       }
-      if(['/instructor.html','/faculty-workspace.js','/faculty-workspace.css','/midland-debrief.js','/midland-debrief.css','/faculty-menu.js'].includes(pathname)){
-        res.setHeader('content-type',pathname.endsWith('.js')?'text/javascript':pathname.endsWith('.css')?'text/css':'text/html');return res.end(await fs.readFile(path.join(root,pathname==='/faculty-menu.js'?'platform/public':'sim03/public',pathname.slice(1))));
+      const shared=pathname==='/faculty-menu.js'||/^\/kit\/[a-z-]+\.(js|css)$/.test(pathname);
+      if(shared||['/instructor.html','/midland-faculty.js','/midland-debrief.js'].includes(pathname)){
+        res.setHeader('content-type',pathname.endsWith('.js')?'text/javascript':pathname.endsWith('.css')?'text/css':'text/html');return res.end(await fs.readFile(path.join(root,shared?'platform/public':'sim03/public',pathname.slice(1))));
       }
       res.statusCode=404;res.end();
     }catch(e){errors.push(e.stack);res.statusCode=500;res.end('{}');}
@@ -68,7 +69,7 @@ async function sessionCode(p) {
   equal(await form.locator('#name').inputValue(),'Friday "class"','switching mode preserves class name');
   equal(await form.locator('#fc').inputValue(),'code-for-test','switching mode preserves facilitator authorization');
   await form.locator('#create').click();await form.locator('#join').waitFor();
-  equal(await form.evaluate(()=>state.session.mode),'team','standalone configured code still creates a team session');
+  equal(await form.evaluate(()=>FacultySession.page.state.session.mode),'team','standalone configured code still creates a team session');
   delete process.env.FACULTY_CODES;
 
   const teacher=await page('missing-token','teacher@example.test');
@@ -90,9 +91,9 @@ async function sessionCode(p) {
   equal(f.sessions.size,2,'renewal did not create a duplicate room');
   // Expiry while already in the console must renew once and retain the room.
   const before=requests.filter(x=>x.startsWith('/api/launch?')).length;
-  await teacher.evaluate(t=>{LT=t;return Promise.all([api({action:'faculty_state',code}),api({action:'faculty_state',code})]);},expired);
+  await teacher.evaluate(t=>{const P=FacultySession.page;P.LT=t;return Promise.all([P.api({action:'faculty_state',code:P.code}),P.api({action:'faculty_state',code:P.code})]);},expired);
   equal(requests.filter(x=>x.startsWith('/api/launch?')).length-before,1,'concurrent expired requests share one renewal');
-  equal(await teacher.evaluate(()=>code),code,'live refresh preserves session state');
+  equal(await teacher.evaluate(()=>FacultySession.page.code),code,'live refresh preserves session state');
 
   f.courses.set('course-b',{id:'course-b',title:'Second course',join_code:'SECOND',faculty_id:'teacher',archived:false});
   const multi=await page('multiple-courses','teacher@example.test');await multi.goto(base+'/sim03/instructor.html');
@@ -160,7 +161,7 @@ async function sessionCode(p) {
   equal(await shortcut.locator('#start-session').isDisabled(),true,'start explains missing team assignments');
   f.seed('third','third@example.test','student',true,'Third Student');
   f.seed('fourth','fourth@example.test','student',true,'Fourth Student');
-  await shortcut.evaluate(()=>refreshEnrolments(true)); // the page also does this by itself every few seconds
+  await shortcut.evaluate(()=>FacultySession.page.refreshEnrolments(true)); // the page also does this by itself every few seconds
   await shortcut.waitForFunction(() => document.querySelectorAll('.fw-unassigned .fw-person').length === 4);
   equal(await shortcut.locator('#teamCount').inputValue(),'2','four approved students default to two teams');
   await shortcut.locator('#autoSplit').click();
@@ -171,7 +172,7 @@ async function sessionCode(p) {
   const startBox=await shortcut.locator('#start-session').boundingBox();
   equal(startBox.y+startBox.height <= (await shortcut.evaluate(()=>innerHeight)),true,'start action stays visible without scrolling back to top');
   await shortcut.locator('#fw-advanced summary').click();
-  await shortcut.evaluate(()=>refresh());
+  await shortcut.evaluate(()=>FacultySession.page.refresh());
   equal(await shortcut.locator('#fw-advanced').evaluate(el=>el.open),true,'advanced settings stay open through polling');
   await shortcut.locator('#fw-advanced summary').click();
   await shortcut.locator('#start-session').click();
@@ -200,7 +201,7 @@ async function sessionCode(p) {
       strategicView:'Midland should provide reliable service through connected equipment.',year1:allocations[i],year2:allocations[i],reflection1:answer,reflection2:'We would move one million into capacity.',done:true},{headers});
     equal(submitted.statusCode,200,'runner submits the single shared result through the production handler');
   }
-  await shortcut.evaluate(()=>refresh());
+  await shortcut.evaluate(()=>FacultySession.page.refresh());
   await shortcut.waitForFunction(()=>document.getElementById('submitted-stat')?.textContent==='2');
   equal(await shortcut.locator('.fw-overview tbody tr').count(),2,'two completed teams produce two rows, not four student copies');
   await shortcut.locator('.fw-overview [data-open-team]').first().click();
@@ -209,7 +210,7 @@ async function sessionCode(p) {
   equal((await shortcut.locator('#response-content').textContent()).includes('Carrolton Systems'),true,'saved buyer outcomes appear in the same selected-team panel');
   await shortcut.locator('#compare-btn').click();
   equal(await shortcut.locator('#compare-all .compare-card').count(),2,'compare shows every submitted team at once');
-  await shortcut.evaluate(()=>refresh());
+  await shortcut.evaluate(()=>FacultySession.page.refresh());
   equal(await shortcut.locator('#compare-dialog').evaluate(el=>el.open),true,'polling does not close comparison');
   await shortcut.locator('#close-compare').click();
   await shortcut.locator('#tab-answers').click();
@@ -222,7 +223,7 @@ async function sessionCode(p) {
   await shortcut.locator('#md-root [data-md="next"]').click();
   await shortcut.locator('#md-root [data-md="lesson"]').click();
   equal((await shortcut.locator('#md-root .md-lesson').textContent()).includes('Technology spending takes time to pay off.'),true,'Show lesson reveals lesson 1');
-  await shortcut.evaluate(()=>refresh());
+  await shortcut.evaluate(()=>FacultySession.page.refresh());
   equal(await shortcut.locator('#md-root [data-md-go="1"]').getAttribute('aria-selected'),'true','polling keeps the slide in place');
   await shortcut.locator('#md-root [data-md="anon"]').click();
   equal((await shortcut.locator('#md-root .md-stage').textContent()).includes('Team A'),true,'anonymous switch replaces team names');
@@ -241,7 +242,7 @@ async function sessionCode(p) {
   const calibration=shortcut.locator('.th').first();
   equal(await calibration.isDisabled(),true,'advanced calibration is locked after start');
   shortcut.once('dialog',d=>d.accept());await shortcut.locator('[data-session-control="close"]').click();
-  await shortcut.waitForFunction(()=>state.session.state==='closed');
+  await shortcut.waitForFunction(()=>FacultySession.page.state.session.state==='closed');
   await shortcut.reload(); // the room in the address reopens by itself
   await shortcut.locator('.fw-overview tbody tr').first().waitFor();
   equal(await shortcut.locator('#manage-view').isHidden(),true,'resuming a closed room opens all saved results');

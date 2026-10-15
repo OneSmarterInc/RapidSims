@@ -140,9 +140,11 @@ async function snapshot(name, page) {
       await handlers[match[1]](req, res); return;
     }
     const name = route === '/' ? 'index.html' : route.slice(1);
-    if (!['index.html', 'instructor.html', 'launch.html', 'faculty-workspace.js', 'faculty-workspace.css', 'midland-debrief.js', 'midland-debrief.css'].includes(name)) return json(res, 404, { error: 'not_found' });
+    // The shared faculty pages (/kit/) come from the platform, as on the live site.
+    const kit = /^kit\/[a-z-]+\.(js|css)$/.test(name);
+    if (!kit && !['index.html', 'instructor.html', 'launch.html', 'midland-faculty.js', 'midland-debrief.js'].includes(name)) return json(res, 404, { error: 'not_found' });
     res.writeHead(200, { 'content-type': name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':'text/html' });
-    res.end(await fs.readFile(path.join(root, 'public', name)));
+    res.end(await fs.readFile(kit ? path.join(root, '..', 'platform', 'public', name) : path.join(root, 'public', name)));
   });
   console.log('Isolated Sim03 server ready:', origin);
   // Verify a real dev-server page with agent-browser as well as the detailed
@@ -296,7 +298,7 @@ async function snapshot(name, page) {
   await instructor.locator('#fc').fill(faculty);
   await instructor.locator('#resumeCode').fill(code);
   await instructor.locator('#resumeBtn').click();
-  await instructor.waitForFunction(() => !!state?.runs?.['team:alpha']?.done);
+  await instructor.waitForFunction(() => !!FacultySession.page.state?.runs?.['team:alpha']?.done);
   const downloadPromise = instructor.waitForEvent('download');
   await instructor.locator('#export-btn').click();
   const download = await downloadPromise;

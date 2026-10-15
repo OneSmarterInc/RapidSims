@@ -40,7 +40,8 @@ async function simRoute(req,res,url) {
   let pathname=url.pathname.replace(/^\/sim03(?=\/|$)/,'')||'/';
   if(pathname.startsWith('/api/')) return invoke(pathname.slice(5),req,res,url);
   if(pathname==='/')pathname='/launch.html';
-  if(!['/launch.html','/index.html','/instructor.html','/faculty-workspace.js','/faculty-workspace.css','/midland-debrief.js','/midland-debrief.css'].includes(pathname)){res.statusCode=404;return res.end();}
+  if(/^\/kit\/[a-z-]+\.(js|css)$/.test(pathname))return file(res,'platform/public'+pathname);
+  if(!['/launch.html','/index.html','/instructor.html','/midland-faculty.js','/midland-debrief.js'].includes(pathname)){res.statusCode=404;return res.end();}
   return file(res,'sim03/public'+pathname);
 }
 async function page(name) {
@@ -73,7 +74,7 @@ async function shot(p,name){await p.screenshot({path:path.join(artifacts,name+'.
     if(url.pathname.startsWith('/sim03'))return simRoute(req,res,url);
     if(url.pathname==='/api/register'){res.writeHead(200,{'content-type':'application/json'});return res.end('{}');}
     if(url.pathname.startsWith('/api/'))return invoke(url.pathname.slice(5),req,res,url);
-    if(['/session.html','/session-entry.js','/portal-navigation.js','/faculty-results.js','/faculty-results.css','/app.css','/faculty.html','/sim-identity.js','/sim-detail.css','/sim-detail.js','/render-transcript.js','/faculty-menu.js'].includes(url.pathname))return file(res,'platform/public'+url.pathname);
+    if(['/session.html','/session-entry.js','/portal-navigation.js','/faculty-results.js','/faculty-results.css','/app.css','/faculty.html','/sim-identity.js','/sim-detail.css','/sim-detail.js','/render-transcript.js','/faculty-menu.js'].includes(url.pathname)||/^\/kit\/[a-z-]+\.(js|css)$/.test(url.pathname))return file(res,'platform/public'+url.pathname);
     res.writeHead(404);res.end('Not found');
   };
   platform=await listen(platformRoute);
@@ -120,7 +121,7 @@ async function shot(p,name){await p.screenshot({path:path.join(artifacts,name+'.
   equal(new URL(invite).origin,platform,'generated invite uses platform account origin');
   equal(new URL(invite).searchParams.get('course'),'course-a','generated invite carries class');
   equal(new URL(invite).hash,'','no teacher token copied');await shot(teacher,'01-faculty-session-link');
-  await teacher.waitForFunction(()=>enrolmentData?.students.some(p=>p.participantId==='platform:pending'&&!p.accessReleased));
+  await teacher.waitForFunction(()=>FacultySession.page.enrolmentData?.students.some(p=>p.participantId==='platform:pending'&&!p.accessReleased));
   await teacher.locator('[data-person-id="platform:alice"]').filter({hasText:'Approved · not opened yet'}).waitFor();
   equal(Object.keys(f.participants.get(code)).length,2,'both approved students are in the setup roster before launch');
   equal((await teacher.locator('#courseAccess').getAttribute('href')).includes('course=course-a'),true,'faculty release link targets the current course');
@@ -131,7 +132,7 @@ async function shot(p,name){await p.screenshot({path:path.join(artifacts,name+'.
   await alice.goto(invite);await joined(alice,'platform:alice');
   equal(await alice.evaluate(()=>S.sessionCode),code,'already signed-in student reaches original session');
   await shot(alice,'02-signed-in-student');
-  await teacher.waitForFunction(()=>Object.values(state.participants).filter(p=>p.joinedAt).length===1);
+  await teacher.waitForFunction(()=>Object.values(FacultySession.page.state.participants).filter(p=>p.joinedAt).length===1);
   await teacher.locator('[data-person-id="platform:alice"]').filter({hasText:'Opened the simulation'}).waitFor();checks++;
   // A read-only enrolment refresh must not wipe an unfinished team name.
   await teacher.locator('#fw-manual-team summary').click();
@@ -157,7 +158,7 @@ async function shot(p,name){await p.screenshot({path:path.join(artifacts,name+'.
   await shot(fresh,'04-awaiting-release');
   const user=[...f.users.values()].find(u=>u.email==='fresh@example.test');
   equal(!!user,true,'existing signup API created a real hashed account in test DB');
-  await teacher.waitForFunction(id=>enrolmentData?.students.some(p=>p.participantId==='platform:'+id&&!p.accessReleased),user.id);
+  await teacher.waitForFunction(id=>FacultySession.page.enrolmentData?.students.some(p=>p.participantId==='platform:'+id&&!p.accessReleased),user.id);
   equal(await teacher.locator('#newTeamName').inputValue(),'My unfinished team','new enrolment becomes visible without losing the focused team draft');
   equal(!!f.participants.get(code)['platform:'+user.id],false,'roster visibility does not bypass launch authorization');
   await shot(teacher,'05-faculty-enrolment-before-release');
