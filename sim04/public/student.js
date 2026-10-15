@@ -22,6 +22,7 @@ if (launch && !code && launchClaims()?.role === 'student') {
 }
 let participantId = sessionStorage.getItem('m04-participant:' + code) || null;
 let config = null, view = null, pollAt = 0, renderedPack = false, renderedCommit = '';
+let storyRead = (() => { try { return sessionStorage.getItem('m04-story:' + code) === '1'; } catch { return false; } })();
 
 function headers() {
   return { 'content-type': 'application/json', ...(launch ? { 'x-launch-token': launch }
@@ -84,11 +85,23 @@ function csv(records, name) {
 function draw(result) {
   view = result.view; pollAt = Date.now();
   $('entry').hidden = true; $('play').hidden = false;
-  $('group').textContent = view.group || 'Not yet in a group';
+  const solo = view.mode === 'individual';
+  $('groupLabel').textContent = solo ? 'You' : 'Your group';
+  $('group').textContent = solo ? `${view.you} · on your own` : view.group || 'Not yet in a group';
+  $('lockedNote').textContent = solo ? 'This is your final report. Keep it for the discussion.' : "This is your group's final report. Keep it for the discussion.";
   $('introMinutes').textContent = view.clockMinutes;
-  $('intro').hidden = view.state !== 'lobby' && !!view.data;
+  // Everyone reads the story first. Anyone who arrives after the clock starts reads it, then opens the data.
+  if (view.state === 'lobby') storyRead = true;
+  const story = view.state !== 'lobby' && !!view.data && !storyRead;
+  $('intro').hidden = view.state !== 'lobby' && !!view.data && !story;
+  $('introGo').hidden = !story;
+  $('introEyebrow').textContent = story ? 'Before you start' : 'Before the clock starts';
   $('waiting').hidden = !!view.data && view.state !== 'lobby';
   $('practiceBar').hidden = !view.practice || view.state !== 'lobby';
+  const facultyPreview = ['faculty', 'faculty_preview'].includes(launchClaims()?.role) || facultyPractice;
+  $('practiceConsole').hidden = !facultyPreview;
+  $('practiceNote').textContent = facultyPreview ? 'Practice room. Only you are in it. In a class, your instructor forms the groups and starts the clock.'
+    : 'Practice session. In a class, your instructor starts the clock for everyone. Here, any practice student can start it.';
   if (view.practice && view.state !== 'lobby') $('roomLabel').textContent = 'Practice room';
   if (view.state !== 'lobby' && !view.group) {
     $('waitingTitle').textContent = 'The clock has started';
@@ -97,8 +110,8 @@ function draw(result) {
   if (view.state === 'lobby') {
     const mates = view.groupmates.length ? ` with ${view.groupmates.join(', ')}` : '';
     $('roomLabel').textContent = `Room ${code} · signed in as ${view.you}`;
-    $('waitingTitle').textContent = view.group ? `You are in ${view.group}${mates}` : 'Waiting for your instructor to form groups';
-    $('waitingText').textContent = view.group
+    $('waitingTitle').textContent = solo ? 'You are in. You will work on your own.' : view.group ? `You are in ${view.group}${mates}` : 'Waiting for your instructor to form groups';
+    $('waitingText').textContent = solo ? 'The clock starts when your instructor presses Start.' : view.group
       ? 'Your instructor may still move people between groups. The clock starts when your instructor presses Start.'
       : 'You have joined. Your instructor puts everyone into groups from the instructor screen.';
     $('waitingHelp').textContent = 'Read What happens today while you wait. This page checks every 4 seconds.';
@@ -110,7 +123,7 @@ function draw(result) {
     }
     error('waitingError', '');
   }
-  $('materials').hidden = !view.data || view.state === 'lobby';
+  $('materials').hidden = !view.data || view.state === 'lobby' || story;
   if (view.data && !renderedPack) {
     renderedPack = true;
     $('briefing').textContent = config.briefing;
@@ -231,8 +244,12 @@ $('facultyPreview').addEventListener('click', async () => {
     draw(result);
   } catch (e) { error('entryError', e.message); }
 });
+$('introDone').addEventListener('click', () => {
+  storyRead = true; try { sessionStorage.setItem('m04-story:' + code, '1'); } catch {}
+  if (view) draw({ view }); window.scrollTo(0, 0);
+});
 $('practiceStart').addEventListener('click', async () => {
-  try { await api('session', { action: 'start', code }); await refresh(); }
+  try { await api('session', { action: launchClaims()?.role === 'student' ? 'practice_clock' : 'start', code, participantId }); await refresh(); }
   catch (e) { error('waitingError', e.message); }
 });
 $('joinForm').addEventListener('submit', join);

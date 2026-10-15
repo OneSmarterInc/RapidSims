@@ -97,9 +97,15 @@ const token = (sub, name, role) => signBack({ kind: 'launch', run: 'lch-' + sub,
     for (const [sub, name] of people) {
       const pg = pages[sub] = await open(sub);
       await pg.goto(`${origin}/sim04/#lt=${encodeURIComponent(token(sub, name, 'student'))}`);
+      await pg.locator('#introDone').waitFor({ state: 'visible' });
+      if (sub === 'ana') {
+        ok(await pg.locator('#materials').isHidden(), 'A student who arrives after Start reads the story first');
+        await pg.screenshot({ path: path.join(artifacts, '02b-story-first.png') });
+      }
+      await pg.locator('#introDone').click();
       await pg.locator('#materials').waitFor({ state: 'visible' });
     }
-    ok(true, 'Each student opens the class link and sees the data and a sheet');
+    ok(true, 'Each student opens the class link, reads the story, then sees the data and a sheet');
     const ana = pages.ana;
     ok(!/disagree|different (definitions|numbers)/i.test(await ana.locator('body').innerText()), 'The student page gives nothing away');
     await ana.fill('#number', '90.0'); await ana.selectOption('#confidence', '4');
@@ -128,6 +134,10 @@ const token = (sub, name, role) => signBack({ kind: 'launch', run: 'lch-' + sub,
     ok((await fac.locator('.md-head').innerText()).includes('reported 90.0%'), 'Defend your number: the two furthest apart');
     await fac.locator('[data-md="next"]').click();
     ok((await fac.locator('.md-slide').innerText()).includes('Investor Relations'), 'The definitions slide names each department');
+    await fac.locator('[data-md="lesson"]').click();
+    const fit = await fac.evaluate(() => { const rows = [...document.querySelectorAll('.wd-def')], foot = document.querySelector('.md-foot');
+      return rows.length === 5 && rows.at(-1).getBoundingClientRect().bottom <= foot.getBoundingClientRect().top + 1; });
+    ok(fit, 'All five definitions fit with the lesson open');
     await fac.screenshot({ path: path.join(artifacts, '06-debrief-definitions.png') });
     await fac.locator('[data-md="next"]').click();
     await fac.locator('select[data-md-pick="first"]').selectOption({ index: 2 });
