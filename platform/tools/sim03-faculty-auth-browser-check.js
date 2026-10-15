@@ -85,7 +85,8 @@ async function sessionCode(p) {
   const saved=await teacher.evaluate(()=>sessionStorage.getItem('m03-faculty-lt'));
   const expired=sign({...verify(saved),exp:Date.now()-1000});
   await teacher.evaluate(t=>sessionStorage.setItem('m03-faculty-lt',t),expired);await teacher.reload();
-  await teacher.locator('#resumeBtn').click();equal(await sessionCode(teacher),code,'expired authorization resumes the original room');
+  // A reload reopens the room in the address (#code) by itself, renewing the expired authorization.
+  equal(await sessionCode(teacher),code,'expired authorization resumes the original room');
   equal(f.sessions.size,2,'renewal did not create a duplicate room');
   // Expiry while already in the console must renew once and retain the room.
   const before=requests.filter(x=>x.startsWith('/api/launch?')).length;
@@ -178,7 +179,7 @@ async function sessionCode(p) {
   equal((await shortcut.locator('#response-heading').textContent()).includes('All team results'),true,'start leads directly to all team results');
   equal(await shortcut.locator('.fw-overview tbody tr').count(),2,'all teams including not-started runs appear once');
   equal(Object.values(f.participants.get(shortcutCode)).every(p=>p.joinedAt===null),true,'starting did not manufacture attendance');
-  await shortcut.reload();await shortcut.locator('#resumeBtn').click();
+  await shortcut.reload(); // the room in the address reopens by itself
   await shortcut.locator('.fw-overview tbody tr').first().waitFor();
   equal(await shortcut.locator('#manage-view').isHidden(),true,'resuming a running room opens results rather than setup');
   await shortcut.screenshot({path:path.join(artifacts,'02-faculty-shortcut-roster.png'),fullPage:true});
@@ -228,7 +229,7 @@ async function sessionCode(p) {
   equal(await calibration.isDisabled(),true,'advanced calibration is locked after start');
   shortcut.once('dialog',d=>d.accept());await shortcut.locator('[data-session-control="close"]').click();
   await shortcut.waitForFunction(()=>state.session.state==='closed');
-  await shortcut.reload();await shortcut.locator('#resumeBtn').click();
+  await shortcut.reload(); // the room in the address reopens by itself
   await shortcut.locator('.fw-overview tbody tr').first().waitFor();
   equal(await shortcut.locator('#manage-view').isHidden(),true,'resuming a closed room opens all saved results');
   equal(errors,[],'no browser or server errors');

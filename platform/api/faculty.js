@@ -48,6 +48,19 @@ module.exports = async (req, res) => {
 
       // Simulation-centric results are a faculty-only screen. Keep existing admin
       // teaching routes unchanged; do not grant this new action to another role.
+      // A one-time link a student opens to choose a new password. The platform
+      // sends no email, so faculty hand the link over.
+      case 'student_reset_link': {
+        const course = await ownCourse(s, me.id, String(b.courseId || ''));
+        if (!course) return res.status(404).json({ error:'no_such_course' });
+        const student = (await s`SELECT u.id, u.name FROM enrolments e JOIN users u ON u.id=e.student_id
+          WHERE e.id=${String(b.enrolmentId || '')} AND e.course_id=${course.id} AND u.role='student'`)[0];
+        if (!student) return res.status(404).json({ error:'no_such_student' });
+        const expires = new Date(Date.now() + 3 * 86400000);
+        const token = await require('../lib/credential-tokens').issue(s, student.id, 'reset', expires);
+        return res.status(200).json({ resetUrl: `${baseUrl(req)}/reset.html?t=${token}`, who: student.name, expiresAt: expires });
+      }
+
       // Rehearse Midland with practice students, outside the course's real classes.
       case 'midland_practice_start':
       case 'midland_practice_status':

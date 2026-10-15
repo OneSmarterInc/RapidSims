@@ -545,6 +545,7 @@ function renderCourse() {
           ${r.dropped ? `<button class="btn sm" data-drop="${esc(r.enrolment_id)}" data-now="1">Put back</button>`
             : `${r.paid ? `<button class="btn sm" data-revoke="${esc(r.enrolment_id)}">Take access</button>`
                         : `<button class="btn sm" data-give="${esc(r.enrolment_id)}">Give access</button>`}
+               <button class="btn sm" data-reset-pw="${esc(r.enrolment_id)}">Reset password</button>
                <button class="btn sm" data-drop="${esc(r.enrolment_id)}" data-now="0">Remove</button>`}
         </td>
       </tr>`).join('') : `<tr><td colspan="7" class="empty">${roster.length ? 'Nobody matches that.' : 'Nobody has joined yet. Share the link above.'}</td></tr>`}
@@ -656,6 +657,14 @@ function renderCourse() {
     try { await api('/api/faculty', { action:'set_paid', courseId:course.id, paid:false, enrolmentIds:[b.dataset.revoke] });
       done(); openCourse(course.id); }
     catch (e) { if (e.stale) return; done('Failed','bad'); }
+  });
+  app.querySelectorAll('[data-reset-pw]').forEach(b => b.onclick = async () => {
+    const done = acting(b, 'Creating…');
+    try {
+      const d = await api('/api/faculty', { action:'student_reset_link', courseId: course.id, enrolmentId: b.dataset.resetPw });
+      done();
+      prompt(`Give this link to ${d.who}. It sets a new password, works once, and lasts three days. Their results and team place stay as they are.`, d.resetUrl);
+    } catch (e) { if (e.stale) return; done(); alert('The reset link could not be created. ' + (e.message || 'Try again.')); }
   });
   app.querySelectorAll('[data-drop]').forEach(b => b.onclick = async () => {
     const done = acting(b, 'Saving…');
