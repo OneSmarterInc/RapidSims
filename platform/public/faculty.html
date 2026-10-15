@@ -451,8 +451,11 @@ function wireSims() {
 
 /* ── one course ─────────────────────────────────────────────────────────── */
 function renderCourse() {
-  const { course, sims, roster, catalogue, enrolUrl } = F.course;
-  const active = roster.filter(r => !r.dropped);
+  const { course, sims, catalogue, enrolUrl } = F.course;
+  // Students of earlier sessions moved into Results when those sessions closed.
+  const earlier = F.course.roster.filter(r => r.archived_at && !r.dropped);
+  const roster = F.showEarlier ? earlier : F.course.roster.filter(r => !r.archived_at);
+  const active = F.course.roster.filter(r => !r.dropped && !r.archived_at);
   const waiting = active.filter(r => !r.paid);
   const q = (F.q.ros||'').toLowerCase().trim();
   const filteredRoster = roster.filter(r => !q || [r.name, r.email].join(' ').toLowerCase().includes(q));
@@ -574,6 +577,10 @@ function renderCourse() {
       <div class="copyrow"><input id="eurl" readonly value="${esc(enrolUrl)}"><button class="btn" id="ecopy">Copy</button></div>
     </div>
 
+    ${earlier.length || F.showEarlier ? `<div class="faculty-earlier"><span>${F.showEarlier
+      ? `Students from earlier sessions. Their results are under Results. They come back here when they open the class link or a sim again.`
+      : `${earlier.length} student${earlier.length===1?'':'s'} from earlier sessions moved into Results.`}</span>
+      <button class="btn sm" id="earlierBtn">${F.showEarlier ? 'Show current students' : 'Show earlier students'}</button></div>` : ''}
     <div class="toolbar faculty-roster-toolbar">
       <div class="search"><input data-q="ros" type="text" placeholder="Search this course's students" value="${esc(F.q.ros||'')}"></div>
       <input id="p_note" class="faculty-note-input" placeholder="note, e.g. dept PO 4471">
@@ -588,19 +595,20 @@ function renderCourse() {
       ${shown.length ? shown.map(r => `<tr style="${r.dropped?'opacity:.5':''}">
         <td data-l="">${r.dropped ? '' : `<input type="checkbox" aria-label="Select ${esc(r.name)}" data-en="${esc(r.enrolment_id)}" ${F.sel.has(r.enrolment_id)?'checked':''}>`}</td>
         <td data-l="Student"><div class="nm">${esc(r.name)}</div><div class="sub">${esc(r.email)}</div></td>
-        <td data-l="Access">${r.dropped ? dot('off','removed') : dot(r.paid?'ok':'warn', r.paid?'released':'waiting')}</td>
+        <td data-l="Access">${r.dropped ? dot('off','removed') : r.archived_at ? dot('off', 'in Results' + (r.archived_session ? ' · ' + r.archived_session : '')) : dot(r.paid?'ok':'warn', r.paid?'released':'waiting')}</td>
         <td data-l="Note" class="meta">${r.paid_note ? esc(r.paid_note) : '<span class="dim">—</span>'}</td>
         <td data-l="Joined" class="num">${when(r.created_at)}</td>
         <td data-l="Run activity"><div class="faculty-run-activity"><div><b>${r.started || 0}</b><span>Started</span></div><div><b>${r.finished || 0}</b><span>Finished</span></div></div></td>
         <td data-l="" class="act">
           <button class="btn sm faculty-result-btn" data-student-results="${esc(r.student_id)}">Results</button>
-          ${r.dropped ? `<button class="btn sm" data-drop="${esc(r.enrolment_id)}" data-now="1">Put back</button>`
+          ${r.archived_at ? `<button class="btn sm" data-restore="${esc(r.enrolment_id)}">Bring back</button>`
+          : r.dropped ? `<button class="btn sm" data-drop="${esc(r.enrolment_id)}" data-now="1">Put back</button>`
             : `${r.paid ? `<button class="btn sm" data-revoke="${esc(r.enrolment_id)}">Take access</button>`
                         : `<button class="btn sm" data-give="${esc(r.enrolment_id)}">Give access</button>`}
                <button class="btn sm" data-reset-pw="${esc(r.enrolment_id)}">Reset password</button>
                <button class="btn sm" data-drop="${esc(r.enrolment_id)}" data-now="0">Remove</button>`}
         </td>
-      </tr>`).join('') : `<tr><td colspan="7" class="empty">${roster.length ? 'Nobody matches that.' : 'Nobody has joined yet. Share the link above.'}</td></tr>`}
+      </tr>`).join('') : `<tr><td colspan="7" class="empty">${roster.length ? 'Nobody matches that.' : earlier.length && !F.showEarlier ? 'Students appear here when they open the class link or Midland for the next session.' : 'Nobody has joined yet. Share the link above.'}</td></tr>`}
       </tbody></table></div>
       <div class="foot">
         <span class="info">${rosterPg.total} shown · ${active.length} enrolled · ${active.filter(r=>r.paid).length} released</span>
@@ -677,6 +685,13 @@ function renderCourse() {
     const done = acting(b, 'Removing…');
     try { await api('/api/faculty', { action:'remove_sim', courseId:course.id, simId:b.dataset.rmsim });
       done(); openCourse(course.id); }
+    catch (e) { if (e.stale) return; done('Failed','bad'); }
+  });
+  const earlierBtn = document.getElementById('earlierBtn');
+  if (earlierBtn) earlierBtn.onclick = () => { F.showEarlier = !F.showEarlier; F.page.ros = 1; render(); };
+  app.querySelectorAll('[data-restore]').forEach(b => b.onclick = async () => {
+    const done = acting(b, 'Bringing back…');
+    try { await api('/api/faculty', { action:'restore_student', courseId:course.id, enrolmentId:b.dataset.restore }); done(); openCourse(course.id); }
     catch (e) { if (e.stale) return; done('Failed','bad'); }
   });
   app.querySelectorAll('[data-en]').forEach(cb => cb.onchange = () => {
@@ -965,7 +980,7 @@ async function restoreFaculty(params,current) {
   Object.assign(F,{data,tab,view,course,progress,studentResults,simResults,resultsSort:simResults?.sort||'name',simsOverview,err:null,
     ...lists,
     newCourse:view==='home' && params.get('new')==='1',editCourse:view==='course' && params.get('edit')==='1',
-    addSim:view==='course' && params.get('add')==='1',looking:PortalNavigation.id(params,'look') || null,help:null});
+    addSim:view==='course' && params.get('add')==='1',showEarlier:false,looking:PortalNavigation.id(params,'look') || null,help:null});
   F.sel.clear();
 }
 

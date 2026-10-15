@@ -1,4 +1,5 @@
 const { body } = require('../lib/guard.js');
+const enrolmentsLib = require('../lib/course-enrolments.js');
 const { syncCourseRoster, approvedIds } = require('../lib/session-roster.js');
 const store = require('../lib/store.js');
 const { verifyLaunch } = require('../lib/launch.js');
@@ -29,7 +30,7 @@ async function otherOpenSessions(courseId, except) {
 }
 
 // Close those sessions after faculty confirmed. Teams keep their saved decisions and results.
-async function closeSessions(list, who, from) {
+async function closeSessions(list, who, from, req, b) {
   for (const s of list) {
     for (let i = 0; i < 5; i++) {
       const prev = await store.getSession(s.code);
@@ -37,6 +38,7 @@ async function closeSessions(list, who, from) {
       const next = { ...structuredClone(prev), state: 'closed', closedAt: Date.now(), closedBy: who.name || null, closedFrom: from };
       if (await store.compareAndSetSession(s.code, prev, next)) {
         if (next.courseId) await pointCourse(() => store.clearCourseTeamSession(next.courseId, s.code));
+        if (req) await enrolmentsLib.moveSessionRoster(req, b, next, 'archive', await store.getParticipants(s.code).catch(() => ({})));
         break;
       }
     }
@@ -320,7 +322,7 @@ module.exports = async (req, res) => {
         if (who.platformAuth && who.courseId) {
           const open = await otherOpenSessions(who.courseId, null);
           if (open.length && !b.closeOpen) return otherOpenReply(res, open, 'Starting a new session');
-          if (open.length) await closeSessions(open, who, 'new-session');
+          if (open.length) await closeSessions(open, who, 'new-session', req, b);
         }
         const c = newCode();
         const sess = {
@@ -591,7 +593,7 @@ module.exports = async (req, res) => {
           if (!sess.practice && sess.courseId) {
             const open = await otherOpenSessions(sess.courseId, code);
             if (open.length && !b.closeOpen) return otherOpenReply(res, open, 'Reopening this session');
-            if (open.length) await closeSessions(open, who, 'reopen-other');
+            if (open.length) await closeSessions(open, who, 'reopen-other', req, b);
           }
           sess.state = sess.startedAt ? 'running' : 'lobby';
           sess.paused = false;
@@ -603,6 +605,8 @@ module.exports = async (req, res) => {
         if (b.set === 'reopen' && !sess.practice && sess.mode === 'team' && sess.courseId) {
           await pointCourse(() => store.setCourseTeamSession(sess.courseId, code));
         }
+        // The class page lists this session's students again while it is open; they move into Results when it closes.
+        if (b.set === 'close' || b.set === 'reopen') await enrolmentsLib.moveSessionRoster(req, b, sess, b.set === 'close' ? 'archive' : 'restore', await store.getParticipants(code).catch(() => ({})));
         return res.status(200).json({ session: sess });
       }
 

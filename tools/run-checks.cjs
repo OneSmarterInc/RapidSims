@@ -14,7 +14,7 @@ run(['--test', ...fs.readdirSync(path.join(__dirname, 'security'))
 for (const name of ['sim-identity-check','session-sims-check','new-sims-entry-check',
   'catalogue-content-check','health-contract-check','catalogue-number-check','deploy-check',
   'catalogue-check','sim-detail-check','address-check.test','address-check','contact-check',
-  'prose-check','check-faculty-student-results','faculty-sim-results-check','midland-practice-check','student-reset-check']) {
+  'prose-check','check-faculty-student-results','faculty-sim-results-check','midland-practice-check','student-reset-check','class-roster-check']) {
   run(['platform/tools/' + name + '.js']);
 }
 run(['platform/tools/sync-catalogue-source.js', '--check']);

@@ -118,7 +118,7 @@ module.exports = async (req, res) => {
       let rows;
       if (courseId) {
         rows = await s`
-          SELECT e.id, e.paid, e.dropped, c.title, e.course_id
+          SELECT e.id, e.paid, e.dropped, c.title, e.course_id, e.archived_at
           FROM enrolments e
           JOIN courses c ON c.id = e.course_id
           JOIN course_sims cs ON cs.course_id = c.id AND cs.sim_id = ${simId}
@@ -126,7 +126,7 @@ module.exports = async (req, res) => {
           ORDER BY e.paid DESC LIMIT 1`;
       } else {
         rows = await s`
-          SELECT e.id, e.paid, e.dropped, c.title, e.course_id
+          SELECT e.id, e.paid, e.dropped, c.title, e.course_id, e.archived_at
           FROM enrolments e
           JOIN courses c ON c.id = e.course_id
           JOIN course_sims cs ON cs.course_id = c.id AND cs.sim_id = ${simId}
@@ -167,6 +167,8 @@ module.exports = async (req, res) => {
       // ticket so session sims can find that course's open room automatically.
       courseId = en.course_id;
       asRole = 'student';
+      // A student from an earlier session comes back to the class page by opening a sim again.
+      if (en.archived_at) await s`UPDATE enrolments SET archived_at = NULL, archived_session = NULL WHERE id = ${en.id}`;
     }
 
     const runId = id('lch');

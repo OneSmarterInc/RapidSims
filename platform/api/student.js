@@ -74,6 +74,7 @@ module.exports = async (req, res) => {
         const already = (await s`SELECT id, dropped FROM enrolments WHERE course_id = ${course.id} AND student_id = ${user.id}`)[0];
         if (already) {
           if (already.dropped) return res.status(403).json({ error: 'instructor_approval_required' });
+          await s`UPDATE enrolments SET archived_at = NULL, archived_session = NULL WHERE id = ${already.id} AND archived_at IS NOT NULL`;
         } else {
           await s`INSERT INTO enrolments (id, course_id, student_id)
                   VALUES (${id('enr')}, ${course.id}, ${user.id})`;
@@ -93,6 +94,7 @@ module.exports = async (req, res) => {
         if (!course) return res.status(404).json({ error: 'no_such_course' });
         const already = (await s`SELECT id, dropped FROM enrolments WHERE course_id = ${course.id} AND student_id = ${me.id}`)[0];
         if (already?.dropped) return res.status(403).json({ error: 'instructor_approval_required' });
+        if (already) await s`UPDATE enrolments SET archived_at = NULL, archived_session = NULL WHERE id = ${already.id} AND archived_at IS NOT NULL`;
         if (!already) await s`INSERT INTO enrolments (id, course_id, student_id) VALUES (${id('enr')}, ${course.id}, ${me.id})`;
         return res.status(200).json({ ok: true, course: { title: course.title } });
       }

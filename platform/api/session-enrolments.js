@@ -30,10 +30,24 @@ module.exports = async (req, res) => {
     }
     const attached = await s`SELECT 1 FROM course_sims WHERE course_id = ${courseId} AND sim_id = ${p.sim}`;
     if (!attached.length) return res.status(403).json({ error: 'simulation_not_on_course' });
+    // A closed session's students move into Results; reopening it brings them back.
+    const action = String(b.action || 'list');
+    if (action === 'archive' || action === 'restore') {
+      const ids = (Array.isArray(b.participantIds) ? b.participantIds : []).slice(0, 500)
+        .map(x => String(x || '').match(/^platform:([A-Za-z0-9_-]{1,100})$/)).filter(Boolean).map(m => m[1]);
+      if (!ids.length) return res.status(200).json({ ok: true, changed: 0 });
+      const label = String(b.sessionLabel || '').slice(0, 80) || null;
+      const changed = action === 'archive'
+        ? await s`UPDATE enrolments SET archived_at = now(), archived_session = ${label}
+            WHERE course_id = ${courseId} AND student_id = ANY(${ids}) AND archived_at IS NULL RETURNING id`
+        : await s`UPDATE enrolments SET archived_at = NULL, archived_session = NULL
+            WHERE course_id = ${courseId} AND student_id = ANY(${ids}) AND archived_at IS NOT NULL RETURNING id`;
+      return res.status(200).json({ ok: true, changed: changed.length });
+    }
     const rows = await s`
       SELECT u.id AS student_id, u.name, e.paid
       FROM enrolments e JOIN users u ON u.id = e.student_id
-      WHERE e.course_id = ${courseId} AND e.dropped = false
+      WHERE e.course_id = ${courseId} AND e.dropped = false AND e.archived_at IS NULL
         AND u.role = 'student' AND u.disabled = false
       ORDER BY lower(u.name), u.id`;
     return res.status(200).json({ students: rows.map(r => ({

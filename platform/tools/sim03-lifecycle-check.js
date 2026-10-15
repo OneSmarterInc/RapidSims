@@ -31,6 +31,8 @@ function sql(strings, ...v) {
   const q = norm(strings);
 
   // Sign-in throttle (platform/lib/auth-throttle.js): every test attempt is the first in its window.
+  // Opening the class link or a sim again brings an earlier session's student back to the class page.
+  if (q.startsWith('UPDATE enrolments SET archived_at = NULL')) return [];
   if (q.startsWith('INSERT INTO auth_attempts')) return Promise.resolve([{ attempts: 1 }]);
   if (q.startsWith('DELETE FROM auth_attempts')) return Promise.resolve([]);
   if (q.includes('SELECT id FROM courses WHERE join_code')) {
