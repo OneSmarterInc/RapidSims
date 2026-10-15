@@ -51,7 +51,7 @@ async function sessionCode(p) {
         if(r.url)res.setHeader('location',r.url);
         res.setHeader('content-type','application/json');return res.end(r.payload?JSON.stringify(r.payload):'');
       }
-      if(['/instructor.html','/faculty-workspace.js','/faculty-workspace.css'].includes(pathname)){
+      if(['/instructor.html','/faculty-workspace.js','/faculty-workspace.css','/midland-debrief.js','/midland-debrief.css'].includes(pathname)){
         res.setHeader('content-type',pathname.endsWith('.js')?'text/javascript':pathname.endsWith('.css')?'text/css':'text/html');return res.end(await fs.readFile(path.join(root,'sim03/public',pathname.slice(1))));
       }
       res.statusCode=404;res.end();
@@ -215,6 +215,20 @@ async function sessionCode(p) {
   await shortcut.locator('#close-compare').click();
   await shortcut.locator('#tab-answers').click();
   await shortcut.screenshot({path:path.join(artifacts,'03-team-written-responses.png'),fullPage:true});
+  // Debrief: slides written from this session's results.
+  await shortcut.locator('#debrief-tab').click();
+  await shortcut.locator('#md-root .md-head').waitFor();
+  equal(await shortcut.locator('#md-root [data-md-go]').count(),8,'debrief has eight slides');
+  equal((await shortcut.locator('#md-root .md-head').textContent()).includes('Year 3'),true,'the first slide states the Year 3 result');
+  await shortcut.locator('#md-root [data-md="next"]').click();
+  await shortcut.locator('#md-root [data-md="lesson"]').click();
+  equal((await shortcut.locator('#md-root .md-lesson').textContent()).includes('Technology spending takes time to pay off.'),true,'Show lesson reveals lesson 1');
+  await shortcut.evaluate(()=>refresh());
+  equal(await shortcut.locator('#md-root [data-md-go="1"]').getAttribute('aria-selected'),'true','polling keeps the slide in place');
+  await shortcut.locator('#md-root [data-md="anon"]').click();
+  equal((await shortcut.locator('#md-root .md-stage').textContent()).includes('Team A'),true,'anonymous switch replaces team names');
+  await shortcut.screenshot({path:path.join(artifacts,'03b-debrief.png'),fullPage:true});
+  await shortcut.locator('#results-tab').click();
   const exportPromise=shortcut.waitForEvent('download');await shortcut.locator('#export-btn').click();
   const download=await exportPromise;const csvPath=path.join(artifacts,'shared-team-responses.csv');await download.saveAs(csvPath);
   const csv=await fs.readFile(csvPath,'utf8');
