@@ -244,7 +244,7 @@ function render() {
   else if (F.view === 'sim' && F.course && F.frame) renderFrame();
   else if (F.view === 'course' && F.course) renderCourse();
   else renderHome();
-  document.body.classList.toggle('rs-framed', F.view === 'sim');
+  document.body.classList.toggle?.('rs-framed', F.view === 'sim');
   drawMenu();
 }
 
