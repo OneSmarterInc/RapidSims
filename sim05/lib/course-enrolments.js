@@ -31,4 +31,24 @@ async function courseEnrolments(req, b, sess) {
     unavailable.status=503;throw unavailable;
   }
 }
-module.exports = { courseEnrolments };
+// When a session closes its students move into Results on the class page; reopening brings them back.
+// Best effort: the session's own state never waits on the class page.
+async function moveSessionRoster(req, b, sess, action, participants) {
+  // Only where a platform is configured (always in production); checks without one never reach the network.
+  if (!process.env.PLATFORM_URL || !sess || !sess.platformAuth || !sess.courseId || sess.practice) return { ok: false, skipped: true };
+  const token = String(req.headers?.['x-launch-token'] || b.launchToken || '');
+  const p = verifyLaunch(token);
+  if (!p || p.sim !== META.id || p.role !== 'faculty' || p.course !== sess.courseId || p.mode !== 'session') return { ok: false, skipped: true };
+  const ids = Object.keys(participants || {}).filter(id => /^platform:[A-Za-z0-9_-]+$/.test(id));
+  if (!ids.length) return { ok: true, changed: 0 };
+  const base = (process.env.PLATFORM_URL || 'https://rapidsims.flexee.org').replace(/\/+$/, '');
+  try {
+    const response = await fetch(base + '/api/session-enrolments', {
+      method: 'POST', redirect: 'error', signal: AbortSignal.timeout(4000),
+      headers: { 'Content-Type': 'application/json', 'x-launch-token': token },
+      body: JSON.stringify({ courseId: sess.courseId, action, participantIds: ids, sessionLabel: sess.name || '' })
+    });
+    return { ok: response.ok };
+  } catch (e) { console.error('class roster move failed', e.code || e.name || 'error'); return { ok: false }; }
+}
+module.exports = { courseEnrolments, moveSessionRoster };
