@@ -355,7 +355,7 @@ const LESSON_QUESTIONS = [
   "What does a dollar you spend this year buy two years from now?",
   "Which capabilities take more than a year to build?",
   "Every executive is right about their own part of the company. How do you fund the whole company?",
-  "Which need will speak up for itself, and which one only you can speak for?"
+  "Which part of the company had no one asking for money?"
 ];
 
 function publicConfig(thresholds = DEFAULT_THRESHOLDS) {

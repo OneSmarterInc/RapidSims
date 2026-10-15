@@ -195,7 +195,7 @@ function renderStart(){
 function mountDebrief(){
  if(!global.MidlandDebrief){$('md-root').innerHTML='<p class="md-empty">The debrief could not load. Reload the page.</p>';return;}
  global.MidlandDebrief.mount($('md-root'),()=>({mode:cfg.state.session.mode,thresholds:cfg.state.session.thresholds||cfg.state.defaultThresholds||{},
-  teams:TEAMS.map(t=>({id:t.id,name:t.name,members:t.members,year1:t.year1,year2:t.year2,outcomes:t.outcomes,strategicView:t.strategicView,reviews:t.reviews}))}));
+  teams:TEAMS.map(t=>({id:t.id,name:t.name,members:t.members,year1:t.year1,year2:t.year2,outcomes:t.outcomes,strategicView:t.strategicView,reviews:t.reviews}))}),{onEnd:()=>showPage('results')});
 }
 function showPage(p){page=p;paintPage();if(cfg.onPage)cfg.onPage(page);}
 function paintPage(){
