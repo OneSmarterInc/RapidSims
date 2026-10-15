@@ -78,6 +78,11 @@ async function invoke(endpoint, body, lt) {
   check((await invoke(handler, { action: 'course_session' }, student)).body, { code: null }, 'Closed session no longer captures launches');
   check((await invoke(outcome, { stage: 'year1', year1: alloc }, student)).body.error === 'team_session_open', false, 'Solo play returns after close');
 
+  check((await invoke(handler, { action: 'control', code, set: 'reopen' }, faculty)).status, 200, 'A class closed by mistake reopens');
+  check([sessions.get(code).state, pointers.get('crs_A')], ['lobby', code], 'Reopened: back in setup (it was never started) and the course class again');
+  check((await invoke(handler, { action: 'course_session' }, student)).body, { code }, 'Students are routed to the reopened class');
+  check((await invoke(handler, { action: 'control', code, set: 'reopen' }, faculty)).status, 409, 'Only a closed class reopens');
+  check((await invoke(handler, { action: 'control', code, set: 'close' }, faculty)).status, 200, 'Close it again');
   const listed = (await invoke(handler, { action: 'course_sessions' }, faculty)).body.sessions;
   check(listed.map(x => [x.code, x.mode, x.state]).sort(), [[code, 'team', 'closed'], [individual.body.session.code, 'individual', 'lobby']].sort(), 'Faculty see every session for the course');
   const otherFaculty = token({ sub: 'fac-2', name: 'Other', role: 'faculty', course: 'crs_A', mode: 'session' });

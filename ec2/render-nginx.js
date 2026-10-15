@@ -18,7 +18,7 @@ for (const path of ['/api/auth','/api/student']) location('= '+path,apps.platfor
 location('/', apps.platform);
 for (const [id, app] of Object.entries(apps)) {
   if (id === 'platform') continue;
-  if (!/^[a-z0-9-]+$/.test(app.dir) || !Number.isInteger(app.port) || app.port < 1024 || app.port > 65535) throw new Error('Invalid app manifest');
+  if (!/^[A-Za-z0-9-]+$/.test(app.dir) || !Number.isInteger(app.port) || app.port < 1024 || app.port > 65535) throw new Error('Invalid app manifest');
   for (const prefix of [app.prefix, ...(app.aliases || [])]) {
     if (!/^\/[a-z0-9-]+$/.test(prefix)) throw new Error('Invalid route prefix');
     lines.push(`    location = ${prefix} { return 308 ${prefix}/$is_args$args; }`);
