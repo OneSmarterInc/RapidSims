@@ -75,6 +75,9 @@ process.env.SIM03_SESSION_URL = 'http://midland.internal/api/session';
   const facultyLt = launchToken({ userId: 'f1', name: 'Faculty f1', role: 'faculty', simId: 'rapid-03-midland', courseId: 'c1', mode: 'session', runId: 'x' });
   const realClass = (await invoke(midland, { action: 'create', mode: 'team', name: 'Thursday' }, facultyLt)).body.session.code;
 
+  const row = (await call({ action: 'midland_status', courseId: 'c1' })).body;
+  check([row.available, row.open && row.open.code, row.open && row.open.state, row.open && row.open.name], [true, realClass, 'lobby', 'Thursday'], 'The course row sees the open session');
+  check((await call({ action: 'midland_status', courseId: 'c1' }, 'nobody')).statusCode >= 400, true, 'Only the signed-in faculty member sees it');
   let r = await call({ action: 'midland_practice_start', courseId: 'c1' });
   check(r.statusCode, 200, 'Faculty start a practice class');
   const { code, students, classUrl } = r.body;
@@ -126,6 +129,7 @@ process.env.SIM03_SESSION_URL = 'http://midland.internal/api/session';
   check([r.statusCode, sessions.has(second), sessions.has(realClass)], [200, false, true], 'Finish practice removes the practice class and keeps the real class');
 
   global.fetch = async () => { throw new Error('down'); };
+  check((await call({ action: 'midland_status', courseId: 'c1' })).body.available, false, 'If Midland cannot be reached, the row says it is checking, not that nothing is open');
   check((await call({ action: 'midland_practice_start', courseId: 'c1' })).statusCode, 503, 'If Midland cannot be reached, the course page says so');
   console.log(`Midland practice checks passed (${n} assertions).`);
 })().catch(e => { console.error(e); process.exit(1); });
