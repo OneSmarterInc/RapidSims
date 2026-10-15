@@ -41,10 +41,18 @@ declare -A previous=()
 changed=()
 for app in $(node -e "console.log(Object.keys(require('./ec2/apps.json')).join(' '))"); do
   dir="$(node -e "console.log(require('./ec2/apps.json')[process.argv[1]].dir)" "$app")"
-  if [[ -L "$links/$app" ]]; then previous[$app]="$(readlink -f "$links/$app")"; else previous[$app]="$repo"; fi
+  [[ -d "$release/$dir" && -f "$release/$dir/package.json" ]] || { echo "Missing registered simulation: $app ($dir)" >&2; exit 1; }
+  if [[ -L "$links/$app" ]]; then
+    previous[$app]="$(readlink -f "$links/$app")"
+  elif systemctl cat "rapidsims@$app.service" &>/dev/null && systemctl is-active --quiet "rapidsims@$app.service"; then
+    # Legacy services previously ran from the checkout, before release pointers existed.
+    previous[$app]="$repo"
+  else
+    previous[$app]=""
+  fi
   printf '%s\t%s\n' "$app" "${previous[$app]}" >> "$release/services-previous.tsv"
-  old="${previous[$app]##*/}"
-  if [[ "$old" =~ ^[a-f0-9]{40}$ ]] && git_repo diff --quiet "$old" "$sha" -- "$dir" shared ec2 package.json package-lock.json; then continue; fi
+  # Restart every registered app, even when its own folder has not changed:
+  # shared assets, environment, schema and startup contracts can affect it.
   changed+=("$app")
 done
 # Retain old configuration for rollback; do not remove release directories here.
@@ -57,7 +65,11 @@ rollback() {
       ln -sfn "${previous[$app]}" "$links/$app.rollback"
       mv -Tf "$links/$app.rollback" "$links/$app"
       systemctl restart "rapidsims@$app.service"
-    else systemctl stop "rapidsims@$app.service"; fi
+    else
+      systemctl stop "rapidsims@$app.service"
+      systemctl disable "rapidsims@$app.service"
+      rm -f "$links/$app"
+    fi
   done
   cp "$release/nginx-previous.conf" /etc/nginx/rapidsims-locations.conf
   nginx -t && systemctl reload nginx
@@ -83,5 +95,5 @@ systemctl reload nginx
 systemctl enable --now rapidsims-reports.service
 systemctl restart rapidsims-reports.service
 trap - ERR
-printf 'Deployed %s; updated services: %s\n' "$sha" "${changed[*]}"
+printf 'Deployed %s; restarted services: %s\n' "$sha" "${changed[*]}"
 
