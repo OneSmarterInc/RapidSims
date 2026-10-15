@@ -351,6 +351,13 @@ function evaluateAll(y1, y2, thresholds) {
   };
 }
 
+const LESSON_QUESTIONS = [
+  "What does a dollar you spend this year buy two years from now?",
+  "Which capabilities take more than a year to build?",
+  "Every executive is right about their own part of the company. How do you fund the whole company?",
+  "Which need will speak up for itself, and which one only you can speak for?"
+];
+
 function publicConfig(thresholds = DEFAULT_THRESHOLDS) {
   const rules = publicRules(thresholds);
   return {
@@ -454,6 +461,8 @@ function publicConfig(thresholds = DEFAULT_THRESHOLDS) {
     ],
     position: rules.position,
     practise: META.detail.practise,
+    // Asked on the Brief; answered in the same order by the closing lesson.
+    lessonQuestions: LESSON_QUESTIONS,
     lastYear: { run: 6.1, uptime: 0.7, capacity: 0.4, connect: 0.2, features: 1.6 },
     viewPrompt: 'This budget is for ___, because ___.',
     viewDisclosure: 'Your instructor can see this sentence. It comes back to you at the end.',
@@ -479,5 +488,5 @@ module.exports = {
   META, LINES, LABELS, DEFAULT_THRESHOLDS, LEGACY_THRESHOLDS, CALIBRATION_ID, OUTCOME_KEYS,
   sanitizeThresholds, validateThresholds, sessionThresholds, standaloneThresholds, publicRules,
   validateAllocation, cumulative, evaluateYear1, evaluateYear2, evaluateYear3,
-  evaluateBuyers, evaluateAll, publicConfig
+  evaluateBuyers, evaluateAll, publicConfig, LESSON_QUESTIONS
 };

@@ -117,6 +117,7 @@ function buildClosingLesson(y1,y2,outcomes,thresholds){
     [heatSentence(c,heat),competitorSentence(c,competitor)].filter(Boolean).join(' '),
     buyerSentence(buyers)
   ].filter(Boolean);
+  const questions=require('./scenario.js').LESSON_QUESTIONS||[];
   return {
     title:'What this RapidSim teaches',
     teaches:[
@@ -124,7 +125,7 @@ function buildClosingLesson(y1,y2,outcomes,thresholds){
       {head:'Some capabilities take years to build.',text:`The $${Number((thresholds&&thresholds.perLineCap)??3)}M yearly limit on each line stands for that time. Money arriving later buys less of it.`},
       {head:'Each executive is right about one part of the company.',text:'The technology leader’s job is to fund the whole company.'},
       {head:'The quietest line can matter most.',text:'Capacity had only you to speak for it, and in Year 3 it decided whether the data could become a service.'}
-    ],
+    ].map((t,i)=>({...t,question:questions[i]||''})),
     paragraphs:[
       'You made two years of choices before you knew which tests would come. Good technology planning works that way: you decide which capabilities Midland will already have when the future arrives.',
       'Every million you put into one line was a million that went to no other line. Dale was right that Run uses money without producing something new. Renata was right that her technicians were stretched. Tom was right that the board needed something real. Sam was right that the machines already knew more than Midland could hear. Your job was to see the whole company while each of them defended one part of it.',
