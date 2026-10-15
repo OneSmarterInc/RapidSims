@@ -225,6 +225,18 @@ module.exports = async (req, res) => {
         return res.status(200).json({ code: open ? open.code : null });
       }
 
+      case 'hide_session': {
+        // A closed session leaves the Sessions list. Its results stay on the platform under Past sessions.
+        const who = whoIsFaculty(req, b);
+        if (!who) return res.status(401).json({ error: 'faculty_authorization_required' });
+        const code = String(b.code || '').toUpperCase();
+        const sess = /^[A-Z2-9]{5}$/.test(code) ? await store.getSession(code) : null;
+        if (!sess || !ownsSession(who, sess)) return res.status(404).json({ error: 'no_such_session' });
+        if (sess.state !== 'closed') return res.status(409).json({ error: 'session_open', message: 'Close the session first. Then you can hide it.' });
+        await store.putSession(code, { ...sess, hidden: true, hiddenAt: Date.now() });
+        return res.status(200).json({ ok: true });
+      }
+
       case 'course_sessions': {
         // The course's sessions, newest first, with what faculty need to open or close each one.
         const who = whoIsFaculty(req, b);
@@ -239,7 +251,7 @@ module.exports = async (req, res) => {
         const sessions = [];
         for (const c of codes.slice(0, 20)) {
           const sess = await store.getSession(c);
-          if (!sess || sess.practice || !ownsSession(who, sess)) continue;
+          if (!sess || sess.practice || sess.hidden || !ownsSession(who, sess)) continue;
           const [people, teamRuns] = await Promise.all([store.getParticipants(c), store.getRuns(c)]);
           const list = Object.values(people || {}).filter(Boolean);
           const runs = Object.values(teamRuns || {}).filter(Boolean);

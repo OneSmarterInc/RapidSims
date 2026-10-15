@@ -26,5 +26,5 @@ assert.equal(solo[0].reflection1,'Own answer');
 for(const marker of ['All team results','Start session →','data-session-control','Opening the simulation is not required for grouping','recordsFrom(cfg.state)','cfg.refreshRoster()','fw-startbar','compare-dialog','No response was recorded for this shared run'])assert(source.includes(marker),marker);
 for(const marker of ['FICTIONAL RESPONSES','SIM03_DEMO','const TEAMS = [','Predictive service ready'])assert(!source.includes(marker),'prototype sample leaked: '+marker);
 const html=fs.readFileSync(path.join(__dirname,'../public/instructor.html'),'utf8');
-assert(html.includes('window.MidlandFaculty.render('));assert(html.includes('faculty-workspace.js?v=20261015b'));
+assert(html.includes('window.MidlandFaculty.render('));assert(html.includes('faculty-workspace.js?v=20261015c'));
 console.log('Faculty workspace checks passed (team/individual adapters, role IDs, saved narratives, legacy results, empty states and live integration).');

@@ -209,7 +209,7 @@ async function snapshot(name, page) {
     box.previousElementSibling.textContent.includes('main office system') &&
     box.nextElementSibling.textContent.includes('sell the company')), true,
     'Brief places the business-model callout after systems and before the planned sale');
-  check(await ben.locator('.brief-practise').textContent().then(t => t.includes('What you will practise')), true, 'Brief states what students will practise');
+  check(await ben.locator('.brief-practise').textContent().then(t => t.includes('What you will practice')), true, 'Brief states what students will practice');
   await snapshot('06-brief-order', ben);
   await next(ben, 1); await next(ben, 2);
   const rules = await ben.locator('#position-rules').innerText();

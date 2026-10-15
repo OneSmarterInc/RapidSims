@@ -105,6 +105,10 @@ async function invoke(endpoint, body, lt) {
   check((await invoke(handler, { action: 'course_sessions' }, student)).status, 401, 'Students cannot list sessions');
   check((await invoke(handler, { action: 'control', code: individual.body.session.code, set: 'close' }, faculty)).status, 200, 'A session in setup closes');
   check((await invoke(handler, { action: 'course_sessions' }, faculty)).body.sessions.every(x => x.state === 'closed'), true, 'The list shows both sessions closed');
+  // Hide session: a closed session leaves the Sessions list; only its owner can hide it.
+  check((await invoke(handler, { action: 'hide_session', code: laterCode }, otherFaculty)).status, 404, 'Another faculty member cannot hide it');
+  check((await invoke(handler, { action: 'hide_session', code: laterCode }, faculty)).status, 200, 'Faculty hide a closed session');
+  check((await invoke(handler, { action: 'course_sessions' }, faculty)).body.sessions.some(x => x.code === laterCode), false, 'A hidden session leaves the list');
 
   console.log(`RapidSim 03 course team-session routing checks passed (${n} assertions).`);
 })().catch(e => { console.error(e); process.exit(1); });

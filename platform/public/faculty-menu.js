@@ -42,8 +42,8 @@ function read() { try { return localStorage.getItem(KEY) === '1'; } catch { retu
 function save(v) { try { localStorage.setItem(KEY, v ? '1' : '0'); } catch { /* menu still works */ } }
 const phone = () => global.matchMedia && global.matchMedia('(max-width:900px)').matches;
 
-function link(key, href, label, extra = '') {
-  return `<a href="${esc(href || '#')}" data-rs-key="${esc(key)}"${opts.current === key ? ' aria-current="page"' : ''}>${extra}${esc(label)}</a>`;
+function link(key, href, label, extra = '', attrs = '') {
+  return `<a href="${esc(href || '#')}" data-rs-key="${esc(key)}"${opts.current === key ? ' aria-current="page"' : ''}${attrs}>${extra}${esc(label)}</a>`;
 }
 
 function html() {
@@ -66,9 +66,10 @@ function html() {
         if (SL.debrief) out += link(`${s.id}:debrief`, SL.debrief, 'Debrief');
         out += '</div>';
       }
-      if (L.results) out += link(`${s.id}:all-results`, L.results, 'All results');
+      if (L.results) out += link(`${s.id}:all-results`, L.results, 'Past sessions');
       if (L.rehearse) out += link(`${s.id}:rehearse`, L.rehearse, 'Rehearse');
-      if (L.play) out += link(`${s.id}:play`, L.play, 'Play it yourself');
+      // Play it yourself opens in a new tab, so the console stays open.
+      if (L.play) out += link(`${s.id}:play`, L.play, 'Play it yourself', '', ' target="_blank" rel="noopener"');
       out += '</div>';
     }
   }

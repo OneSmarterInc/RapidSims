@@ -197,10 +197,26 @@ async function shot(p,name){await p.screenshot({path:path.join(artifacts,name+'.
   const shell=await page('class-shell');await signIn(shell,'teacher@example.test');shell.on('dialog',d=>d.accept());
   await shell.goto(platform+'/faculty.html?view=course&course=course-a');
   await shell.locator('#rs-menu').waitFor();
+  // Play it yourself opens in a new tab; Rehearse is its own page, marked in the menu.
+  equal(await shell.locator('#rs-menu a[data-rs-key="rapid-03-midland:play"]').getAttribute('target'),'_blank','Play it yourself opens in a new tab');
+  await shell.evaluate(()=>{window.__samePage=true;});
+  await shell.locator('#rs-menu a[data-rs-key="rapid-03-midland:rehearse"]').click();
+  await shell.getByRole('heading',{name:'Rehearse Midland Equipment'}).waitFor();
+  equal((await shell.locator('#rs-menu a[aria-current=page]').innerText()).trim(),'Rehearse','the menu marks Rehearse');
+  await shell.locator('[data-practice-start],[data-practice-title]').first().waitFor();
+  equal(await shell.evaluate(()=>window.__samePage===true),true,'Rehearse changes the main area only');
+  await shot(shell,'05a-rehearse');
+  await shell.locator('#rs-menu a[data-rs-key="class"]').click();
+  await shell.waitForFunction(()=>new URL(location.href).searchParams.get('view')==='course');
+  equal(await shell.locator('.faculty-sim-card a.btn.pri').first().innerText().then(t=>t.trim().toLowerCase()),'start a session','one main button: Start a session');
+  await shot(shell,'05b-class-home');
   await shell.locator('a[data-frame]').last().click();
   await shell.waitForFunction(()=>new URL(location.href).searchParams.get('view')==='sim');
   const framed=shell.frameLocator('#simFrame');
   await framed.locator('#create').waitFor();
+  equal(await framed.locator('section.card h3').first().innerText(),'Start a session','Start a session comes first');
+  equal(await framed.locator('body').evaluate(b=>getComputedStyle(b).backgroundColor),'rgb(244, 244, 242)','the Sessions page uses the light class-page theme');
+  await shot(shell,'05c-sessions');
   equal(await shell.locator('#rs-menu').count(),1,'one menu, drawn by the class page');
   equal(await framed.locator('#rs-menu').count(),0,'the framed page draws no menu of its own');
   await shell.evaluate(()=>{window.__samePage=true;});
@@ -223,6 +239,7 @@ async function shot(p,name){await p.screenshot({path:path.join(artifacts,name+'.
   await shell.locator('#rs-menu a[data-rs-key="classes"]').click();
   await shell.waitForFunction(()=>!new URL(location.href).searchParams.get('course'));
   equal(await shell.evaluate(()=>window.__samePage===true),true,'Class home and Your classes change the main area only');
+  await shell.locator('.faculty-start-here').waitFor();await shot(shell,'08-your-classes');
   equal(failures,[],'no browser JavaScript errors or unexpected server errors');
   const result={status:'passed',assertions:checks,scope:'Real account, launch and session handlers plus real HTML in Chromium; in-memory SQL/session adapters; no production data'};
   await fs.writeFile(path.join(artifacts,'results.json'),JSON.stringify(result,null,2));
