@@ -51,8 +51,8 @@ async function sessionCode(p) {
         if(r.url)res.setHeader('location',r.url);
         res.setHeader('content-type','application/json');return res.end(r.payload?JSON.stringify(r.payload):'');
       }
-      if(['/instructor.html','/faculty-workspace.js','/faculty-workspace.css','/midland-debrief.js','/midland-debrief.css'].includes(pathname)){
-        res.setHeader('content-type',pathname.endsWith('.js')?'text/javascript':pathname.endsWith('.css')?'text/css':'text/html');return res.end(await fs.readFile(path.join(root,'sim03/public',pathname.slice(1))));
+      if(['/instructor.html','/faculty-workspace.js','/faculty-workspace.css','/midland-debrief.js','/midland-debrief.css','/faculty-menu.js'].includes(pathname)){
+        res.setHeader('content-type',pathname.endsWith('.js')?'text/javascript':pathname.endsWith('.css')?'text/css':'text/html');return res.end(await fs.readFile(path.join(root,pathname==='/faculty-menu.js'?'platform/public':'sim03/public',pathname.slice(1))));
       }
       res.statusCode=404;res.end();
     }catch(e){errors.push(e.stack);res.statusCode=500;res.end('{}');}
@@ -160,7 +160,7 @@ async function sessionCode(p) {
   equal(await shortcut.locator('#start-session').isDisabled(),true,'start explains missing team assignments');
   f.seed('third','third@example.test','student',true,'Third Student');
   f.seed('fourth','fourth@example.test','student',true,'Fourth Student');
-  await shortcut.locator('#fw-refresh').click();
+  await shortcut.evaluate(()=>refreshEnrolments(true)); // the page also does this by itself every few seconds
   await shortcut.waitForFunction(() => document.querySelectorAll('.fw-unassigned .fw-person').length === 4);
   equal(await shortcut.locator('#teamCount').inputValue(),'2','four approved students default to two teams');
   await shortcut.locator('#autoSplit').click();
@@ -208,10 +208,9 @@ async function sessionCode(p) {
   await shortcut.locator('#tab-outcomes').click();
   equal((await shortcut.locator('#response-content').textContent()).includes('Carrolton Systems'),true,'saved buyer outcomes appear in the same selected-team panel');
   await shortcut.locator('#compare-btn').click();
-  const compared=await shortcut.locator('#compare-left').inputValue();
+  equal(await shortcut.locator('#compare-all .compare-card').count(),2,'compare shows every submitted team at once');
   await shortcut.evaluate(()=>refresh());
   equal(await shortcut.locator('#compare-dialog').evaluate(el=>el.open),true,'polling does not close comparison');
-  equal(await shortcut.locator('#compare-left').inputValue(),compared,'polling preserves comparison selection');
   await shortcut.locator('#close-compare').click();
   await shortcut.locator('#tab-answers').click();
   await shortcut.screenshot({path:path.join(artifacts,'03-team-written-responses.png'),fullPage:true});

@@ -65,4 +65,15 @@ async function practiceFinish(me, course, sim) {
   return { status: r.ok ? 200 : r.status, data: r.ok ? { ok: true } : { error: r.data.error || 'practice_unavailable' } };
 }
 
-module.exports = { SIM, ask, practiceStart, practiceStatus, practiceFinish, sessionUrl };
+// The course row and menu: the open session, or the most recent one.
+async function courseStatus(me, course, sim) {
+  const r = await ask(me, course, sim, { action: 'course_sessions' });
+  if (!r.ok) return { status: 200, data: { available: false, open: null, last: null } };
+  const pick = x => x ? { code: String(x.code || ''), name: String(x.name || '').slice(0, 80), mode: x.mode === 'individual' ? 'individual' : 'team',
+    state: ['lobby', 'running', 'closed'].includes(x.state) ? x.state : 'closed', paused: !!x.paused, createdAt: x.createdAt || null,
+    students: Number(x.students) || 0, teams: Number(x.teams) || 0, submitted: Number(x.submitted) || 0 } : null;
+  const list = Array.isArray(r.data.sessions) ? r.data.sessions : [];
+  return { status: 200, data: { available: true, open: pick(list.find(x => x.state !== 'closed')), last: pick(list.find(x => x.state === 'closed')), count: list.length } };
+}
+
+module.exports = { SIM, ask, practiceStart, practiceStatus, practiceFinish, courseStatus, sessionUrl };
