@@ -488,7 +488,7 @@ function renderCourse() {
           <div class="side faculty-sim-side">
             <div class="faculty-sim-actions">
               ${x.sim_id === 'rapid-03-midland'
-                ? `<a class="btn pri sm" href="/api/launch?sim=${encodeURIComponent(x.sim_id)}&course=${encodeURIComponent(course.id)}&mode=session">Sessions</a>
+                ? `<a class="btn pri sm" href="/api/launch?sim=${encodeURIComponent(x.sim_id)}&course=${encodeURIComponent(course.id)}&mode=session">Manage sessions</a>
                    <button class="btn sm" data-midland-rehearse>Rehearse</button>`
                 : x.sim_id === 'rapid-05-approve'
                 ? `<a class="btn pri sm" href="/api/launch?sim=${encodeURIComponent(x.sim_id)}&course=${encodeURIComponent(course.id)}&mode=session&play=team">Run groups</a>
