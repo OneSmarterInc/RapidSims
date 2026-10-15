@@ -1,7 +1,7 @@
 // The whole debrief, including the resolution. None of this exists in the
 // browser until the student has finished all three decisions.
 const { checkAccess, requireKey, anthropic, body } = require('../lib/guard.js');
-const { reportCompletion } = require('../lib/launch.js');
+const { report } = require('../lib/completion.js');
 const S = require('../lib/scenario.js');
 
 const EVIDENCE = [
@@ -135,23 +135,8 @@ ${arcText}`;
   // Awaited deliberately. A serverless function can be frozen the moment the
   // response is sent, so a fire-and-forget request may never leave the machine.
   if (req.launch) {
-    const readingAtEnd = label(S.READINGS, positions[positions.length - 1].reading);
-    const firedAndIgnored = verdicts.filter(v => v.verdict && !v.ok).length;
-    await reportCompletion({
-      launch: req.launch,
-      summary: `Finished all three decisions. Final reading: ${readingAtEnd}.`,
-      metrics: {
-        'Final reading': readingAtEnd,
-        'Sequencing': anyIrreversibleEarly ? 'Acted irreversibly before Day 2' : 'Kept options open',
-        'Threshold disclosure': ladderEarnedAt === null ? 'Never obtained'
-          : (S.PHASES[ladderEarnedAt] ? S.PHASES[ladderEarnedAt].label : 'Obtained')
-            + (ladderPrivate ? ' (privately)' : ''),
-        'Index preserved': preservedAt === null ? 'No'
-          : (S.PHASES[preservedAt] ? S.PHASES[preservedAt].label : 'Yes'),
-        'Went off the bridge': privateCount,
-        'Tripwires not acted on': firedAndIgnored
-      }
-    });
+    await report(req.launch, b, { positions, ladderEarnedAt, ladderPrivate, preservedAt, preservedByTalk, privateCount,
+      firedAndIgnored: verdicts.filter(v => v.verdict && !v.ok).length, revision: 1 });
   }
 
   return res.status(200).json({
