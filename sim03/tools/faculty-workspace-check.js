@@ -1,8 +1,9 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');const path=require('node:path');const vm=require('node:vm');
-const source=fs.readFileSync(path.join(__dirname,'../public/faculty-workspace.js'),'utf8');
-const context={};vm.createContext(context);vm.runInContext(source,context);
-const records=context.MidlandFaculty.recordsFrom;
+const source=fs.readFileSync(path.join(__dirname,'../../platform/public/kit/faculty-workspace.js'),'utf8');
+const settings=fs.readFileSync(path.join(__dirname,'../public/midland-faculty.js'),'utf8');
+const context={};vm.createContext(context);vm.runInContext(source,context);vm.runInContext(settings,context);
+const records=snap=>context.FacultyWorkspace.recordsFrom(snap,context.MidlandSettings);
 const snap={session:{mode:'team'},participants:{
  a:{id:'a',name:'Same Name',groupId:'team:one',teamLabel:'Team 1',isCaptain:true,joinedAt:null},
  b:{id:'b',name:'Same Name',groupId:'team:one',teamLabel:'Team 1',isCaptain:false,joinedAt:99},
@@ -26,5 +27,5 @@ assert.equal(solo[0].reflection1,'Own answer');
 for(const marker of ['All team results','Start session →','data-session-control','Opening the simulation is not required for grouping','recordsFrom(cfg.state)','cfg.refreshRoster()','fw-startbar','compare-dialog','No response was recorded for this shared run'])assert(source.includes(marker),marker);
 for(const marker of ['FICTIONAL RESPONSES','SIM03_DEMO','const TEAMS = [','Predictive service ready'])assert(!source.includes(marker),'prototype sample leaked: '+marker);
 const html=fs.readFileSync(path.join(__dirname,'../public/instructor.html'),'utf8');
-assert(html.includes('window.MidlandFaculty.render('));assert(html.includes('faculty-workspace.js?v=20261015c'));
+assert(html.includes('FacultySession.start(window.MidlandSettings)'));assert(html.includes('kit/faculty-workspace.js?v=20261015d'));assert(html.includes('midland-faculty.js?v=20261015d'));
 console.log('Faculty workspace checks passed (team/individual adapters, role IDs, saved narratives, legacy results, empty states and live integration).');

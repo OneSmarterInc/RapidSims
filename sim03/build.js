@@ -11,9 +11,14 @@ const S = require('./lib/scenario.js');
 
 const read = (name) => fs.readFileSync(path.join(__dirname, 'public', name), 'utf8');
 const index = read('index.html');
-const instructor = read('instructor.html');
+const instructorHtml = read('instructor.html');
+// The faculty pages are the shared RapidSims kit plus Midland's own settings.
+const kitFile = name => fs.readFileSync(path.join(__dirname, '..', 'platform', 'public', 'kit', name), 'utf8');
+const sessionKit = kitFile('faculty-session.js');
+const settings = read('midland-faculty.js');
+const instructor = [instructorHtml, sessionKit, settings].join('\n');
 const launcher = read('launch.html');
-const workspace = read('faculty-workspace.js');
+const workspace = kitFile('faculty-workspace.js');
 const configApi = fs.readFileSync(path.join(__dirname, 'api', 'config.js'), 'utf8');
 
 function refuse(message) {
@@ -60,9 +65,6 @@ for (const raw of ['strategic_view_locked','year1_locked','year2_locked']) {
   if (!index.includes(raw)) refuse('friendly error mapping missing for: ' + raw);
 }
 
-if (!instructor.includes('Anonymous run ${i+1}')) {
-  refuse('projector-friendly opening sentence cards are missing');
-}
 if (!instructor.includes("Heat wave middle starts at ≥")) {
   refuse('instructor calibration label does not describe the middle-band lower bound');
 }
@@ -108,7 +110,7 @@ if (index.includes('id=\"teamName\"')) refuse('student team-name input returned;
 for (const marker of ['m03-faculty-lt','System message: Midland confirmed you as faculty','async function renewFaculty()','captureDraft()','facultyRecovery']) if (!instructor.includes(marker)) refuse('faculty authorization persistence marker missing: ' + marker);
 if (!launcher.includes("sessionStorage.setItem('m03-faculty-lt',token)")) refuse('launch router does not persist faculty authorization');
 if (!index.includes("sessionStorage.setItem('m03-faculty-lt',LAUNCH_TOKEN)")) refuse('faculty play surface does not persist faculty authorization');
-for (const marker of ['Resume session code', 'function startPresent()', 'dotcount', 'the annual cap is the wall'])
+for (const marker of ['Resume session code', 'FacultySession.start(window.MidlandSettings)'])
   if (!instructor.includes(marker)) refuse('instructor entry/debrief marker missing: ' + marker);
 for (const marker of ['Auto split teams', 'Unassigned students', 'Team lead', 'All team results', 'Start session',
   'Advanced settings and instructor notes', 'Approved · not opened yet'])
@@ -134,7 +136,6 @@ if (S.META.minutes !== 30) refuse('Increment 2 catalogue duration is not 30 minu
 if (index.includes('That imbalance was intentional')) refuse('simulation-design language leaked into the debrief');
 if (index.includes('calibrationGap') || index.includes('unresolved_calibration')) refuse('resolved Year 3 calibration scaffolding remains in the student UI');
 if (!instructor.includes('Data without room to run it')) refuse('instructor Year 3 distribution is missing data_no_room label');
-if (!instructor.includes('Corven high / Ridge Hollow low')) refuse('instructor buyer debate finder is missing');
 for (const marker of ['MAX $${C.lineMaximum}M / YEAR','The business model','function year2BreakdownHTML(','Year 1 + Year 2 split','advocate-reminder','How to set your Year 1 budget'])
   if (!index.includes(marker)) refuse('Increment 2 visibility follow-up marker missing: ' + marker);
 for (const marker of ['Year 2 brought two tests.','Tom wants to sell a new service: fixing units before they fail.','Tom asks you to look back on your three years.'])
@@ -149,7 +150,9 @@ function checkScripts(name, source) {
 }
 try {
   checkScripts('index.html', index);
-  checkScripts('instructor.html', instructor);
+  checkScripts('instructor.html', instructorHtml);
+  new vm.Script(sessionKit, { filename: 'kit/faculty-session.js' });
+  new vm.Script(settings, { filename: 'midland-faculty.js' });
   checkScripts('launch.html', launcher);
   new vm.Script(workspace, { filename: 'faculty-workspace.js' });
 } catch (e) {

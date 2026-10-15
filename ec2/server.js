@@ -258,8 +258,15 @@ function sendFile(res, file) {
   }).pipe(res);
 }
 
+// The shared RapidSims faculty pages (/kit/) live in the platform and are served by every app,
+// so a sim's instructor page can load kit/... beside itself (template: claude/RapidSims-Faculty-Template.md).
+const kitRoot = path.join(REPO, 'platform', 'public', 'kit');
 function staticPath(pathname) {
   const decoded = decodeURIComponent(pathname);
+  if (/^\/kit\/[a-z0-9-]+\.(js|css)$/.test(decoded)) {
+    const kitFile = path.join(kitRoot, decoded.slice(5));
+    return fs.existsSync(kitFile) ? kitFile : null;
+  }
   const relative = decoded === '/' ? 'index.html' : decoded.replace(/^\/+/, '');
   const candidate = path.resolve(publicRoot, relative);
   if (candidate !== publicRoot && !candidate.startsWith(publicRoot + path.sep)) return null;
