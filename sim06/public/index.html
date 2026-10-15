@@ -259,7 +259,7 @@ function render(){
     const by=v.decision.by?` (${esc(v.decision.by)} pressed)`:'';
     const st=v.status?.kind==='switching'?`<div class="status-box" role="status"><h3 class="status-title">Switching is in progress</h3><p>Terminals are re-registering. Stores cannot take card payments during this window.</p><p>About eight simulation minutes, or up to 1 minute 20 seconds in real time, in total. Estimated time left in this window: <strong id="switch-remaining">${fmtDuration(Math.max(0,v.status.untilMs-v.elapsedMs))}</strong>.</p></div>`:v.status?.text?`<div class="status-box" role="status"><h3 class="status-title">The switching window has ended</h3><p>${esc(v.status.text)} Keep reading the reports as the simulation continues.</p></div>`:'';
     panel=`<div class="card"><div class="ey">Decision recorded</div><p>${me.team?'Your team':'You'} ${what} at report ${v.decision.atReport}${by}. This choice is final for the run.</p>${st}
-    <h3>What to do now</h3><p>Keep reading new reports. Open both provider documents if you have not already. You do not need to submit anything else.</p><p>The run ends when the <strong>real time left</strong> reaches <strong>00:00</strong> (<strong data-run-remaining>${fmtDuration(Math.max(0,s.playMs-v.elapsedMs))}</strong> remaining). The explanation opens automatically.</p></div>`;
+    <h3>What to do now</h3><p>Keep reading new reports. Open both provider documents if you have not already. Your decision is saved. Keep reading until the clock ends.</p><p>The run ends when the <strong>real time left</strong> reaches <strong>00:00</strong> (<strong data-run-remaining>${fmtDuration(Math.max(0,s.playMs-v.elapsedMs))}</strong> remaining). The explanation opens automatically.</p></div>`;
   }else{
     panel=`<div class="card"><div class="ey">Decide</div><div class="choice">
       <button data-c="switch"><b>Switch to ClearPath</b><span>About 8 simulation minutes (up to 1:20 in real time) with no card payments while terminals re-register.</span></button>
@@ -267,7 +267,7 @@ function render(){
       <p class="muted" style="margin-top:10px">Read the reports and both documents before deciding. New reports arrive automatically; you can decide now or keep reading. A confirmed choice is final for this run. If you make no choice before the real-time countdown ends, that is recorded as no decision. The explanation opens automatically at 00:00.</p></div>`;
   }
   app.innerHTML=`<div class="grid play-grid"><div class="play-reports"><div class="card"><div class="ey">Reports</div>${reps}</div></div>
-  <div class="play-actions">${panel}<div class="card"><div class="ey">Documents</div><p class="muted">Open the reports and provider documents while you wait.</p><div class="row">${docButtons()}</div></div>
+  <div class="play-actions">${panel}<div class="card"><div class="ey">Documents</div><p class="muted">Open the two provider documents at any time.</p><div class="row">${docButtons()}</div></div>
   <div class="card"><div class="ey">Briefing</div>${CFG.briefing.map(p=>`<p class="muted">${esc(p)}</p>`).join('')}${who}</div></div></div>`;
   wireDocs();
   app.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>askReason(b.dataset.c));
@@ -276,7 +276,7 @@ function askReason(choice){
   pending=choice;
   const label=choice==='switch'?'Switch to ClearPath':'Stay on Northline';
   modal.innerHTML=`<div class="modal" role="dialog" aria-modal="true"><div class="card" style="width:min(520px,100%)"><div class="ey">${label}</div>
-  <p>${choice==='switch'?'No store can take a card for about eight minutes. ':''}This decision is final for this run. Choose “Not yet” to keep reading.</p><p>In one line, why?</p><textarea id="why" maxlength="${CFG.reasonMaxLength}" aria-label="Your reason"></textarea><div class="m" id="cnt">0 / ${CFG.reasonMaxLength}</div>
+  <p>${choice==='switch'?'No store can take a card for about eight minutes of store time. ':''}This decision is final for this run. Choose “Not yet” to keep reading.</p><p>In one line, why?</p><textarea id="why" maxlength="${CFG.reasonMaxLength}" aria-label="Your reason"></textarea><div class="m" id="cnt">0 / ${CFG.reasonMaxLength}</div>
   <div class="row"><button class="btn pri" id="ok">Confirm: ${label}</button><button class="btn" id="no">Not yet</button></div><div id="me"></div></div></div>`;
   const ta=document.getElementById('why');ta.focus();
   ta.oninput=()=>document.getElementById('cnt').textContent=`${ta.value.length} / ${CFG.reasonMaxLength}`;
