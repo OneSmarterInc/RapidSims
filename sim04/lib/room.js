@@ -7,6 +7,7 @@
 const config = require('../data/config');
 const sheets = require('../data/sheets');
 const engine = require('../engine/retention');
+const debrief = require('./debrief');
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const shortName = email => String(email || '').split('@')[0].slice(0, 40) || 'participant';
@@ -30,18 +31,23 @@ function checkSize(n) {
   return size;
 }
 
-function deadline(session) { return session.startedAt + session.clockMinutes * 60000; }
+function deadline(session) { return session.startedAt + session.clockMinutes * 60000 + (session.pausedMs || 0); }
+// While paused, time stands at the moment of the pause.
+const at = (session, now) => session.pausedAt || now;
 function secondsLeft(session, now) {
-  return session.startedAt ? Math.max(0, Math.ceil((deadline(session) - now) / 1000)) : null;
+  return session.startedAt ? Math.max(0, Math.ceil((deadline(session) - at(session, now)) / 1000)) : null;
 }
+// Every group that has a member has a number, or the clock has run out.
 function allLocked(session, now) {
-  return !!session.startedAt && (now >= deadline(session) || session.slots.every(s => s.commit));
+  const playing = session.slots.filter(s => s.memberIds.length);
+  return !!session.startedAt && (at(session, now) >= deadline(session) || playing.every(s => s.commit));
 }
 function clock(session, now) {
   const remaining = secondsLeft(session, now);
   return {
     remaining, warning: remaining !== null && remaining > 0 && remaining <= config.warningMinutes * 60,
-    expired: remaining === 0, running: !!session.startedAt && remaining > 0 && session.stage === 0
+    expired: remaining === 0, running: !!session.startedAt && remaining > 0 && session.stage === 0 && !session.pausedAt,
+    paused: !!session.pausedAt
   };
 }
 function slotFor(session, id) {
@@ -55,17 +61,29 @@ function newSlot(session) {
   return slot;
 }
 
-function join(session, id, email, now) {
-  if (session.stage === 3) throw new Error('The session is complete.');
-  const clean = String(email || '').trim().toLowerCase().slice(0, 120);
-  if (!EMAIL.test(clean)) throw new Error('Enter your email address.');
+function join(session, id, email, now, name = null) {
+  if (session.stage === 3 || session.state === 'closed') throw new Error('The session is complete.');
   const next = structuredClone(session);
-  if (next.participants[id]) { next.participants[id].joinedAt ||= now; return next; }
+  if (next.participants[id]) { next.participants[id].joinedAt ||= now; return lateSeat(next, id); }
+  const clean = String(email || '').trim().toLowerCase().slice(0, 120);
+  if (!clean && name) {
+    next.participants[id] = { id, email: null, name: String(name).slice(0, 60), joinedAt: now, slotId: null, reportedAt: null };
+    return lateSeat(next, id);
+  }
+  if (!EMAIL.test(clean)) throw new Error('Enter your email address.');
   if (Object.values(next.participants).some(p => p.email === clean)) {
     throw new Error('This email has already joined this room. Continue in the browser you joined from.');
   }
   next.participants[id] = { id, email: clean, name: shortName(clean), joinedAt: now, slotId: null, reportedAt: null };
-  return next;
+  return lateSeat(next, id);
+}
+// Individual play after the clock starts: a newcomer gets their own run and the next sheet in the cycle.
+function lateSeat(session, id) {
+  if (session.mode !== 'individual' || session.state !== 'running' || session.participants[id].slotId) return session;
+  const slot = newSlot(session);
+  slot.memberIds.push(id); slot.sheetId = engine.assignSheets(session.slots.length).at(-1);
+  session.participants[id].slotId = slot.id;
+  return session;
 }
 
 // Random division, before the clock only. Sizes differ by at most one and none
@@ -120,7 +138,13 @@ function rename(session, slotId, label) {
 // One filled group is enough. Unassigned people may still be placed later.
 function start(session, now) {
   if (session.state !== 'lobby') throw new Error('The session has already started.');
-  const filled = session.slots.filter(s => s.memberIds.length);
+  // Individual play: everyone on the list gets their own run.
+  if (session.mode === 'individual') {
+    session = structuredClone(session);
+    for (const p of Object.values(session.participants)) if (!p.slotId) { const s = newSlot(session); s.memberIds.push(p.id); p.slotId = s.id; }
+  }
+  const filled = session.slots.filter(s => s.memberIds.length)
+    .sort((x, y) => x.label.localeCompare(y.label, undefined, { numeric: true }));
   if (!filled.length) throw new Error('Put at least one person in a group before starting.');
   const assignment = engine.assignSheets(filled.length);
   const slots = filled.map((s, i) => ({ ...s, sheetId: assignment[i] }));
@@ -130,7 +154,8 @@ function start(session, now) {
 function commit(session, participantId, number, confidence, now) {
   const slot = slotFor(session, participantId);
   if (!slot) throw new Error('Wait for your instructor to put you in a group.');
-  if (session.stage !== 0 || !session.startedAt || now >= deadline(session)) throw new Error('The number is locked.');
+  if (session.state === 'closed' || session.stage !== 0 || !session.startedAt || at(session, now) >= deadline(session)) throw new Error('The number is locked.');
+  if (session.pausedAt) throw new Error('Your instructor has paused the clock. Commit when it restarts.');
   if (slot.commit) throw new Error('This group has already committed its number.');
   const n = Number(number);
   if (number === '' || number === null || !Number.isFinite(n) || n < 0 || n > 100 || Math.abs(n * 10 - Math.round(n * 10)) > 1e-8) {
@@ -140,7 +165,7 @@ function commit(session, participantId, number, confidence, now) {
     throw new Error('Choose a confidence rating from 1 to 5.');
   }
   const next = structuredClone(session);
-  next.slots.find(s => s.id === slot.id).commit = { number: n, confidence: Number(confidence), at: now };
+  next.slots.find(s => s.id === slot.id).commit = { number: n, confidence: Number(confidence), at: now, by: participantId };
   return next;
 }
 function advance(session, now) {
@@ -165,7 +190,11 @@ function studentView(session, participantId, now) {
     // No sheet before the clock starts, and none for anyone not yet in a group.
     data: slot && started ? engine.studentPayload(slot.sheetId) : null,
     commit: slot ? slot.commit && { number: slot.commit.number.toFixed(1), confidence: slot.commit.confidence } : null,
-    canCommit: !!slot && session.stage === 0 && started && now < deadline(session) && !slot.commit
+    canCommit: !!slot && session.stage === 0 && started && session.state !== 'closed' && !session.pausedAt && at(session, now) < deadline(session) && !slot.commit,
+    // The lesson questions follow the group's number; the review questions follow the instructor's release.
+    afterCommit: slot && (slot.commit || (started && at(session, now) >= deadline(session))) ? debrief.LESSON_QUESTIONS : null,
+    review: { open: !!slot && (!!session.reviewOpen || session.state === 'closed'), questions: debrief.REVIEW_QUESTIONS,
+      sent: !!p.review }
   };
 }
 
@@ -217,3 +246,80 @@ function privateCheck(session) {
 }
 module.exports = { createSession, deadline, allLocked, clock, slotFor, join, divide, move, rename, start,
   commit, advance, studentView, projector: console_, privateCheck, shortName };
+
+// ---- The shared faculty pages (platform/public/kit/) ----
+// Team setup from the Teams tab: value is a group id, a new team name, or '__unassigned__'.
+function assign(session, participantId, value) {
+  const v = String(value || '').trim().slice(0, 40);
+  if (!v) throw new Error('Choose a team.');
+  if (v === '__unassigned__') return withCaptains(move(session, participantId, 'unassigned'));
+  let target = session.slots.find(s => s.id === v) || session.slots.find(s => s.label.toLowerCase() === v.toLowerCase());
+  if (target) return withCaptains(move(session, participantId, target.id));
+  if (session.state !== 'lobby') throw new Error('After the clock starts, place late arrivals in an existing team.');
+  const next = move(session, participantId, 'new');
+  const slot = next.slots.find(s => s.memberIds.includes(participantId));
+  slot.label = v;
+  return withCaptains(next);
+}
+// Every team has a lead: the first member until the instructor chooses another.
+function withCaptains(session) {
+  for (const s of session.slots) if (!s.memberIds.includes(s.captainId)) s.captainId = s.memberIds[0] || null;
+  return session;
+}
+function setCaptain(session, participantId) {
+  const next = structuredClone(session);
+  const slot = next.slots.find(s => s.memberIds.includes(participantId));
+  if (!slot) throw new Error('Put this student in a team first.');
+  slot.captainId = participantId;
+  return next;
+}
+function bandOf(slot) {
+  if (!slot.commit) return 'none';
+  return engine.checkCommit(slot.sheetId, slot.commit.number).status === 'ok' ? 'match' : 'off';
+}
+const kitState = s => s.state === 'complete' || s.state === 'closed' ? 'closed' : s.state === 'lobby' ? 'lobby' : 'running';
+// The faculty session as the shared pages read it: session, participants and one run per team
+// (or per student). Faculty only: it carries numbers, bands, definitions and departments.
+function facultyKit(session, now) {
+  const c = clock(session, now), locked = allLocked(session, now), closed = kitState(session) === 'closed';
+  const individual = session.mode === 'individual';
+  const participants = {}, runs = {};
+  for (const p of Object.values(session.participants)) {
+    const slot = p.slotId ? session.slots.find(s => s.id === p.slotId) : null;
+    participants[p.id] = { id: p.id, name: p.name, joinedAt: p.joinedAt || null,
+      ...(individual ? {} : { groupId: slot ? slot.id : null, teamLabel: slot ? slot.label : null, isCaptain: !!slot && slot.captainId === p.id }) };
+  }
+  for (const slot of session.slots) {
+    if (!slot.memberIds.length) continue;
+    const joined = slot.memberIds.some(id => session.participants[id]?.joinedAt);
+    const done = !!slot.commit || (!!session.startedAt && (c.expired || closed) && joined);
+    const runId = individual ? `individual:${slot.memberIds[0]}` : slot.id;
+    const reflections = {};
+    for (const id of slot.memberIds) { const r = session.participants[id]?.review; if (r) reflections[id] = { reflection1: r.reflection1, reflection2: r.reflection2 }; }
+    const committer = slot.commit?.by || slot.captainId || slot.memberIds[0];
+    runs[runId] = { runId, teamLabel: individual ? session.participants[slot.memberIds[0]]?.name : slot.label,
+      runnerId: individual ? slot.memberIds[0] : slot.captainId, completedBy: done ? committer : null,
+      done, completedAt: slot.commit?.at || null, phase: session.startedAt && joined ? 1 : 0, joined,
+      sheetId: slot.sheetId, number: slot.commit ? slot.commit.number.toFixed(1) : null, confidence: slot.commit?.confidence || null,
+      band: done ? bandOf(slot) : null, reflections,
+      ...(individual ? { reflection1: reflections[slot.memberIds[0]]?.reflection1 || '', reflection2: reflections[slot.memberIds[0]]?.reflection2 || '' } : {}) };
+  }
+  const kit = {
+    bands: debrief.BANDS, order: debrief.ORDER, locked, clock: c,
+    reviewQuestions: debrief.REVIEW_QUESTIONS, lessonQuestions: debrief.LESSON_QUESTIONS, lessons: debrief.LESSONS,
+    assignmentOrder: config.assignmentOrder,
+    sheets: Object.fromEntries(config.assignmentOrder.map(id => [id, { lines: sheets.sheetLines(id), contestedIndex: 3,
+      department: sheets.reveal[id].department, purpose: sheets.reveal[id].purpose,
+      derivation: engine.derivation(id), value: engine.compute(id).value.toFixed(1) }]))
+  };
+  return { session: { code: session.code, name: session.name, mode: session.mode, state: kitState(session), paused: !!session.pausedAt,
+    platformAuth: !!session.platformAuth, courseId: session.courseId || null, createdAt: session.createdAt || null,
+    practice: !!session.practice, reviewOpen: !!session.reviewOpen, locked, startedAt: session.startedAt || null },
+    participants, runs, kit, warningMinutes: config.warningMinutes };
+}
+module.exports.assign = assign;
+module.exports.setCaptain = setCaptain;
+module.exports.withCaptains = withCaptains;
+module.exports.bandOf = bandOf;
+module.exports.facultyKit = facultyKit;
+module.exports.kitState = kitState;

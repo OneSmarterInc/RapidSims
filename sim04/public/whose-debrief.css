@@ -1,0 +1,22 @@
+/* Whose Number Is Right? debrief bodies. Sizes in em off the shared slide base (kit/debrief.css). */
+.wd-nums{display:grid;grid-template-columns:repeat(auto-fill,minmax(14em,1fr));gap:1em}
+.wd-num{display:flex;flex-direction:column;gap:.3em;padding:1em 1.2em;border:1px solid var(--line2);border-radius:.4em;background:var(--panel)}
+.wd-num b{font:600 3em var(--mono);color:var(--amber);line-height:1.1}
+.wd-num small,.wd-side small{font:1.1em var(--mono);color:var(--dim)}
+.wd-name{font:600 1.4em var(--sans);color:var(--ink)}
+.wd-ex{opacity:.7;border-style:dashed}
+.wd-defend{display:flex;align-items:center;justify-content:center;gap:3em;height:100%}
+.wd-side{display:flex;flex-direction:column;align-items:center;gap:.4em;padding:2em 3em;border:1px solid var(--line2);border-radius:.5em;background:var(--panel)}
+.wd-side b{font:600 5.5em var(--mono);color:var(--amber);line-height:1}
+.wd-vs{font:600 2em var(--mono);color:var(--dim);text-transform:uppercase}
+.wd-defs{display:flex;flex-direction:column;gap:.7em}
+.wd-def{display:grid;grid-template-columns:18em 1fr 16em;gap:1.2em;align-items:center;padding:.7em 1em;border:1px solid var(--line2);border-radius:.4em;background:var(--panel)}
+.wd-dhead{display:flex;flex-direction:column;gap:.2em}.wd-dhead b{font-size:1.4em;color:var(--ink)}.wd-dhead span{font-size:1.05em;color:var(--dim)}
+.wd-line{margin:0;font-size:1.3em;line-height:1.35;color:var(--ink);border-left:.25em solid var(--amber);padding-left:.7em}
+.wd-teams{display:flex;flex-wrap:wrap;gap:.4em}.wd-teams span{font:1.05em var(--mono);padding:.25em .6em;border:1px solid var(--line2);border-radius:.3em;color:var(--soft)}
+.wd-worked{display:grid;grid-template-columns:1fr 1fr;gap:1.5em}
+.wd-col{display:flex;flex-direction:column;gap:.6em;padding:1em 1.2em;border:1px solid var(--line2);border-radius:.4em;background:var(--panel)}
+.wd-col select{font:1.2em var(--sans);padding:.4em;background:var(--panel2);color:var(--ink);border:1px solid var(--line2);border-radius:.3em}
+.wd-dept{font-size:1.4em;color:var(--ink)}
+.wd-col ol{margin:0;padding-left:1.3em;font-size:1.2em;line-height:1.45;color:var(--soft)}
+.wd-q{display:block;color:var(--dim);font-size:1em;margin-top:.5em}

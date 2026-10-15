@@ -39,7 +39,7 @@ async function backfillCourseIndex(courseId, index) {
       try {
         const session = JSON.parse(values[i]);
         if (!session.solo && !session.practice && session.platformAuth && String(session.courseId) === String(courseId) &&
-            session.state !== 'complete' && session.stage < 3) {
+            !['complete', 'closed'].includes(session.state) && session.stage < 3) {
           found.add(keys[i].slice('m04:sess:'.length));
         }
       } catch {}
@@ -67,7 +67,7 @@ module.exports = {
     for (const code of Array.isArray(codes) ? codes : []) {
       const session = await getSession(code);
       if (!session || session.solo || session.practice || !session.platformAuth || String(session.courseId) !== String(courseId) ||
-          session.state === 'complete' || session.stage >= 3) {
+          ['complete', 'closed'].includes(session.state) || session.stage >= 3) {
         await cmd(['SREM', index, code]);
         continue;
       }
@@ -80,6 +80,26 @@ module.exports = {
     }
     return active.sort((a, b) => String(a.name).localeCompare(String(b.name)) || a.code.localeCompare(b.code));
   },
+  // A reopened session takes students from the class link again.
+  async indexCourseSession(courseId, code) {
+    await cmd(['SADD', courseKey(courseId), code]);
+    await cmd(['EXPIRE', courseKey(courseId), String(TTL)]);
+  },
+  // Every session created for a class, newest first, for the faculty Sessions page.
+  async addCourseSession(courseId, code, createdAt) {
+    const k = courseKey(courseId) + ':all';
+    await cmd(['ZADD', k, String(Number(createdAt) || Date.now()), code]);
+    await cmd(['EXPIRE', k, String(30 * 24 * 3600)]);
+  },
+  async listCourseSessions(courseId) {
+    return (await cmd(['ZREVRANGE', courseKey(courseId) + ':all', '0', '19'])) || [];
+  },
+  // One practice session per faculty member and class (Rehearse).
+  async setPracticeSession(courseId, ownerId, code) { await cmd(['SET', `m04:practice:${courseKey(courseId).slice(11)}:${ownerId}`, code, 'EX', String(TTL)]); },
+  async getPracticeSession(courseId, ownerId) { return (await cmd(['GET', `m04:practice:${courseKey(courseId).slice(11)}:${ownerId}`])) || null; },
+  async clearPracticeSession(courseId, ownerId) { await cmd(['DEL', `m04:practice:${courseKey(courseId).slice(11)}:${ownerId}`]); },
+  async putSession(code, session) { await cmd(['SET', key(code), JSON.stringify(session), 'EX', String(TTL)]); },
+  async wipe(code) { await cmd(['DEL', key(code)]); },
   async compareAndSetSession(code, previous, next) {
     return Number(await cmd(['EVAL', CAS, '1', key(code), JSON.stringify(previous), JSON.stringify(next), String(TTL)])) === 1;
   }

@@ -1,7 +1,7 @@
 /* RapidSims debrief player, shared by every sim (template: claude/RapidSims-Faculty-Template.md).
    DebriefPlayer.mount(root, getInput, { model, body, onEnd }):
    model(input) returns { ready, submitted, total, unit, units, lessons, slides:[{ key, kicker, headline, sub, body, note, ask, lesson, evidence }] };
-   body(slide, ui) returns that slide's body HTML. Slides stay dark for the projector. */
+   body(slide, ui) returns that slide's body HTML; ui.pick holds any choice made with a select[data-md-pick]. Slides stay dark for the projector. */
 (function (global) {
 'use strict';
 const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -26,7 +26,7 @@ function slideHTML(m, s, i, ui, body) {
 // opts.model(input) builds the slides; opts.body(slide, ui) draws a slide's body; opts.onEnd() runs on End debrief.
 function mount(root, getInput, opts) {
   if (root._md) { root._md.opts = { ...root._md.opts, ...(opts || {}) }; root._md.refresh(); return root._md; }
-  const ui = { index: 0, anonymous: false, revealed: {}, allReviews: false, hidden: {} };
+  const ui = { index: 0, anonymous: false, revealed: {}, allReviews: false, hidden: {}, pick: {} };
   let last = '', slides = [];
   const api = { refresh: () => paint(false), ui, opts: opts || {} };
   function paint(force) {
@@ -70,6 +70,11 @@ function mount(root, getInput, opts) {
       else if (root.requestFullscreen) root.requestFullscreen().then(() => { const st = root.querySelector('.md-stage'); if (st) st.focus(); }).catch(() => root.classList.toggle('md-presenting'));
       else root.classList.toggle('md-presenting');
     }
+  });
+  // A slide may offer a choice (a select with data-md-pick="name"); the choice survives polling.
+  root.addEventListener('change', e => {
+    const k = e.target && e.target.dataset && e.target.dataset.mdPick;
+    if (k) { ui.pick[k] = e.target.value; paint(true); }
   });
   // Arrow keys move slides while the debrief has focus, so typing elsewhere on the page is untouched.
   root.addEventListener('keydown', e => {

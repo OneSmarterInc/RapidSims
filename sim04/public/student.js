@@ -46,7 +46,7 @@ function time() {
   $('clock').textContent = remaining === null ? 'Not started' : `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`;
   $('clock').classList.toggle('warn', remaining !== null && remaining <= warnAt());
   const pill = $('statePill');
-  pill.textContent = view.commit ? 'Report locked' : remaining === 0 ? 'Time ended' : view.canCommit ? 'Decision open' : view.state === 'lobby' ? 'Awaiting instructor' : 'Waiting';
+  pill.textContent = view.commit ? 'Report locked' : remaining === 0 ? 'Time ended' : view.clock.paused ? 'Clock paused' : view.canCommit ? 'Decision open' : view.state === 'lobby' ? 'Awaiting instructor' : 'Waiting';
   pill.classList.toggle('good', !!view.commit);
   pill.classList.toggle('warn', !view.commit && remaining !== null && remaining <= warnAt());
 }
@@ -136,6 +136,18 @@ function draw(result) {
     }
     if (!view.commit && view.clock.expired) error('commitError', 'Time ended. No number reported.');
   }
+  // After the number: the four questions for the class discussion, then the review when the instructor opens it.
+  const after = view.afterCommit || [];
+  $('afterCommit').hidden = !after.length;
+  if (after.length && !$('afterCommitList').children.length) {
+    for (const q of after) { const li = document.createElement('li'); li.textContent = q; $('afterCommitList').append(li); }
+  }
+  const review = view.review || {};
+  $('reviewForm').hidden = !review.open || review.sent;
+  $('reviewSent').hidden = !review.sent;
+  if (review.open && !review.sent && !$('rv1q').textContent) {
+    $('rv1q').textContent = review.questions[0] || ''; $('rv2q').textContent = review.questions[1] || '';
+  }
   time();
 }
 async function refresh() {
@@ -224,6 +236,15 @@ $('practiceStart').addEventListener('click', async () => {
   catch (e) { error('waitingError', e.message); }
 });
 $('joinForm').addEventListener('submit', join);
+$('reviewForm').addEventListener('submit', async event => {
+  event.preventDefault(); error('reviewError', '');
+  const reflection1 = $('rv1').value.trim(), reflection2 = $('rv2').value.trim();
+  if (!reflection1 || !reflection2) { error('reviewError', 'Answer both questions, then submit.'); return; }
+  $('rvgo').disabled = true;
+  try { draw(await api('session', { action: 'review', code, participantId, reflection1, reflection2 })); }
+  catch (e) { error('reviewError', e.message); }
+  finally { $('rvgo').disabled = false; }
+});
 $('commitForm').addEventListener('submit', async event => {
   event.preventDefault(); error('commitError', '');
   const n = Number($('number').value).toFixed(1), confidence = $('confidence').value;

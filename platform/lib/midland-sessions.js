@@ -8,7 +8,8 @@ const SIM = 'rapid-03-midland';
 const KIT_SIMS = {
   'rapid-03-midland': { app: 'sim03', env: 'SIM03_SESSION_URL', practice: 3 },
   'rapid-01-disaster': { app: 'sim01', env: 'SIM01_SESSION_URL', practice: 1 },
-  'rapid-02-relay': { app: 'sim02', env: 'SIM02_SESSION_URL', practice: 1 }
+  'rapid-02-relay': { app: 'sim02', env: 'SIM02_SESSION_URL', practice: 1 },
+  'rapid-04-whose-number': { app: 'sim04', env: 'SIM04_SESSION_URL', practice: 3 }
 };
 let apps = {};
 try { apps = require('../../ec2/apps.json'); } catch { apps = {}; }
