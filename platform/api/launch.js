@@ -198,6 +198,8 @@ module.exports = async (req, res) => {
     if (mode === 'session' && q.play === 'team') target.searchParams.set('play', 'team');
     if (mode === 'session' && q.play === 'individual') target.searchParams.set('play', 'individual');
     if (session) target.searchParams.set('session', session);
+    // The session page opens on the tab asked for (Teams, Results, Debrief).
+    if (mode === 'session' && ['teams', 'results', 'debrief'].includes(String(q.tab || ''))) target.searchParams.set('tab', String(q.tab));
     target.hash = 'lt=' + encodeURIComponent(token);
     let url = target.href;
     if (wants === 'json') return res.status(200).json({ url });

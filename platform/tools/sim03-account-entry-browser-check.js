@@ -73,7 +73,7 @@ async function shot(p,name){await p.screenshot({path:path.join(artifacts,name+'.
     if(url.pathname.startsWith('/sim03'))return simRoute(req,res,url);
     if(url.pathname==='/api/register'){res.writeHead(200,{'content-type':'application/json'});return res.end('{}');}
     if(url.pathname.startsWith('/api/'))return invoke(url.pathname.slice(5),req,res,url);
-    if(['/session.html','/session-entry.js','/portal-navigation.js','/faculty-results.js','/faculty-results.css','/app.css','/faculty.html','/sim-identity.js','/sim-detail.css','/sim-detail.js','/render-transcript.js'].includes(url.pathname))return file(res,'platform/public'+url.pathname);
+    if(['/session.html','/session-entry.js','/portal-navigation.js','/faculty-results.js','/faculty-results.css','/app.css','/faculty.html','/sim-identity.js','/sim-detail.css','/sim-detail.js','/render-transcript.js','/faculty-menu.js'].includes(url.pathname))return file(res,'platform/public'+url.pathname);
     res.writeHead(404);res.end('Not found');
   };
   platform=await listen(platformRoute);
@@ -193,6 +193,30 @@ async function shot(p,name){await p.screenshot({path:path.join(artifacts,name+'.
   equal(await alice.evaluate(()=>S.me.name),'Alex Student','account switching replaces remembered participant');
   const pending=await page('unreleased');await signIn(pending,'pending@example.test');await pending.goto(invite);
   await pending.getByRole('heading',{name:'Waiting on your instructor'}).waitFor();checks++;
+  // The class page frames Midland's session pages, so the left menu stays put.
+  const shell=await page('class-shell');await signIn(shell,'teacher@example.test');shell.on('dialog',d=>d.accept());
+  await shell.goto(platform+'/faculty.html?view=course&course=course-a');
+  await shell.locator('#rs-menu').waitFor();
+  await shell.locator('a[data-frame]').last().click();
+  await shell.waitForFunction(()=>new URL(location.href).searchParams.get('view')==='sim');
+  const framed=shell.frameLocator('#simFrame');
+  await framed.locator('#create').waitFor();
+  equal(await shell.locator('#rs-menu').count(),1,'one menu, drawn by the class page');
+  equal(await framed.locator('#rs-menu').count(),0,'the framed page draws no menu of its own');
+  await shell.evaluate(()=>{window.__samePage=true;});
+  await framed.locator('[data-mode="team"]').click();await framed.locator('#create').click();
+  const debriefLink=shell.locator('#rs-menu a[data-rs-key="rapid-03-midland:debrief"]');
+  await debriefLink.waitFor();
+  equal((await shell.locator('#rs-menu').innerText()).toLowerCase().includes('setting up'),true,'the menu shows the new session and its state');
+  await debriefLink.click();
+  await shell.waitForFunction(()=>new URL(location.href).searchParams.get('tab')==='debrief');
+  await framed.locator('#debrief-view:not([hidden])').waitFor();
+  equal(await shell.evaluate(()=>window.__samePage===true),true,'moving between tabs keeps the class page and its menu in place');
+  equal((await shell.locator('#rs-menu a[aria-current=page]').innerText()).trim(),'Debrief','the menu marks Debrief');
+  await shell.reload();
+  await shell.frameLocator('#simFrame').locator('#debrief-view:not([hidden])').waitFor();
+  equal(new URL(shell.url()).searchParams.get('tab'),'debrief','refresh keeps the session and the tab');
+  await shot(shell,'07-class-shell-debrief');
   equal(failures,[],'no browser JavaScript errors or unexpected server errors');
   const result={status:'passed',assertions:checks,scope:'Real account, launch and session handlers plus real HTML in Chromium; in-memory SQL/session adapters; no production data'};
   await fs.writeFile(path.join(artifacts,'results.json'),JSON.stringify(result,null,2));
