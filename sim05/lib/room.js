@@ -186,7 +186,7 @@ function projectorView(sess, participants, now) {
     disagreement: clk.closedRounds === 5 ? agg.disagreement : null,
     progress: progress(sess, participants, now),
     debrief: {
-      naming: C.DEBRIEF.naming,
+      naming: C.DEBRIEF.naming.map(n => ({ term: n.term, line: intensity === 'lighter' && n.lighter ? n.lighter : n.line })),
       turn: C.DEBRIEF.turn,
       teamPrompt: sess.mode === 'team' ? C.DEBRIEF.teamPrompt : null
     }

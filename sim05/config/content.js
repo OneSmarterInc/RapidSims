@@ -351,7 +351,8 @@ const DEBRIEF = {
   disagreementTeams: 'Round {round} split {teams} internally. Ask {whose} members where they disagreed.',
   noDisagreement: 'No round divided the class. Ask who hesitated longest, and at which round.',
   naming: [
-    { term: 'Collected vs inferred', line: 'Loopwell collected steps, routes, sleep, shopping and heart rate. It inferred a pregnancy nobody told it about.' },
+    { term: 'Collected vs inferred', line: 'Loopwell collected steps, routes, sleep, shopping and heart rate. It inferred a pregnancy nobody told it about.',
+      lighter: 'Loopwell collected steps, routes, sleep, shopping and heart rate. It inferred a change in her health nobody told it about.' },
     { term: 'Purpose limitation', line: "Data gathered for one purpose shouldn't be used for another. Route maps don't justify knowing where Dana sleeps." },
     { term: 'Data minimization', line: 'Collect only what a feature needs. Sleep reports needed a time zone, not a nightly location.' },
     { term: 'Consent for every step, covering none of the result', line: 'Dana agreed to each feature. She never agreed to the combination.' }

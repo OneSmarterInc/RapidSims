@@ -32,10 +32,11 @@ function model(input) {
   const split = (A.rounds || []).find(r => r.round === A.mostDivided) || null;
   const atLeast3 = counted.filter(r => (r.decisions || []).filter(shipped).length >= 3).length;
   base.slides.push({ key: 'split', kicker: 'Where the class split', lesson: 3,
-    headline: esc(A.disagreement || 'No round divided the class.'),
-    sub: split ? esc(`Round ${split.round}: ${(rounds[split.round - 1] || {}).title || ''}`) : 'Ask who hesitated longest, and at which round.',
+    // With no split, the slide says so once and asks about hesitation instead.
+    headline: split ? esc(A.disagreement) : 'No round divided the class.',
+    sub: split ? esc(`Round ${split.round}: ${(rounds[split.round - 1] || {}).title || ''}`) : `Every ${unit} decided each round the same way.`,
     evidence: `${ofN(atLeast3)} let at least three of the five requests ship.`,
-    ask: esc(team && K.teamPrompt ? K.teamPrompt : 'Find one of each. What did you see that the other side did not?'),
+    ask: split ? esc(team && K.teamPrompt ? K.teamPrompt : 'Find one of each. What did you see that the other side did not?') : 'Who hesitated longest, and at which round?',
     body: { kind: 'split', round: split ? split.round : null, title: split ? (rounds[split.round - 1] || {}).title : '',
       approved: split ? rows.filter(r => r.decisions[split.round - 1] === 'approve').map(r => r.name) : [],
       declined: split ? rows.filter(r => r.decisions[split.round - 1] === 'decline').map(r => r.name) : [],
