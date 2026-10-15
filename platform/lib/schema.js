@@ -175,4 +175,8 @@ module.exports = [
 `ALTER TABLE transcripts ADD COLUMN IF NOT EXISTS launch_id TEXT REFERENCES launches(id) ON DELETE SET NULL`,
 
 `CREATE UNIQUE INDEX IF NOT EXISTS transcripts_report_id_idx ON transcripts(report_id)`,
+
+`ALTER TABLE enrolments ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ`,
+
+`ALTER TABLE enrolments ADD COLUMN IF NOT EXISTS archived_session TEXT`,
 ];

@@ -16,6 +16,17 @@ const enrolments = [], launches = [];
 const sim = { id:'rapid-03-midland', launch_url:'https://midland.test/sim03', published:true };
 const query = async (strings, ...v) => {
   const q = strings.join('?').replace(/\s+/g, ' ').trim();
+  // Opening the class link or a sim again brings an earlier session's student back to the class page.
+  if (q.startsWith('UPDATE enrolments SET archived_at = now()')) {
+    const out = [];
+    for (const e of enrolments) if (e.course_id === v[1] && v[2].includes(e.student_id) && !e.archived_at) { e.archived_at = new Date(); e.archived_session = v[0]; out.push({ id: e.id }); }
+    return out;
+  }
+  if (q.startsWith('UPDATE enrolments SET archived_at = NULL')) {
+    const out = [];
+    for (const e of enrolments) if (e.archived_at && (q.includes('student_id = ANY') ? e.course_id === v[0] && v[1].includes(e.student_id) : e.id === v[v.length - 1] || e.id === v[0])) { e.archived_at = null; e.archived_session = null; out.push({ id: e.id }); }
+    return out;
+  }
   if (q.startsWith('SELECT u.* FROM sessions ses')) {
     const c = cookies.get(v[0]), user = c && users.get(c.user_id);
     return c && c.expires_at > new Date() && user && !user.disabled ? [user] : [];
@@ -42,7 +53,7 @@ const query = async (strings, ...v) => {
   if (q.startsWith('SELECT id, faculty_id, archived FROM courses WHERE id')) return courses.has(v[0]) ? [courses.get(v[0])] : [];
   if (q.startsWith('SELECT 1 FROM course_sims WHERE')) return courses.has(v[0]) && v[1] === sim.id && !sim.detached ? [{one:1}] : [];
   if (q.startsWith('SELECT u.id AS student_id, u.name, e.paid FROM enrolments')) {
-    return enrolments.filter(e => e.course_id === v[0] && !e.dropped).flatMap(e => {
+    return enrolments.filter(e => e.course_id === v[0] && !e.dropped && !e.archived_at).flatMap(e => {
       const u=users.get(e.student_id);
       return u && !u.disabled && u.role === 'student' ? [{student_id:u.id,name:u.name,paid:e.paid}] : [];
     });

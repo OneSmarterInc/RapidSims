@@ -198,3 +198,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS transcripts_report_id_idx ON transcripts(repor
 -- act, either per course or by an admin, so that a policy decision is never
 -- made by a default nobody chose.
 
+-- A session's students move with it into Results when it closes; the class page
+-- lists the students of the session at hand. Opening a sim again brings a student back.
+ALTER TABLE enrolments ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ;
+
+ALTER TABLE enrolments ADD COLUMN IF NOT EXISTS archived_session TEXT;

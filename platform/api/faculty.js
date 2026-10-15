@@ -221,7 +221,7 @@ module.exports = async (req, res) => {
           FROM course_sims cs JOIN sims si ON si.id = cs.sim_id
           WHERE cs.course_id = ${course.id} ORDER BY cs.added_at`;
         const roster = await s`
-          SELECT e.id AS enrolment_id, e.paid, e.paid_at, e.paid_note, e.dropped, e.created_at,
+          SELECT e.id AS enrolment_id, e.paid, e.paid_at, e.paid_note, e.dropped, e.created_at, e.archived_at, e.archived_session,
                  u.id AS student_id, u.name, u.email, u.last_seen_at,
                  (SELECT count(*) FROM launches l
                    WHERE l.user_id = u.id AND l.course_id = e.course_id AND l.as_role = 'student') AS started,
@@ -233,7 +233,7 @@ module.exports = async (req, res) => {
                      )))) AS finished
           FROM enrolments e JOIN users u ON u.id = e.student_id
           WHERE e.course_id = ${course.id}
-          ORDER BY e.dropped, u.name`;
+          ORDER BY e.dropped, (e.archived_at IS NOT NULL), u.name`;
         const catalogue = await visibleSims(s, me.id);
         return res.status(200).json({
           course, sims, roster, catalogue,
@@ -377,6 +377,15 @@ module.exports = async (req, res) => {
                     WHERE course_id = ${course.id} AND id = ANY(${ids})`;
           }
         }
+        return res.status(200).json({ ok: true });
+      }
+
+      // Bring a student from an earlier session back to the class page.
+      case 'restore_student': {
+        const course = await ownCourse(s, me.id, String(b.courseId || ''));
+        if (!course) return res.status(404).json({ error: 'no_such_course' });
+        await s`UPDATE enrolments SET archived_at = NULL, archived_session = NULL
+                WHERE course_id = ${course.id} AND id = ${String(b.enrolmentId || '')}`;
         return res.status(200).json({ ok: true });
       }
 
