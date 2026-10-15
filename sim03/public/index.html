@@ -403,12 +403,15 @@ function sharedResultsHTML(){
     ${r.year2?readOnlyAllocationHTML(r.year2,'Shared Year 2 allocation',2):''}
     ${cards.map(x=>`<div class="outcome"><h3>${esc(x.title)}</h3><p>${esc(x.narrative)}</p></div>`).join('')}`;
 }
+// The four questions this RapidSim asks; the closing lesson answers them in order.
+function briefQuestionsHTML(){return Array.isArray(C?.lessonQuestions)&&C.lessonQuestions.length?`<div class="brief-questions"><div class="eyebrow">What this RapidSim asks you</div><ol>${C.lessonQuestions.map(q=>`<li>${esc(q)}</li>`).join('')}</ol><p class="small">Keep these in mind. The last screen answers them, using ${S.session?.mode==='team'?'your team’s':'your own'} decisions.</p></div>`:''}
 function renderTeamMemberWaiting(){
   const runner=teamRunner(),teamName=S.me?.teamLabel||'Your team',runnerName=runner?.name||'your team lead';
   shell(`<div class="eyebrow">Team mode · read-only</div><h2>${esc(runnerName)} will run the simulation for ${esc(teamName)}.</h2>
     <p class="lede">Contact ${esc(runnerName)} and make decisions together on that person's screen. This page is read-only so the team does not accidentally create separate results.</p>
     ${sessionGate()}${notice(teamProgressText())}
     <div class="card"><h3>Your role</h3><p>Discuss, challenge, and help decide. The same team result will appear here after the runner completes the shared run.</p></div>
+    ${briefQuestionsHTML()}
     ${sharedResultsHTML()}`);
 }
 function renderTeamMemberReflection(){
@@ -483,7 +486,7 @@ function renderBrief(){
   shell(`<section class="brief-screen"><div class="eyebrow">MIDLAND EQUIPMENT</div><h2>Forty-one years old, profitable, and nobody thinks it is in trouble.</h2>
   <div class="copy">${C.coldOpen.map((x,i)=>i===2?`<div class="brief-profit"><div class="eyebrow">The business model</div><p>${esc(x)}</p></div>`:`<p>${esc(x)}</p>`).join('')}</div>
   <div class="brief-practise"><div class="eyebrow">What you will practise</div><p>${esc(C.practise||'')}</p></div>
-  ${Array.isArray(C.lessonQuestions)&&C.lessonQuestions.length?`<div class="brief-questions"><div class="eyebrow">What this RapidSim asks you</div><ol>${C.lessonQuestions.map(q=>`<li>${esc(q)}</li>`).join('')}</ol><p class="small">Keep these in mind. The last screen answers them, using your own decisions.</p></div>`:''}
+  ${briefQuestionsHTML()}
   <div class="briefing-prep"><div class="briefing-prep-copy"><span class="small">Before you continue</span><b>This sim assumes you have read the briefing packet before starting.</b> If you have not read it yet, open the in-app packet here before continuing.</div><button class="btn" data-open-briefing>Read briefing packet</button></div>
   ${sessionGate()}${!S.session?(LAUNCH&&(LAUNCH.role==='faculty'||LAUNCH.role==='faculty_preview')?'<div class="actions"><button class="btn" id="runSessionEntry">Run a facilitated session</button></div>':'<div class="actions"><button class="btn" id="joinSessionEntry">Join a facilitated session</button></div>'):''}${nav({backOk:false,disabled:blocked()})}</section>`);
   const runEntry=document.getElementById('runSessionEntry');if(runEntry)runEntry.onclick=()=>{
