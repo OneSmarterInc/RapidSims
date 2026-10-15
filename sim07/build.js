@@ -15,8 +15,7 @@ function refuse(message) { console.error('REFUSING:', message); process.exit(1);
 
 const pages = {
   student: read('public/index.html'),
-  presenter: read('public/instructor.html'),
-  projector: read('public/projector.html'),
+  live: read('public/live.html'),
   launcher: read('public/launch.html')
 };
 
@@ -54,6 +53,18 @@ for (const hint of ['mistake', 'wrong', 'failed', 'regret', 'outcome is known', 
 if (C.META.detail.teaches !== 'what was knowable at the time · how hindsight rewrites a judgement') refuse('approved teaches line changed');
 if (!C.PRE_REVEAL.intro || !C.PRE_REVEAL.intro.points.length) refuse('untimed intro screen content missing');
 if (!pages.student.includes('function viewIntro()')) refuse('student page has no untimed intro screen');
+
+// 2c. The faculty settings and debrief files reach every browser. The stages and the names reach the
+// faculty pages from the server only, with the faculty session.
+for (const f of ['instructor.html', 'bought-faculty.js', 'bought-debrief.js']) {
+  const text = read('public/' + f);
+  const hit = leakScan(text);
+  if (hit.length) refuse(`${f} contains: ${hit.join(', ')}`);
+  for (const s of C.REVEAL.stages) for (const p of s.body) if (text.includes(p)) refuse(`${f} contains reveal text`);
+  if (/\b(room|bridge)\b/i.test(text)) refuse(`${f} uses "room" or "bridge"; say "class" or "session"`);
+  if (f.endsWith('.js')) { try { new vm.Script(text, { filename: f }); } catch (e) { refuse(f + ' does not parse: ' + e.message); } }
+}
+for (const [name, html] of Object.entries(pages)) if (/\broom\b/i.test(html)) refuse(`${name} page uses "room"; say "class" or "session"`);
 
 // 3. Names appear in stage 3 and nowhere earlier in the reveal.
 const st3 = C.REVEAL.stages.find(s => s.n === 3);

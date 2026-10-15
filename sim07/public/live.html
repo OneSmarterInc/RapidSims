@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Would You Have Bought It? — projector</title>
+<title>Would You Have Bought It? — Live screen</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap" rel="stylesheet">
 <style>
@@ -37,7 +37,11 @@ table{border-collapse:collapse;font:clamp(16px,1.3vw,24px) var(--mono)}th,td{pad
 const app=document.getElementById('app');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const BASE=(location.pathname.match(/^\/sim-?\d+/)||[''])[0];
-const code=(new URLSearchParams(location.search).get('code')||'').toUpperCase();
+// Opened from the session page (Live screen) with ?session=CODE#lt=TOKEN.
+const q=new URLSearchParams(location.search);
+const code=(q.get('session')||q.get('code')||'').toUpperCase();
+const incoming=new URLSearchParams(location.hash.slice(1)).get('lt');
+if(incoming){sessionStorage.setItem('w07-faculty-lt',incoming);history.replaceState(null,'',location.pathname+location.search)}
 const LT=sessionStorage.getItem('w07-faculty-lt');const facultyCode=sessionStorage.getItem('w07-fc')||'';
 let P=null,skew=0;
 async function load(){
@@ -68,7 +72,7 @@ function render(){
   else if(P.phase==='deciding')h=`<h1>Autumn 2000. Decide on what you can see.</h1><div class="big">${clock()}</div><p class="dim">${P.decided} of ${P.joined} have decided</p>`;
   else{
     if(P.stageTitle){const st=P.stageTitle;h+=`<p class="dim" style="font-family:var(--mono)">${esc(st.year)}</p><h1>${esc(st.title)}</h1>${st.names?`<p class="names">${esc(st.names)}</p>`:''}`}
-    else h+=`<h1>How the room decided</h1>`;
+    else h+=`<h1>How the class decided</h1>`;
     if(P.pinned?.length===2)h+=pinnedView();
     else if(P.split&&!P.stageTitle)h+=splitView();
     else if(P.split)h+=`<div class="legend"><span>${P.split.bought} bought</span><span>${P.split.declined} declined</span></div>`;
@@ -76,7 +80,7 @@ function render(){
   if(P.prompts)h+=`<div class="prompts">${P.prompts.map(p=>`<div><b>${esc(p.title)}</b>${esc(p.text)}</div>`).join('')}</div>`;
   app.innerHTML=h;
 }
-async function cycle(){try{await load();render()}catch(e){app.innerHTML=`<p class="err">${esc(e.message)}. Open the projector from the presenter screen.</p>`}}
+async function cycle(){try{await load();render()}catch(e){app.innerHTML=`<p class="err">${esc(e.message)}. Open the Live screen from your session page.</p>`}}
 cycle();setInterval(cycle,3000);setInterval(()=>{if(P?.phase==='deciding'){const b=app.querySelector('.big');if(b)b.textContent=clock()}},1000);
 </script>
 </body>

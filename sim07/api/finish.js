@@ -4,6 +4,7 @@ const { checkAccess, checkDemoAccess, body } = require('../lib/guard.js');
 const { reportCompletion } = require('../lib/launch.js');
 const store = require('../lib/store.js');
 const E = require('../lib/engine.js');
+const KIT = require('../lib/kit.js');
 const { participantLaunch, participantError } = require('../lib/session-entry.js');
 
 module.exports = async (req, res) => {
@@ -37,9 +38,12 @@ module.exports = async (req, res) => {
       const sess = await store.getSession(code);
       if (!sess) return res.status(404).json({ error: 'no_such_session' });
       if (!sess.platformAuth) return res.status(200).json({ ok: true, reported: false, reason: 'standalone' });
+      // Rehearse never reports.
+      if (sess.practice) return res.status(200).json({ ok: true, reported: false, reason: 'practice' });
       const denied = participantError(req, b, sess, pid);
       if (denied) return res.status(denied.status).json({ error: denied.error });
-      const me = (await store.getParticipants(code))[pid];
+      const participants = await store.getParticipants(code);
+      const me = participants[pid];
       if (!me) return res.status(403).json({ error: 'not_joined' });
       if (me.reportedAt) return res.status(200).json({ ok: true, reported: true, already: true });
       if (!me.choice || !me.recognised || E.effectiveStage(sess, await store.lastBeat(code), now) < 3) {
@@ -48,7 +52,9 @@ module.exports = async (req, res) => {
       if (me.reportingAt && now - me.reportingAt < 30000) return res.status(200).json({ ok: true, reported: false, pending: true });
       const next = { ...me, reportingAt: now };
       if (!await store.compareAndSetParticipant(code, pid, me, next, sess)) continue;
-      const r = await report(me.choice, !!me.lapsed);
+      // The same report the session sends at close: revision 1, with the session, team and band.
+      const c = KIT.completion(sess, { ...participants, [pid]: next }, pid, now, 1);
+      const r = c ? await reportCompletion({ launch, ...c }) : { ok: false };
       const saved = { ...next, reportingAt: null, ...(r.ok ? { reportedAt: now } : {}) };
       const persisted = await store.compareAndSetParticipant(code, pid, next, saved, sess);
       return res.status(200).json({ ok: true, reported: !!r.ok && persisted });

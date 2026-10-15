@@ -5,7 +5,7 @@
   "description": "Flexee RapidSim 07 \u2014 Would You Have Bought It?",
   "scripts": {
     "build": "node build.js",
-    "test": "node tools/checks.js"
+    "test": "node build.js && node tools/kit-session-check.js"
   },
   "engines": {
     "node": ">=20"

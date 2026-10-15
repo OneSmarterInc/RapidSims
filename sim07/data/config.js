@@ -162,7 +162,7 @@ const PRE_REVEAL = {
       'After that, you will see what happened over the following years, in three parts. Nothing is scored.'
     ],
     soloStart: 'Start the clock',
-    lobbyWait: 'Your instructor will start the clock when the room is ready.'
+    lobbyWait: 'Your instructor starts the clock when the class is ready.'
   },
 
   advisers: [
@@ -266,7 +266,7 @@ const REVEAL = {
   ],
   close: {
     title: 'What you wrote',
-    body: 'Nothing here is scored.',
+    body: 'Your reason goes to the class discussion.',
     handoff: 'Your instructor will take it from here.'
   }
 };
