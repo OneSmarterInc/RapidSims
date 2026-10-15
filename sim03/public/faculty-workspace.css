@@ -401,3 +401,6 @@ body.present #faculty-workspace>*:not(#results-view),body.present #results-view>
 #faculty-workspace .fw-overview .btn{white-space:nowrap;overflow-wrap:normal;word-break:normal;min-width:62px}#faculty-workspace .fw-overview td:last-child{min-width:86px;width:86px}#faculty-workspace .fw-overview .line-description{max-width:none}
 #faculty-workspace:has(#manage-view:not([hidden])) .toast{bottom:125px}
 @media(max-width:650px){#faculty-workspace:has(#manage-view:not([hidden])) .toast{bottom:220px}}
+
+#faculty-workspace .compare-all{grid-template-columns:repeat(var(--n,2),minmax(0,1fr))}#faculty-workspace .compare-card-top b{display:block;font-size:15px}#faculty-workspace .compare-all .compare-answer{padding:14px 16px;margin:0}#faculty-workspace dialog#compare-dialog{width:min(1280px,96vw)}
+@media(max-width:900px){#faculty-workspace .compare-all{grid-template-columns:minmax(0,1fr)}}

@@ -167,7 +167,7 @@ async function shot(p,name){await p.screenshot({path:path.join(artifacts,name+'.
   await teacher.locator('#courseAccess').click();
   const coursePage=await popupPromise;
   coursePage.on('pageerror',error=>failures.push('course-shortcut: '+error.stack));
-  await coursePage.getByRole('heading',{name:'Test course',exact:true}).waitFor();
+  await coursePage.getByRole('heading',{name:'Class: Test course',exact:true}).waitFor();
   equal(new URL(coursePage.url()).searchParams.get('course'),'course-a','course shortcut renders the correct course, not a loading screen');
   await shot(coursePage,'06-course-access-controls');
   const enrollment=f.enrolments.find(e=>e.student_id===user.id);

@@ -66,6 +66,8 @@ const query = async (strings, ...v) => {
     return [];
   }
   if (q.startsWith('SELECT * FROM sims WHERE id')) return v[0] === sim.id ? [sim] : [];
+  // The course page asks Midland for its session status; this fixture has no Midland to ask.
+  if (q.startsWith('SELECT si.id, si.launch_url FROM course_sims cs')) return [];
   if (q.startsWith('SELECT id, detail FROM sims WHERE id')) return v[0] === sim.id ? [{ id: sim.id, detail: null }] : [];
   if (q.startsWith('SELECT c.id, c.title FROM course_sims cs')) {
     return v[0] === sim.id && !sim.detached ? [...courses.values()]

@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Your courses — Flexee RapidSims</title>
+<title>Your classes — Flexee RapidSims</title>
 <link rel="stylesheet" href="/sim-detail.css">
 <link rel="stylesheet" href="/app.css">
 <script src="/sim-identity.js"></script>
 <script src="/sim-detail.js"></script>
 <script src="/render-transcript.js?v=2"></script>
 <script src="/portal-navigation.js"></script>
+<script src="/faculty-menu.js"></script>
 <link rel="stylesheet" href="/faculty-results.css">
 <script src="/faculty-results.js"></script>
 </head>
@@ -237,11 +238,54 @@ function render() {
   if (!F.data) { app.innerHTML = F.err
     ? `<div class="crumb" style="margin-top:34px">Teaching</div><div class="head"><div><h1>Something went wrong</h1><p class="hint">${esc(F.err)}</p></div></div>`
     : '<div class="empty" style="margin-top:40px">Loading…</div>'; return; }
-  if (F.view === 'sim-results' && F.simResults) return renderSimResults();
-  if (F.view === 'played' && F.progress) return renderPlayed();
-  if (F.view === 'student-results' && F.studentResults) return renderStudentResults();
-  if (F.view === 'course' && F.course) return renderCourse();
-  renderHome();
+  if (F.view === 'sim-results' && F.simResults) renderSimResults();
+  else if (F.view === 'played' && F.progress) renderPlayed();
+  else if (F.view === 'student-results' && F.studentResults) renderStudentResults();
+  else if (F.view === 'course' && F.course) renderCourse();
+  else renderHome();
+  drawMenu();
+}
+
+/* ── left menu and Midland's session status ─────────────────────────────── */
+const MIDLAND = 'rapid-03-midland';
+const launchHref = (sim, course, extra = '') => `/api/launch?sim=${encodeURIComponent(sim)}&course=${encodeURIComponent(course)}${extra}`;
+const sessionLabel = x => x ? (x.name || (x.createdAt ? new Date(x.createdAt).toLocaleString(undefined, { weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit' }) : 'Session')) : '';
+function menuCourse() {
+  if (F.view === 'home') return null;
+  return F.course?.course || F.simResults?.course || F.progress?.course || F.studentResults?.course || null;
+}
+function drawMenu() {
+  if (!window.FacultyMenu || !F.data) return;
+  const classes = (F.data.courses || []).map(c => ({ id:c.id, title:c.title, href:`/faculty.html?view=course&course=${encodeURIComponent(c.id)}` }));
+  const c = menuCourse();
+  const sims = c && F.course?.course?.id === c.id ? F.course.sims : [];
+  const current = F.view === 'home' ? 'classes' : F.view === 'sim-results' ? `${F.simResults?.sim?.id}:all-results` : 'class';
+  FacultyMenu.mount({ classes, classesHref:'/faculty.html', current,
+    course: c ? { id:c.id, title:c.title, href:`/faculty.html?view=course&course=${encodeURIComponent(c.id)}` } : null,
+    sims: (sims || []).map(x => {
+      const open = x.sim_id === MIDLAND && F.midland?.courseId === c.id ? F.midland.open : null;
+      return { id:x.sim_id, title:x.title,
+        links:{ sessions:launchHref(x.sim_id, c.id, '&mode=session'), play:launchHref(x.sim_id, c.id),
+          results:F.me?.role === 'faculty' ? `/faculty.html?view=sim-results&course=${encodeURIComponent(c.id)}&sim=${encodeURIComponent(x.sim_id)}` : null,
+          rehearse:x.sim_id === MIDLAND ? `/faculty.html?view=course&course=${encodeURIComponent(c.id)}&practice=1` : null },
+        session: open ? { label:sessionLabel(open), state:open.paused ? 'paused' : open.state, team:open.mode === 'team',
+          links:{ teams:launchHref(x.sim_id, c.id, `&mode=session&session=${encodeURIComponent(open.code)}&tab=teams`),
+            results:launchHref(x.sim_id, c.id, `&mode=session&session=${encodeURIComponent(open.code)}&tab=results`),
+            debrief:launchHref(x.sim_id, c.id, `&mode=session&session=${encodeURIComponent(open.code)}&tab=debrief`) } } : null };
+    }) });
+}
+// Midland's open session (or the last one) for the course row and the menu. Loaded after the page draws.
+let midlandAsking = '';
+async function loadMidlandStatus(courseId) {
+  if (midlandAsking === courseId || F.me?.role !== 'faculty') return;
+  midlandAsking = courseId;
+  try {
+    const r = await fetch('/api/faculty', { method:'POST', cache:'no-store', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ action:'midland_status', courseId }) });
+    const d = await r.json().catch(() => ({}));
+    F.midland = r.ok ? { courseId, at:Date.now(), ...d } : { courseId, at:Date.now(), available:false };
+  } catch { F.midland = { courseId, at:Date.now(), available:false }; }
+  midlandAsking = '';
+  if (F.view === 'course' && F.course?.course.id === courseId) render(); else drawMenu();
 }
 
 /* ── home ───────────────────────────────────────────────────────────────── */
@@ -256,13 +300,13 @@ function renderHome() {
       For everyone's, use the <a href="/admin.html">admin console</a>.
     </div>` : ''}
     <div class="strip">
-      <div class="cell"><div class="n">${courses.length}</div><div class="l">Courses</div></div>
+      <div class="cell"><div class="n">${courses.length}</div><div class="l">Classes</div></div>
       <div class="cell"><div class="n">${students}</div><div class="l">Students</div></div>
       <div class="cell"><div class="n">${released}</div><div class="l">Released</div></div>
       <div class="cell"><div class="n">${finished}</div><div class="l">Runs finished</div></div>
     </div>
     <div class="tabs">
-      <button class="tab ${F.tab==='crs'?'on':''}" data-tab="crs">Courses <span class="count">${courses.length}</span></button>
+      <button class="tab ${F.tab==='crs'?'on':''}" data-tab="crs">Classes <span class="count">${courses.length}</span></button>
       <button class="tab ${F.tab==='sim'?'on':''}" data-tab="sim">Simulations <span class="count">${F.data.catalogue.length}</span></button>
     </div>
     <div id="body"></div>`;
@@ -280,12 +324,12 @@ function coursesTab() {
   const rows = pg.rows;
   return `
     <div class="toolbar">
-      <div class="search"><input data-q="crs" type="text" placeholder="Search your courses" value="${esc(F.q.crs||'')}"></div>
-      <button class="btn ${F.newCourse?'':'pri'}" id="nc">${F.newCourse?'Cancel':'New course'}</button>
+      <div class="search"><input data-q="crs" type="text" placeholder="Search your classes" value="${esc(F.q.crs||'')}"></div>
+      <button class="btn ${F.newCourse?'':'pri'}" id="nc">${F.newCourse?'Cancel':'New class'}</button>
     </div>
     ${F.newCourse ? `<div class="panel" style="padding:15px 16px;margin-bottom:12px">
       <div class="field">
-        <div><label class="f">Course title</label><input id="c_t" placeholder="Operations Management"></div>
+        <div><label class="f">Class title</label><input id="c_t" placeholder="Operations Management"></div>
         <div style="flex:0 0 180px;min-width:180px"><label class="f">Term</label><input id="c_m" placeholder="Fall 2026"></div>
         <div style="flex:0 0 auto;align-self:flex-end"><button class="btn pri" id="ncgo">Create course</button></div>
       </div>
@@ -415,14 +459,13 @@ function renderCourse() {
   const rosterPg = paginate(filteredRoster, 'ros');
   const shown = rosterPg.rows;
   const notAdded = catalogue.filter(si => !sims.find(x => x.sim_id === si.id));
-  const runStarts = sims.reduce((n,x) => n + Number(x.started_runs || 0), 0);
   const runFinishes = sims.reduce((n,x) => n + Number(x.finished_runs || 0), 0);
 
   app.innerHTML = `
-    <div class="crumb"><a id="back">← Your courses</a></div>
+    <div class="crumb"><a id="back">Your classes</a> › ${esc(course.title)}</div>
     <div class="head">
       <div>
-        <h1>${esc(course.title)}</h1>
+        <h1>Class: ${esc(course.title)}</h1>
         <div class="sub" style="font-size:12px;margin-top:5px">${esc(course.term || 'no term')} · join code ${esc(course.join_code)}</div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -434,8 +477,8 @@ function renderCourse() {
     <div class="faculty-course-summary" aria-label="Course activity summary">
       <div class="faculty-summary-cell"><div class="faculty-summary-n">${active.length}</div><div class="faculty-summary-l">Enrolled</div></div>
       <div class="faculty-summary-cell"><div class="faculty-summary-n">${active.filter(r=>r.paid).length}</div><div class="faculty-summary-l">Released</div></div>
-      <div class="faculty-summary-cell"><div class="faculty-summary-n">${runStarts}</div><div class="faculty-summary-l">Run starts</div></div>
-      <div class="faculty-summary-cell"><div class="faculty-summary-n">${runFinishes}</div><div class="faculty-summary-l">Runs finished</div></div>
+      <div class="faculty-summary-cell"><div class="faculty-summary-n">${sims.length}</div><div class="faculty-summary-l">Simulations</div></div>
+      <div class="faculty-summary-cell"><div class="faculty-summary-n">${runFinishes}</div><div class="faculty-summary-l">Finished runs</div></div>
     </div>
     ${F.editCourse ? `<div class="panel" style="padding:15px 16px;margin-bottom:14px">
       <div class="field">
@@ -450,8 +493,8 @@ function renderCourse() {
 
     ${explain('sims', 'Playing it, and running it with a class', `<ol>
       <li><b>Play it yourself</b> takes you into the simulation as a student sees it. Worth doing once before you teach with it.</li>
-      <li><b>Run a session</b> opens the console for a live class: it gives you a five-character code, puts people into groups, and holds a clock you can freeze.</li>
-      <li>Students in this course reach it from their own page — they do not need the session code unless you are running one.</li>
+      <li><b>Manage sessions</b> (or <b>Run a session</b>) opens the sessions page for a live class. Start a new session there, split students into teams, and start them.</li>
+      <li>Students reach it from their own page with the class link. They join the open session by themselves.</li>
       <li><b>Who has played</b> shows who finished, how long they took, and a short summary the simulation reports back. Not a transcript; students keep their own.</li>
       <li>The expected number is a forecast, not a limit. Nobody is turned away.</li>
     </ol>`)}
@@ -471,34 +514,43 @@ function renderCourse() {
     <div class="panel" style="margin-bottom:26px">
       ${sims.length ? sims.map(x => {
         const runPct = Number(x.started_runs) ? Math.min(100, Math.round(Number(x.finished_runs)/Number(x.started_runs)*100)) : 0;
+        const midland = x.sim_id === MIDLAND;
+        const M = midland && F.midland?.courseId === course.id ? F.midland : null;
+        const open = M?.open, last = M?.last;
+        const teamWord = s => s.mode === 'team' ? `in teams · ${s.teams} team${s.teams===1?'':'s'}` : 'on their own';
+        const status = !midland ? '' : !M ? '<div class="faculty-session-line"><span class="hint">Checking sessions…</span></div>'
+          : open ? `<div class="faculty-session-line"><span class="faculty-state ${open.state==='running'&&!open.paused?'run':'set'}">${open.state==='lobby'?'Setting up':open.paused?'Paused':'Running'}</span>
+              <span>${esc(sessionLabel(open))} · ${esc(teamWord(open))} · ${open.students} student${open.students===1?'':'s'}${open.state!=='lobby'&&open.mode==='team'?` · ${open.submitted} of ${open.teams} teams submitted`:''}</span></div>`
+          : `<div class="faculty-session-line"><span class="faculty-state off">Ready</span><span>No session open${last?` · last session ${esc(sessionLabel(last))}${last.mode==='team'?` · ${last.submitted} of ${last.teams} teams submitted`:''}`:''}</span></div>`;
+        const more = `<details class="faculty-more"><summary class="btn sm">More</summary><div class="faculty-more-menu">
+              <button class="btn sm faculty-result-btn" data-prog="${esc(x.sim_id)}">Who has played</button>
+              <button class="btn sm" data-seats="${esc(x.sim_id)}" data-cur="${x.expected_seats||''}">Expected number</button>
+              <button class="btn sm danger" data-rmsim="${esc(x.sim_id)}">Remove from class</button></div></details>`;
         return `<div class="sim faculty-sim-card">
           <div class="no">${RapidSimsIdentity.number(x)}</div>
           <div class="body">
             <div class="faculty-sim-title-row"><div class="t">${esc(x.title)}${eye(x.sim_id)}</div></div>
-            <div class="faculty-sim-kpis">
+            ${midland ? status : `<div class="faculty-sim-kpis">
               <div class="faculty-sim-kpi"><b>${x.started||0}</b><span>Students started</span></div>
               <div class="faculty-sim-kpi"><b>${x.finished||0}</b><span>Students finished</span></div>
-              <div class="faculty-sim-kpi"><b>${x.started_runs||0}</b><span>Run starts</span></div>
-              <div class="faculty-sim-kpi"><b>${x.finished_runs||0}</b><span>Runs finished</span></div>
               ${x.expected_seats ? `<div class="faculty-sim-kpi"><b>${x.expected_seats}</b><span>Expected</span></div>` : ''}
             </div>
-            <div class="faculty-run-progress" title="${x.finished_runs||0} of ${x.started_runs||0} started runs completed"><i style="width:${runPct}%"></i></div>
-            ${x.sim_id === 'rapid-03-midland' ? '<div class="faculty-practice" data-midland-practice hidden></div>' : ''}
+            <div class="faculty-run-progress" title="${x.finished_runs||0} of ${x.started_runs||0} started runs completed"><i style="width:${runPct}%"></i></div>`}
+            ${midland ? '<div class="faculty-practice" data-midland-practice hidden></div>' : ''}
           </div>
           <div class="side faculty-sim-side">
             <div class="faculty-sim-actions">
-              ${x.sim_id === 'rapid-03-midland'
-                ? `<a class="btn pri sm" href="/api/launch?sim=${encodeURIComponent(x.sim_id)}&course=${encodeURIComponent(course.id)}&mode=session">Manage sessions</a>
+              ${midland
+                ? `${open ? `<a class="btn pri sm" href="${launchHref(x.sim_id, course.id, `&mode=session&session=${encodeURIComponent(open.code)}`)}">Open session</a>` : ''}
+                   <a class="btn ${open?'':'pri '}sm" href="${launchHref(x.sim_id, course.id, '&mode=session')}">Manage sessions</a>
                    <button class="btn sm" data-midland-rehearse>Rehearse</button>`
                 : x.sim_id === 'rapid-05-approve'
-                ? `<a class="btn pri sm" href="/api/launch?sim=${encodeURIComponent(x.sim_id)}&course=${encodeURIComponent(course.id)}&mode=session&play=team">Run groups</a>
-                   <a class="btn sm" href="/api/launch?sim=${encodeURIComponent(x.sim_id)}&course=${encodeURIComponent(course.id)}&mode=session&play=individual">Run individual</a>`
-                : `<a class="btn pri sm" href="/api/launch?sim=${encodeURIComponent(x.sim_id)}&course=${encodeURIComponent(course.id)}&mode=session">Run a session</a>`}
-              <a class="btn sm" href="/api/launch?sim=${encodeURIComponent(x.sim_id)}&course=${encodeURIComponent(course.id)}">Play it yourself</a>
-              <button class="btn sm faculty-result-btn" data-prog="${esc(x.sim_id)}">Who has played</button>
+                ? `<a class="btn pri sm" href="${launchHref(x.sim_id, course.id, '&mode=session&play=team')}">Run groups</a>
+                   <a class="btn sm" href="${launchHref(x.sim_id, course.id, '&mode=session&play=individual')}">Run individual</a>`
+                : `<a class="btn pri sm" href="${launchHref(x.sim_id, course.id, '&mode=session')}">Run a session</a>`}
+              <a class="btn sm" href="${launchHref(x.sim_id, course.id)}">Play it yourself</a>
               ${F.me?.role === 'faculty' ? `<button class="btn sm faculty-result-btn" data-sim-results="${esc(x.sim_id)}">Results</button>` : ''}
-              <button class="btn sm" data-seats="${esc(x.sim_id)}" data-cur="${x.expected_seats||''}">Expected number</button>
-              <button class="btn sm danger" data-rmsim="${esc(x.sim_id)}">Remove</button>
+              ${more}
             </div>
           </div>
         </div>`;
@@ -557,6 +609,7 @@ function renderCourse() {
     </div>
     ${F.err ? `<div class="hint" style="color:var(--rose)">${esc(F.err)}</div>` : ''}`;
 
+  if (sims.some(x => x.sim_id === MIDLAND) && (F.midland?.courseId !== course.id || Date.now() - (F.midland.at || 0) > 15000)) loadMidlandStatus(course.id);
   document.getElementById('back').onclick = loadHome;
   document.getElementById('ce').onclick = () => { F.editCourse = !F.editCourse; render(); };
   const eg = document.getElementById('e_go');
