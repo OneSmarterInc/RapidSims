@@ -121,7 +121,7 @@ function renderRehearse() {
     <div class="crumb"><a data-crumb-class>${esc(course.title)}</a> › ${esc(title)} › Rehearse</div>
     <div class="head"><div><h1>Rehearse ${esc(title)}</h1>
       <p class="hint" style="margin-top:6px;max-width:720px">${solo ? 'Play as a practice student to see what your class will see, from the brief to the review.'
-        : seats ? 'Play as four practice students at one table, one per seat, to see what your class will see. Start the table and move each phase on from its faculty view.'
+        : seats ? 'Play as four practice students in one team, one per seat, to see what your class will see. Start the team and move each phase on from the faculty view.'
         : team ? 'Play as three practice students to see what your class will see. One practice student enters the decisions. The other two follow each step and write their own reviews.'
         : 'Play as three practice students, each on their own run, to see what your class will see, from the brief to the review.'}</p></div></div>
     ${has ? '<div class="panel faculty-practice faculty-practice-page" data-midland-practice><div class="empty">Checking for a practice session…</div></div>'
@@ -289,7 +289,7 @@ const KIT_SIMS = ['rapid-03-midland', 'rapid-01-disaster', 'rapid-02-relay', 'ra
 const PRACTICE_N = { 'rapid-03-midland': 3, 'rapid-01-disaster': 1, 'rapid-02-relay': 1, 'rapid-04-whose-number': 3, 'rapid-05-approve': 1, 'rapid-06-switch': 1, 'rapid-07-bought': 1, 'rapid-08-later': 1, 'rapid-09-money-land': 1, 'rapid-10-bubble': 1, 'rapidsimplus-02': 4 };
 // Practice students who form one team (Midland). Elsewhere each practice student plays their own run.
 const PRACTICE_TEAM = { 'rapid-03-midland': true };
-// Four practice students at one table, one per seat (Who Pays for the Wire?).
+// Four practice students in one team, one per seat (Who Pays for the Wire?).
 const PRACTICE_SEATS = { 'rapidsimplus-02': true };
 const isKit = id => KIT_SIMS.includes(id);
 // The sim Rehearse is for: the one asked for, or the class's first sim on the kit.
