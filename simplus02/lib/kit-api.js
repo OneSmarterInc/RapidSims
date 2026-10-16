@@ -1,6 +1,6 @@
 'use strict';
 // The shared faculty pages' actions (platform/public/kit/) on POST /api/session. Faculty sign in with the platform
-// launch only; students join from the class link; Rehearse opens four practice students at one table.
+// launch only; students join from the class link; Rehearse opens four practice students in one team.
 const crypto = require('crypto');
 const C = require('../data/config');
 const R = require('./room');
@@ -65,7 +65,7 @@ async function otherOpen(courseId, except) {
   return found;
 }
 const otherOpenReply = list => out(409, { error: 'other_session_open', open: list.map(x => ({ code: x.code, name: x.name })),
-  message: `Starting closes the open session "${list[0].name || 'Who Pays for the Wire?'}". Tables that reached the deadline keep their outcomes.` });
+  message: `Starting closes the open session "${list[0].name || 'Who Pays for the Wire?'}". Teams that reached the deadline keep their outcomes.` });
 
 // Close a session: an open negotiation reaches its deadline now, then the session closes and every student reports.
 async function closeSession(req, b, code, now, settle, extra = {}) {
@@ -78,7 +78,7 @@ async function closeSession(req, b, code, now, settle, extra = {}) {
   return next;
 }
 
-// Import the class's approved students so faculty can split them into tables before they open the sim.
+// Import the class's approved students so faculty can split them into teams before they open the sim.
 async function syncRoster(req, b, sess) {
   const roster = await courseEnrolments(req, b, sess);
   if (!roster.available || sess.state === 'closed') return roster;
@@ -200,11 +200,11 @@ async function kitAction(a, req, b, now, settle) {
         const roster = (await store.get(keys.roster(code))) || {}, people = Object.values(roster);
         const counts = {};
         for (const p of people) if (p.groupId) counts[p.groupId] = (counts[p.groupId] || 0) + 1;
-        if (!Object.keys(counts).length) return out(409, { error: 'participants_required', message: 'Split the class into tables of four before starting.' });
+        if (!Object.keys(counts).length) return out(409, { error: 'participants_required', message: 'Split the class into teams of four before starting.' });
         const unassigned = people.filter(p => p.joinedAt && !p.groupId);
-        if (unassigned.length) return out(409, { error: 'unassigned_participants', message: `${unassigned.length} student${unassigned.length === 1 ? ' is' : 's are'} still unassigned. Put every student at a table before starting.` });
+        if (unassigned.length) return out(409, { error: 'unassigned_participants', message: `${unassigned.length} student${unassigned.length === 1 ? ' is' : 's are'} still unassigned. Put every student in a team before starting.` });
         const small = Object.entries(counts).filter(([, n]) => n < 4);
-        if (small.length) return out(409, { error: 'table_too_small', message: `Each table needs at least four students. ${small.map(([g]) => (people.find(p => p.groupId === g) || {}).teamLabel || g.slice(5)).join(', ')} ${small.length === 1 ? 'has' : 'have'} fewer.` });
+        if (small.length) return out(409, { error: 'table_too_small', message: `Each team needs at least four students. ${small.map(([g]) => (people.find(p => p.groupId === g) || {}).teamLabel || g.slice(5)).join(', ')} ${small.length === 1 ? 'has' : 'have'} fewer.` });
         const pending = K.walkthroughOf(sess, roster).pending;
         if (pending.length && set !== 'start_anyway') return out(409, { error: 'walkthrough_incomplete', message: `Still reading the walkthrough: ${pending.join(', ')}. Wait for them, or press Start anyway.` });
         const seated = K.seatTeams(sess, roster);
@@ -238,6 +238,7 @@ async function kitAction(a, req, b, now, settle) {
       const notice = set.match(/^notice__(T\d+)__([a-z]+)$/);
       if (notice) {
         if (sess.phase !== 'negotiation' || !sess.tableIds.includes(notice[1])) return out(409, { error: 'not_negotiating' });
+        if (!K.noticeOpen(notice[2], sess, now)) return out(409, { error: 'notice_not_yet', message: 'The ten-minute notice opens when twelve minutes or fewer remain.' });
         try { await put(keys.table(code, notice[1]), t => R.addNotice(t, notice[2], now)); } catch (e) { return out(400, { error: 'unknown_notice' }); }
         return out(200, { session: publicFaculty(sess) });
       }
@@ -300,7 +301,7 @@ async function kitAction(a, req, b, now, settle) {
       return out(200, { code: s2 && s2.courseId === p.course && s2.state !== 'closed' ? s2.code : null });
     }
 
-    // Rehearse: four practice students at one table, one per seat, outside the class's sessions.
+    // Rehearse: four practice students in one team, one per seat, outside the class's sessions.
     case 'practice_start':
     case 'practice_status':
     case 'practice_finish': {
@@ -334,7 +335,7 @@ async function kitAction(a, req, b, now, settle) {
           courseId: who.owner.course, kit: true, practice: true, state: 'lobby', mode: 'team', name: 'Practice', tableOf: {} };
         if (!await store.cas(keys.session(c), null, sess)) continue;
         const roster = Object.fromEntries(students.map(x => [`platform:${x.sub}`, { name: x.name.trim().slice(0, 40), key: crypto.randomBytes(12).toString('base64url'),
-          launch: { sub: x.sub, course: who.owner.course }, joinedAt: null, table: null, seat: null, groupId: 'team:practice-table', teamLabel: 'Practice table', source: 'practice' }]));
+          launch: { sub: x.sub, course: who.owner.course }, joinedAt: null, table: null, seat: null, groupId: 'team:practice-table', teamLabel: 'Practice team', source: 'practice' }]));
         await store.cas(keys.roster(c), null, roster);
         await put(pkey, () => c);
         return out(200, { code: c, students: students.map(x => ({ participantId: `platform:${x.sub}`, name: x.name, status: 'Ready to start', finished: false })) });

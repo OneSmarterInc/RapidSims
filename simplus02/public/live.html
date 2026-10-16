@@ -13,7 +13,7 @@
 <body><main id="app"><p class="dim">Connecting…</p></main>
 <script>
 // The class view for the projector, opened from the session bar. Faculty sign-in comes with the link (#lt=).
-// It shows the clock, each table's progress and, after the deadline, the terms: never a seat's brief or floor.
+// It shows the clock, each team's progress and, after the deadline, the terms: never a seat's brief or floor.
 const $ = s => document.querySelector(s), app = $('#app');
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const CODE = (new URLSearchParams(location.search).get('session') || '').toUpperCase();
@@ -37,9 +37,9 @@ function render() {
   const phase = s.state === 'closed' ? 'Session closed' : PHASE[s.state === 'lobby' ? 'lobby' : k.phase] || '';
   let body = '';
   if (s.state === 'lobby') body = `<p class="mono">Walkthrough complete: ${(k.walkthrough || {}).finished || 0} · still reading: ${((k.walkthrough || {}).pending || []).length}</p>`;
-  else if (k.phase !== 'closed') body = `<div class="wrap"><table><tr><th>Table</th><th>Seats</th><th>Money terms</th><th>Size threshold</th><th>Changes</th></tr>${runs.map(r => `<tr><td>${esc(r.teamLabel)}</td><td class="mono">${r.seats.length}</td>
+  else if (k.phase !== 'closed') body = `<div class="wrap"><table><tr><th>Team</th><th>Seats</th><th>Money terms</th><th>Size threshold</th><th>Changes</th></tr>${runs.map(r => `<tr><td>${esc(r.teamLabel)}</td><td class="mono">${r.seats.length}</td>
     <td>${r.sheet && r.sheet.locked.money ? '<span class="imposed">Locked</span>' : 'Open'}</td><td>${r.sheet && r.sheet.locked.threshold ? '<span class="imposed">Locked</span>' : 'Open'}</td><td class="mono">${r.sheet ? r.sheet.moves : ''}</td></tr>`).join('')}</table></div>`;
-  else body = `<div class="wrap"><table><tr><th>Table</th>${Object.keys(dials).map(d => `<th>${esc(dials[d].short)}</th>`).join('')}<th>Freeze</th></tr>${runs.filter(r => r.result).map(r => `<tr><td>${esc(r.teamLabel)}</td>${Object.keys(dials).map(d => `<td>${r.result.imposed.includes(d) ? `<span class="imposed">${esc(r.result.terms[d] + (UNIT[d] || ''))}</span>` : `<span class="mono">${esc(r.result.terms[d] + (UNIT[d] || ''))}</span>`}</td>`).join('')}<td class="mono">${r.result.freezeMonths ? r.result.freezeMonths + ' mo' : ''}</td></tr>`).join('')}</table></div>
+  else body = `<div class="wrap"><table><tr><th>Team</th>${Object.keys(dials).map(d => `<th>${esc(dials[d].short)}</th>`).join('')}<th>Freeze</th></tr>${runs.filter(r => r.result).map(r => `<tr><td>${esc(r.teamLabel)}</td>${Object.keys(dials).map(d => `<td>${r.result.imposed.includes(d) ? `<span class="imposed">${esc(r.result.terms[d] + (UNIT[d] || ''))}</span>` : `<span class="mono">${esc(r.result.terms[d] + (UNIT[d] || ''))}</span>`}</td>`).join('')}<td class="mono">${r.result.freezeMonths ? r.result.freezeMonths + ' mo' : ''}</td></tr>`).join('')}</table></div>
     <p class="dim" style="margin-top:8px">Shaded terms were set by the Commission.</p>`;
   const html = `<div class="bar"><div><h1>Who Pays for the Wire?</h1><span class="dim mono">${esc(phase)}</span></div><div class="clock" id="clock"></div></div>${body}`;
   if (html !== last) { app.innerHTML = html; last = html; }

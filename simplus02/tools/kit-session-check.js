@@ -108,6 +108,10 @@ const act = (code, x, b) => call({ code, participantId: people[x].participantId,
   ok(F.advanced(fs1.session, fs1, { esc: x => String(x) }).includes(`notice__${south}__closest`), 'Staff notices for each table during negotiation');
   eq((await api({ action: 'control', code, set: `notice__${south}__closest` })).status, 200, 'Send a staff notice');
   eq((await act(code, 'dee', { action: 'view' })).body.notices.length, 1, 'The notice reaches that table');
+  ok(!F.advanced(fs1.session, fs1, { esc: x => String(x) }).includes('__tenminutes'), 'The ten-minute notice waits for the last twelve minutes (#69)');
+  eq((await api({ action: 'control', code, set: `notice__${south}__tenminutes` })).body.error, 'notice_not_yet', 'The server refuses an early ten-minute notice');
+  ok(F.advanced(fs1.session, fs1, { esc: x => String(x) }).includes('Commission staff ask'), 'Faculty read each notice before sending it');
+  { const v = (await act(code, 'dee', { action: 'view' })).body; ok(v.myNumbers.every(x => x.floor && typeof x.ok === 'boolean'), 'Each number shows the seat floor and whether it is met (#67)'); }
   eq((await api({ action: 'control', code, set: 'extend' })).body.session.extended, true, 'Add 10 minutes');
   ok(!(await bar(code)).includes('Add 10 minutes'), 'Once only');
   eq(reports.length, 0, 'Nothing reported before the deadline');
@@ -130,7 +134,7 @@ const act = (code, x, b) => call({ code, participantId: people[x].participantId,
   const TEAMS = global.FacultyWorkspace.recordsFrom(fs3, F);
   const m = D.model(F.debrief.input(TEAMS, { state: fs3 }));
   eq([m.ready, m.slides.map(s => s.key)], [true, ['settled', 'pair', 'forward', 'deadline', 'reveal', 'said', 'lessons']], 'Seven slides');
-  eq(m.slides[0].headline, 'One of two tables signed every term.', 'D0: how each table settled');
+  eq(m.slides[0].headline, 'One of two teams signed every term.', 'D0: how each team settled');
   eq(m.slides[1].body.cards.map(c => c.name), ['North', 'Table 2'], 'D1: the most settled beside the least');
   ok(m.slides[2].body.tables[0].misses.advocate.length > 20, 'D2: played forward');
   ok(/The Commission set 4 terms/.test(m.slides[3].headline), 'D3: what the deadline did');

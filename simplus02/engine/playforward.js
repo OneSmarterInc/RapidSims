@@ -24,7 +24,10 @@ function personLines(m, sc, terms) {
         ? `Halvorsen's obligation of ${money(m.developerObligation)} is inside the lender's cap.`
         : `Halvorsen's obligation of ${money(m.developerObligation)} breaks the lender's ${money(d.covenantCap)} cap.`,
     ].join(' '),
-    utility: `Data centres pay for ${Math.round(recoveredShare * 100)}% of the build Dana Okafor signed off. ${o.stranded > 0 ? `${money(o.stranded)} is stranded and spread across shareholders and customers.` : 'Nothing is stranded.'}`,
+    // When demand arrives, the uncovered share is what the contracts at these terms leave to others, not stranded load (#73).
+    utility: sc === 'arrives'
+      ? `Data-centre contracts cover ${Math.round(recoveredShare * 100)}% of the build Dana Okafor signed off. ${o.stranded > 0 ? `The other ${money(o.stranded)} is paid by shareholders and customers.` : 'The contracts cover all of it.'}`
+      : `Data centres pay for ${Math.round(recoveredShare * 100)}% of the build Dana Okafor signed off. ${o.stranded > 0 ? `${money(o.stranded)} is stranded and spread across shareholders and customers.` : 'The contracts cover all of it.'}`,
   };
 }
 

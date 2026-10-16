@@ -153,7 +153,7 @@ const ok = (v, m) => { assert.ok(v, m); checks++; console.log('PASS:', m); };
   await fac.evaluate(() => FacultySession.page.refresh());
   await fac.locator('[data-view="debrief"]').first().click();
   await fac.locator('.md-slide').waitFor();
-  ok((await fac.locator('.md-kicker').first().innerText()).toLowerCase().includes('how each table settled'), 'Debrief opens on how each table settled');
+  ok((await fac.locator('.md-kicker').first().innerText()).toLowerCase().includes('how each team settled'), 'Debrief opens on how each table settled');
   for (let i = 0; i < 7; i++) {
     await fac.screenshot({ path: path.join(artifacts(), `${String(5 + i).padStart(2, '0')}-debrief-${i + 1}.png`) });
     if (i < 6) await fac.locator('[data-md="next"]').click();
