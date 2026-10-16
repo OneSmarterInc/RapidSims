@@ -1,0 +1,20 @@
+/* Where Does the Money Land? debrief bodies. Sizes in em off the shared slide base (kit/debrief.css). */
+.mn-names{display:flex;flex-wrap:wrap;gap:.4em;margin-top:.5em}
+.mn-names span{font:1em var(--mono);padding:.2em .55em;border:1px solid var(--line2);border-radius:.3em;color:var(--soft)}
+.mn-bars{display:flex;flex-direction:column;gap:.55em;margin-bottom:1em}
+.mn-row{display:grid;grid-template-columns:20em 1fr 6em;gap:1em;align-items:center}
+.mn-l{font-size:1.15em;color:var(--ink)}.mn-v{font:600 1.15em var(--mono);color:var(--amber);text-align:right}
+.mn-bar{height:1.5em;background:var(--panel2);border:1px solid var(--line2);border-radius:.3em;overflow:hidden}.mn-bar i{display:block;height:100%;background:var(--b)}
+.mn-pair,.mn-st{display:flex;gap:1.2em;flex-wrap:wrap}
+.mn-card,.mn-s{flex:1;min-width:16em;display:flex;flex-direction:column;gap:.35em;padding:1em 1.2em;border:1px solid var(--line2);border-radius:.4em;background:var(--panel)}
+.mn-card b,.mn-s b{font:500 1.5em var(--serif);color:var(--ink)}
+.mn-card small,.mn-s small{font:600 .9em var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-top:.4em}
+.md-slide .mn-card p,.md-slide .mn-s p,.md-slide .mn-card li{color:var(--ink);font-size:1.08em;line-height:1.45}
+.md-slide .mn-card ul{margin:0;padding-left:1.2em}
+.mn-grid{border-collapse:collapse;font:1.35em var(--mono);min-width:70%}
+.md-slide .mn-grid th,.md-slide .mn-grid td{padding:.5em 1.2em;border-bottom:1px solid var(--line2);text-align:right;color:var(--ink)}
+.md-slide .mn-grid th{color:var(--soft);font-weight:400;font-size:.75em;text-transform:uppercase;letter-spacing:.06em}
+.md-slide .mn-grid td:first-child,.md-slide .mn-grid th:first-child{text-align:left}
+.md-slide .mn-grid td small{display:block;color:var(--amber);font-size:.75em}
+.mn-q{display:block;color:var(--dim);font-size:1em;margin-top:.5em}
+@media(max-width:800px){.mn-row{grid-template-columns:1fr 5em}.mn-row .mn-bar{display:none}}

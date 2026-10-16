@@ -91,7 +91,7 @@ const BRIEFING = {
     "You're a partner at a fund with $1,000,000 to invest. Everyone you meet this year says the same thing: purchasing between businesses is moving onto the internet, and marketplaces will sit in the middle of it. The forecast below is the one on every desk.",
     "Before any money moves, you write two statements. The first says where the forecast thinks things are heading: its direction. The second says who it thinks will be paid for it: its destination. You can bet only on the destination. Take the direction as given (it isn't what you're betting on).",
     "Then you place the fund across five companies chasing this forecast, in steps of $50,000. You may put everything on one, spread it, or hold cash. Holding cash is allowed only if your destination statement names someone other than the five as the one who gets paid.",
-    "Your allocation is final. Once allocation opens, your two statements lock. Nothing is scored and nobody else sees your choices. The room only ever sees totals, and your instructor decides when history arrives."
+    "Your allocation is final. Once allocation opens, your two statements lock. Your statements and your fund go to the class discussion. Classmates see only totals, and your instructor decides when history arrives."
   ],
   teamExtra: 'Your team writes one pair of statements and makes one allocation, on one screen. Argue it out loud. Whoever holds the screen submits for the team.'
 };
@@ -342,7 +342,7 @@ const FLAGS = {
 
 const DEBRIEF = {
   facilitatorNote: [
-    'Everyone loses money. That is the outcome the sim was built to produce, and saying so before the first stage lands keeps the room from reading it as failure.',
+    'Everyone loses money. That is the outcome the sim was built to produce, and saying so before the first stage lands keeps the class from reading it as failure.',
     'The direction statements will almost all hold. Put two of them on the projector at the 2010 stage and ask what they have in common. Then put the destination statements beside them.',
     'Two figures are reconstructed rather than read from a single day\'s close (see the source notes on each company). None of them changes which companies lost almost everything.'
   ],
@@ -356,8 +356,8 @@ const DEBRIEF = {
   turn: 'Find a forecast being made right now about your own field. Write its direction claim and its destination claim separately, and say what would have to be true for the second to hold.',
   cashPrompt: 'For the teams that held cash: where did you say the money would land, and were you right?',
   teamPrompt: 'Who on your team wanted to concentrate, and who wanted to spread?',
-  sawItComing: 'Six months after these funds committed, in December 2000, a Wharton faculty member told the school\'s business journal that big buyers would build their own purchasing systems and keep the savings, rather than pay an outside marketplace to do it. The destination was visible within the year. Ask who in the room wrote something close to that.',
-  epilogue: 'If anyone held on until 2012: the procurement-software vendor was bought for $45 a share. A June 2000 holder of it would have $80K of every $1M. A holder of the reverse-auction firm, carried through the merger, would have about $220K. The best outcome in the room still lost most of the money.'
+  sawItComing: 'Six months after these funds committed, in December 2000, a Wharton faculty member told the school\'s business journal that big buyers would build their own purchasing systems and keep the savings, rather than pay an outside marketplace to do it. The destination was visible within the year. Ask who in the class wrote something close to that.',
+  epilogue: 'If anyone held on until 2012: the procurement-software vendor was bought for $45 a share. A June 2000 holder of it would have $80K of every $1M. A holder of the reverse-auction firm, carried through the merger, would have about $220K. The best outcome in the class still lost most of the money.'
 };
 
 module.exports = { META, CLOCK, BRIEFING, FORECAST, WALL, FUND, COMPANIES, REVEAL, STUDENT_COPY, FLAGS, DEBRIEF };

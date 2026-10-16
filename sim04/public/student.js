@@ -47,7 +47,7 @@ function time() {
   $('clock').textContent = remaining === null ? 'Not started' : `${String(Math.floor(remaining / 60)).padStart(2, '0')}:${String(remaining % 60).padStart(2, '0')}`;
   $('clock').classList.toggle('warn', remaining !== null && remaining <= warnAt());
   const pill = $('statePill');
-  pill.textContent = view.commit ? 'Report locked' : remaining === 0 ? 'Time ended' : view.clock.paused ? 'Clock paused' : view.canCommit ? 'Decision open' : view.state === 'lobby' ? 'Awaiting instructor' : 'Waiting';
+  pill.textContent = view.commit ? 'Report locked' : remaining === 0 ? 'Time ended' : view.clock.paused ? 'Clock paused' : view.canCommit ? 'Decision open' : view.state === 'lobby' ? 'Waiting for the clock to start' : 'Waiting';
   pill.classList.toggle('good', !!view.commit);
   pill.classList.toggle('warn', !view.commit && remaining !== null && remaining <= warnAt());
 }
@@ -90,6 +90,9 @@ function draw(result) {
   $('group').textContent = solo ? `${view.you} · on your own` : view.group || 'Not yet in a group';
   $('lockedNote').textContent = solo ? 'This is your final report. Keep it for the discussion.' : "This is your group's final report. Keep it for the discussion.";
   $('introMinutes').textContent = view.clockMinutes;
+  // The story speaks to one student in individual play and to a group in team play.
+  document.querySelectorAll('[data-solo]').forEach(el => { el.dataset.team ??= el.textContent; el.textContent = solo ? el.dataset.solo : el.dataset.team; });
+  document.querySelectorAll('[data-team-only]').forEach(el => { el.hidden = solo; });
   // Everyone reads the story first. Anyone who arrives after the clock starts reads it, then opens the data.
   if (view.state === 'lobby') storyRead = true;
   const story = view.state !== 'lobby' && !!view.data && !storyRead;

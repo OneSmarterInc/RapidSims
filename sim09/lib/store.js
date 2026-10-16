@@ -127,6 +127,24 @@ module.exports = {
     return Number(result) === 1;
   },
 
+  // One open session per class: the class link lands in it.
+  async setCourseSession(courseId, code) { await cmd(['SET', `m09:course:${courseId}`, code, 'EX', String(TTL)]); },
+  async getCourseSession(courseId) { return (await cmd(['GET', `m09:course:${courseId}`])) || null; },
+  async clearCourseSession(courseId, code) {
+    if ((await cmd(['GET', `m09:course:${courseId}`])) === code) await cmd(['DEL', `m09:course:${courseId}`]);
+  },
+  // Every session created for a class, newest first, for the faculty Sessions page.
+  async addCourseSession(courseId, code, createdAt) {
+    const key = `m09:course:${courseId}:sessions`;
+    await cmd(['ZADD', key, String(Number(createdAt) || Date.now()), code]);
+    await cmd(['EXPIRE', key, String(60 * 60 * 24 * 30)]);
+  },
+  async listCourseSessions(courseId) { return (await cmd(['ZREVRANGE', `m09:course:${courseId}:sessions`, '0', '19'])) || []; },
+  // One practice session per faculty member and class (Rehearse).
+  async setPracticeSession(courseId, ownerId, code) { await cmd(['SET', `m09:practice:${courseId}:${ownerId}`, code, 'EX', String(TTL)]); },
+  async getPracticeSession(courseId, ownerId) { return (await cmd(['GET', `m09:practice:${courseId}:${ownerId}`])) || null; },
+  async clearPracticeSession(courseId, ownerId) { await cmd(['DEL', `m09:practice:${courseId}:${ownerId}`]); },
+
   async wipe(code) {
     await cmd(['DEL', `m09:sess:${code}`, `m09:sess:${code}:p`, `m09:sess:${code}:run`]);
   }

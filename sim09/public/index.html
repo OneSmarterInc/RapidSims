@@ -140,6 +140,8 @@ p.body{color:var(--soft);margin-bottom:14px}
 .hist li.mine p{color:var(--bone)}
 .total{display:flex;justify-content:space-between;align-items:baseline;padding:14px 0;font:500 17px var(--mono)}
 .total b{font-size:26px;color:var(--amber)}
+.think{margin:6px 0 0 20px;line-height:1.6}.rvq{display:block;margin:14px 0 6px}
+#review textarea{width:100%;min-height:90px;background:var(--panel,#161E2E);color:inherit;border:1px solid var(--line);padding:10px;font:inherit;margin-bottom:8px}
 .names{list-style:none;border-top:1px solid var(--line);margin-top:10px}
 .names li{display:grid;grid-template-columns:260px 1fr;gap:16px;padding:10px 0;border-bottom:1px solid var(--line)}
 .names li span{color:var(--dim)}
@@ -244,6 +246,10 @@ async function init(){
     }
     try{await poll()}catch{S.pid='';localStorage.removeItem('m09-pid-'+S.code);return renderJoin()}
   }else{
+    // A student from the class link lands in the class's open session, when there is one.
+    if(LAUNCH?.sub&&LAUNCH.role==='student'&&LAUNCH.course){
+      try{const c=await sessionApi({action:'course_session'});if(c.code){location.replace(location.pathname+'?session='+encodeURIComponent(c.code)+'#lt='+encodeURIComponent(LAUNCH_TOKEN));return}}catch{}
+    }
     const soloKey='m09-solo'+(LAUNCH?.sub?':'+LAUNCH.sub+':'+(LAUNCH.course||''):'');
     let saved=null;try{saved=JSON.parse(sessionStorage.getItem(soloKey)||'null')}catch{}
     if(saved){S.code=saved.code;S.pid=saved.pid;try{await poll()}catch{saved=null}}
@@ -296,7 +302,7 @@ async function poll(){
 }
 function apply(session,view){
   S.session=session;S.view=view;S.syncedAt=performance.now();S.remaining=view.clock.remaining;
-  const key=JSON.stringify([session.state,session.paused,view.clock.phase,view.clock.stage,view.statements,view.allocation,view.canWriteStatements,view.canAllocate,view.canAdvance,view.team,view.stages.length]);
+  const key=JSON.stringify([session.state,session.paused,view.clock.phase,view.clock.stage,view.statements,view.allocation,view.canWriteStatements,view.canAllocate,view.canAdvance,view.team,view.stages.length,view.review]);
   // Never redraw under someone who is typing their statements.
   const typing=document.activeElement&&['TEXTAREA','INPUT'].includes(document.activeElement.tagName)&&view.canWriteStatements;
   if(key!==S.shown&&!typing){S.shown=key;render()}
@@ -458,10 +464,30 @@ function renderHistory(paused){
       <div class="val">${c.held?`${esc(c.value)}<small>from ${esc(c.placed)}</small>`:'<small>not held</small>'}</div></li>`).join('')}</ul>
     ${st.fund?`<div class="total"><span>Your fund${st.cash?` · includes ${esc(st.cash)} cash`:''}</span><b>${esc(st.fund)}</b></div>`:`<div class="note">${esc(CFG.copy.timedOutAllocation)}</div>`}</section>`).join('');
   const names=v.names?`<section class="stage"><h3>${esc(v.names.heading)}</h3><ul class="names">${v.names.list.map(n=>`<li><span>${esc(n.descriptor)}</span><b style="font-weight:500">${esc(n.name)}</b></li>`).join('')}</ul>
-    <p class="closing">${esc(v.closing)}</p></section>`:'';
+    <p class="closing">${esc(v.closing)}</p></section>
+    ${(v.afterReveal||[]).length?`<section class="stage"><h3>Think about it</h3><ol class="think">${v.afterReveal.map(q=>`<li>${esc(q)}</li>`).join('')}</ol></section>`:''}${reviewBlock(v.review)}`:'';
   const next=v.stages.length<CFG.stageYears.length?(v.canAdvance?advanceButton('Show '+CFG.stageYears[v.stages.length]):`<p class="note">${esc(CFG.copy.waitingForStage)}</p>`):'';
   app.innerHTML=`<div class="split">${slip()}<div>${paused}${names}${next}${stages}</div></div>`;
-  bindAdvance();
+  bindAdvance();wireReview();
+}
+// Two questions for the instructor's debrief. Signed-in class students only.
+function reviewBlock(rv){
+  if(!rv||!rv.open)return '';
+  if(rv.sent)return `<section class="stage" id="review"><h3>Your review</h3><p class="body">Sent to your instructor. Thank you.</p></section>`;
+  return `<section class="stage" id="review"><h3>Your review</h3><p class="body">Your instructor reads these in the class debrief.</p>
+  ${rv.questions.map((q,i)=>`<label class="rvq" for="rv${i+1}">${esc(q)}</label><textarea id="rv${i+1}" rows="3" maxlength="1500">${esc(S['rv'+(i+1)]||'')}</textarea>`).join('')}
+  <button class="btn pri" id="rvgo">Submit review</button><div class="note bad" ${S.rvErr?'':'hidden'}>${esc(S.rvErr||'')}</div></section>`;
+}
+function wireReview(){
+  for(const id of ['rv1','rv2']){const t=document.getElementById(id);if(t)t.oninput=()=>{S[id]=t.value}}
+  const go=document.getElementById('rvgo');if(!go)return;
+  go.onclick=async()=>{
+    const a=(S.rv1||'').trim(),b=(S.rv2||'').trim();
+    if(!a||!b){S.rvErr='Answer both questions, then submit.';S.shown='';return render()}
+    go.disabled=true;S.rvErr='';
+    try{const d=await sessionApi({action:'review',code:S.code,participantId:S.pid,reflection1:a,reflection2:b});apply(S.session,d.view)}catch(e){S.rvErr=e.message}
+    S.shown='';render();
+  };
 }
 
 init();
