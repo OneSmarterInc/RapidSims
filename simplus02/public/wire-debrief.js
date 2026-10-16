@@ -27,7 +27,7 @@ function model(input) {
   base.slides.push({ key: 'settled', kicker: 'How each team settled', lesson: 1,
     headline: esc(n === 1 ? (both ? 'The team signed every term.' : `The team signed ${Object.keys(dials).length - rows[0].result.imposed.length} of ${Object.keys(dials).length} terms. The Commission set the rest.`)
       : both ? `${cap1(word(both))} of ${word(n)} teams signed every term.` : 'The Commission set the terms each team left open.'),
-    sub: 'Every team had the same four seats, the same five terms and the same deadline.',
+    sub: n === 1 ? 'The team had four seats, five terms and one deadline.' : 'Every team had the same four seats, the same five terms and the same deadline.',
     evidence: `${ofN(rows.filter(r => settledCount(r) > 0).length)} signed at least one group of terms.`,
     ask: 'Which term did your team settle first, and what made it possible?',
     body: { kind: 'settled', tiles: order.map(b => ({ band: b, rows: rows.filter(r => r.band === b) })).filter(x => x.rows.length && B[x.band])
@@ -41,7 +41,7 @@ function model(input) {
     seats: (r.seats || []).filter(p => p.seat).map(p => `${seatNames[p.seat] || p.seat}: ${anon ? 'a student' : p.name}`) });
   base.slides.push({ key: 'pair', kicker: pair.length > 1 ? 'Two teams side by side' : 'The team', lesson: 0,
     headline: pair.length > 1 ? 'The most settled team beside the least.' : 'What each seat got.',
-    sub: 'Ask which risks each team accepted, before anyone mentions who paid.',
+    sub: pair.length > 1 ? 'Ask which risks each team accepted, before anyone mentions who paid.' : 'Ask which risks each seat accepted, before anyone mentions who paid.',
     evidence: `${ofN(rows.filter(r => r.result.terms.top < 85).length)} set take-or-pay below the filed 85%.`,
     ask: pair.length > 1 ? `${pair[0].name}: what did each seat get? ${pair[1].name}: what stopped the signatures?` : 'What did each seat get?',
     body: { kind: 'pair', cards: pair.map(card) } });
@@ -92,8 +92,10 @@ function bodyHTML(s, ui) {
   if (b.kind === 'pair') return `<div class="wr-pair">${b.cards.map(c => `<div class="wr-card"><span class="md-tband md-t${c.band.cls}">${esc(c.band.label)}</span><b>${esc(c.name)}</b>
     <table class="wr-grid wr-small"><tbody>${c.terms.map(t => `<tr><td>${esc(t.label)}</td>${termRow(t)}</tr>`).join('')}<tr><td>Freeze</td><td>${c.freeze ? c.freeze + ' months' : 'None'}</td></tr></tbody></table>
     ${c.seats.length ? `<small>Seats</small><p>${c.seats.map(esc).join('<br>')}</p>` : ''}</div>`).join('')}</div>`;
-  if (b.kind === 'forward') return `<div class="wr-pair">${b.tables.map(t => `<div class="wr-card"><b>${esc(t.name)}</b><small>If the forecast demand arrives</small>${SEAT_ORDER.map(k => `<p>${esc(t.arrives[k])}</p>`).join('')}
-    <small>If it does not</small>${SEAT_ORDER.map(k => `<p>${esc(t.misses[k])}</p>`).join('')}</div>`).join('')}</div>`;
+  // Two columns per team, one line per seat, sized for the projector (#80).
+  if (b.kind === 'forward') return `<div class="wr-futures">${b.tables.map(t => `<div class="wr-card">${b.tables.length > 1 ? `<b>${esc(t.name)}</b>` : ''}<div class="wr-two">
+    <div><small>If the forecast demand arrives</small>${SEAT_ORDER.map(k => `<p>${esc(t.arrives[k])}</p>`).join('')}</div>
+    <div><small>If it does not</small>${SEAT_ORDER.map(k => `<p>${esc(t.misses[k])}</p>`).join('')}</div></div></div>`).join('')}</div>`;
   if (b.kind === 'deadline') return `<table class="wr-grid"><thead><tr><th>Team</th><th>Set by the Commission</th><th>Freeze added</th></tr></thead><tbody>${b.rows.map(r => `<tr><td>${esc(r.name)}</td><td>${r.imposed.length ? esc(r.imposed.join(', ')) : 'Nothing'}</td><td>${r.freeze ? r.freeze + ' months' : 'None'}</td></tr>`).join('')}</tbody></table>`;
   if (b.kind === 'reveal') return `<div class="wr-reveal">${b.paragraphs.map(p => `<p>${esc(p)}</p>`).join('')}</div><p class="md-note">The full account and its sources are in Advanced settings and instructor notes.</p>`;
   if (b.kind === 'said') {

@@ -43,7 +43,7 @@ const SEAT_NAMES = Object.fromEntries(Object.entries(seatBriefs).map(([k, b]) =>
 const DEBRIEF_NOTES = [
   'Start with two contrasting team outcomes. Ask which risks the parties accepted, which terms made another seat’s agreement possible, and what the deadline changed.',
   'The model shows how the terms move risk between the seats. Its numbers are fictional.',
-  'Use the non-unanimous settlement: the Commission adopted a package the data-centre parties did not sign. Ask what changes when the regulator can approve a package without every party signing.',
+  'Use the settlement the Commission adopted with only some parties signing. The data-centre parties had backed the other one. Ask what changes when the regulator can approve a package without every party signing.',
   'Keep the demand figures distinct: about 30,000 MW of interest, 13,022.7 MW of paid study requests and 5,642 MW of new binding contracts, additional to 12,219 MW contracted earlier. These were projects scheduled to come online through 2035.',
   'Minimum billing demand determines demand charges; The 85% applies to demand charges only. A four-year ramp plus eight years gives a twelve-year contract.'
 ];

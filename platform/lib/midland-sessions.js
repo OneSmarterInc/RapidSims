@@ -44,7 +44,7 @@ async function ask(me, course, sim, body) {
   } finally { clearTimeout(timer); }
 }
 
-// Practice students: three on one team (Midland), four at one table (Who Pays for the Wire?) or one on their own. Each gets a signed
+// Practice students: three on one team (Midland), four in one team (Who Pays for the Wire?) or one on their own. Each gets a signed
 // student launch for the practice session only; the first enters the team's decisions.
 const PRACTICE = [['ana', 'Practice Ana'], ['ben', 'Practice Ben'], ['cal', 'Practice Cal'], ['dee', 'Practice Dee']];
 async function practiceStart(me, course, sim, startOver = false) {

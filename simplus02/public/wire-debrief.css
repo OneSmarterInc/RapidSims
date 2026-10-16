@@ -18,3 +18,8 @@
 /* Instructor notes in Advanced settings (#69, #70). */
 .wr-notices{margin:0 0 12px}.wr-notices dt{font-weight:600;margin-top:8px}.wr-notices dd{margin:2px 0 0}
 .wr-account details p{margin:0 0 12px;line-height:1.55}.wr-account summary{cursor:pointer;font-weight:600;margin-bottom:10px}
+
+/* The two futures, side by side (#80). */
+.wr-futures{display:flex;flex-direction:column;gap:1em}.wr-two{display:grid;grid-template-columns:1fr 1fr;gap:1.6em}
+.wr-two>div{display:flex;flex-direction:column;gap:.55em}.md-slide .wr-two p{font-size:1.15em;line-height:1.4}
+@media (max-width:700px){.wr-two{grid-template-columns:1fr}}
