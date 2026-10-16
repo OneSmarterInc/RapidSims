@@ -28,9 +28,12 @@ function model(input) {
   const totals = buckets.map(b => ({ ...b, amount: placed.reduce((s, r) => s + (r.allocation[b.key] || 0), 0) }));
   const all = totals.reduce((s, b) => s + b.amount, 0) || 1;
   const byPick = picks.map(p => ({ text: p.text, names: rows.filter(r => r.statements && r.statements.pick === p.key).map(r => r.name) })).filter(x => x.names.length);
-  const top = totals.slice().sort((a, b) => b.amount - a.amount)[0];
+  // Every company (or cash) that took the most, so a tie names them all.
+  const topAmount = Math.max(...totals.map(t => t.amount));
+  const tops = totals.filter(t => t.amount === topAmount).map(t => t.key === 'cash' ? 'cash' : t.label.replace(/^The /, 'the '));
+  const topText = tops.length > 1 ? tops.slice(0, -1).join(', ') + ' and ' + tops[tops.length - 1] : tops[0];
   base.slides.push({ key: 'money', kicker: 'Where the money went', lesson: 0,
-    headline: placed.length ? esc(`${usdK(all)} placed. The most went to ${top.label.replace(/^The /, 'the ')}.`) : 'No fund was placed.',
+    headline: placed.length ? esc(`${usdK(all)} placed. The most went to ${topText}.`) : 'No fund was placed.',
     sub: `Every ${unit} read the same forecast and the same five companies.`,
     evidence: `${ofN(rows.filter(r => r.statements).length)} wrote a direction statement before any money moved.`,
     ask: 'Who said where the money would land, and did your money go there?',
@@ -74,7 +77,8 @@ function model(input) {
   // D5 · lessons, each with where this class showed it
   const ev = [];
   base.slides.forEach(s => { if (s.lesson != null) ev[s.lesson] = s.evidence; });
-  const midOnly = placed.filter(r => companies.every(c => !(r.allocation[c.key] > 0) || ['marketplaces', 'software'].includes(c.category))).length;
+  // The whole fund in the firms in the middle: no cash, every dollar in the five.
+  const midOnly = placed.filter(r => !(r.allocation.cash > 0) && companies.every(c => !(r.allocation[c.key] > 0) || ['marketplaces', 'software'].includes(c.category))).length;
   ev[3] = `${ofN(midOnly)} put the whole fund on the firms in the middle.`;
   base.slides.push({ key: 'lessons', kicker: 'What to take from this', headline: 'Four lessons, and where this class showed them.',
     body: { kind: 'lessons', closing: K.closingAsk || '', items: (K.lessons || []).map((l, i) => ({ head: l.head, text: l.text, evidence: ev[i] || '' })) } });
