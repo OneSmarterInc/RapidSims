@@ -45,9 +45,9 @@ const server = http.createServer(async (req, res) => {
       return res.json({ ok: true });
     }
     const mounted = url.pathname.replace(/^\/simplus02(?=\/|$)/, '') || '/';
+    // The platform's own pages and APIs answer Not found, so every sim call must carry the /simplus02 prefix.
+    if (!url.pathname.startsWith('/simplus02')) return res.status(404).json({ error: 'Not found' });
     if (handlers[mounted]) return await handlers[mounted](req, res);
-    // The platform's own pages and APIs, which the faculty pages may ask for.
-    if (!url.pathname.startsWith('/simplus02')) return res.status(url.pathname.startsWith('/api/') ? 200 : 404).json({});
     const file = mounted.startsWith('/kit/') ? path.join(KIT, mounted.slice(5)) : path.join(PUBLIC, mounted === '/' ? 'index.html' : mounted.slice(1));
     if (!fs.existsSync(file)) return res.status(404).end();
     res.setHeader('Content-Type', TYPES[path.extname(file)] || 'text/plain');

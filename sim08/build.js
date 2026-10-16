@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// The path-prefix detector: /simNN, /sim-NN or /simplusNN.
+const PREFIX = /location\.pathname\.match\(\/\^\\\/sim(?:\(\?:plus\)\?)?-\?\\d\+\/\)/;
 // Assertion-only build gate: it never rewrites source. It refuses to pass if any
 // answer, plan, report or risk text reaches a page, if a page would break under
 // the /sim08 path prefix, if its script does not parse, or if the access gate regresses.
@@ -24,7 +26,7 @@ secret.push(...Object.values(C.REPORT_NOTES), ...Object.values(C.DEBRIEF.riskLab
 for (const [name, html] of Object.entries(pages)) {
   for (const s of secret) if (html.includes(s)) refuse(`${name} page contains scenario content: "${s.slice(0, 50)}"`);
   if (/fetch\s*\(\s*['"`]\/api\//.test(html)) refuse(`${name} page has an unprefixed /api fetch`);
-  if (!html.includes("location.pathname.match(/^\\/sim-?\\d+/)")) refuse(`${name} page is missing the path-prefix detector`);
+  if (!PREFIX.test(html)) refuse(`${name} page is missing the path-prefix detector`);
   if (/Loopwell|Would You Approve|m05-|Midland|m03-/.test(html)) refuse(`${name} page still carries another sim's names or storage keys`);
   for (const [, js] of html.matchAll(/<script>([\s\S]*?)<\/script>/g)) {
     try { new vm.Script(js); } catch (e) { refuse(`${name} page script does not parse: ${e.message}`); }
