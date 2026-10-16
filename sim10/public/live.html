@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live screen · Infrastructure or Bubble?</title>
+<link rel="stylesheet" href="app.css">
+<style>
+  body { font-size: 22px; }
+  .live { padding-top: 32px; }
+  .live h1 { margin: 0 0 6px; }
+  .now { font-family: var(--mono); color: var(--muted, #8C95A8); margin: 0; }
+  .big { font-family: var(--mono); font-size: 5rem; line-height: 1; color: var(--amber); margin: 18px 0 6px; font-variant-numeric: tabular-nums; }
+  .counts { font-size: 1.6rem; margin: 10px 0 0; }
+  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 24px; }
+  .split .n { font-family: var(--mono); font-size: 4rem; line-height: 1; color: var(--amber); margin: 0; }
+  @media (max-width: 720px) { .split { grid-template-columns: 1fr; } .big { font-size: 3.4rem; } }
+</style>
+</head>
+<body class="console-page projector-page">
+<header class="brandbar"><span class="brand"><span class="brand-mark">R</span><span>RapidSims<small>10 / INFRASTRUCTURE OR BUBBLE?</small></span></span></header>
+<main class="wrap live">
+  <h1>Infrastructure or Bubble?</h1>
+  <p class="now" id="now">Connecting…</p>
+  <div id="board"></div>
+  <p class="error" id="err" role="alert"></p>
+</main>
+<script>
+// The class view for the projector, opened from the session bar. Faculty sign-in comes with the link (#lt=).
+const BASE = (location.pathname.match(/^\/sim-?\d+/) || [''])[0];
+const CODE = (new URLSearchParams(location.search).get('session') || '').toUpperCase();
+const hash = new URLSearchParams(location.hash.slice(1));
+if (hash.get('lt')) { sessionStorage.setItem('s10-faculty-lt', hash.get('lt')); history.replaceState(null, '', location.pathname + location.search); }
+const LT = sessionStorage.getItem('s10-faculty-lt') || '';
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const PHASE = { lobby: 'Waiting to start', waiting: 'Waiting to start', read: 'Reading time', verdict: 'Make your call', private: 'Your private call', team: 'Agree your team’s call', closed: 'Time is up' };
+let state = null, skew = 0, last = '';
+async function poll() {
+  try {
+    const r = await fetch(BASE + '/api/session', { method: 'POST', cache: 'no-store', headers: { 'Content-Type': 'application/json', 'x-launch-token': LT }, body: JSON.stringify({ action: 'faculty_state', code: CODE }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(r.status === 401 ? 'Open the Live screen again from the session bar.' : d.message || 'Connection lost. Retrying…');
+    state = d; skew = (d.serverNow || Date.now()) - Date.now(); document.getElementById('err').textContent = ''; render();
+  } catch (e) { document.getElementById('err').textContent = e.message; }
+}
+function left() {
+  const c = state && state.session.clock;
+  if (!c || !c.endsAt || c.phase === 'closed' || state.session.state !== 'running') return '';
+  const s = Math.max(0, Math.ceil((c.endsAt - Date.now() - skew) / 1000));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+function render() {
+  if (!state) return;
+  const s = state.session, k = state.kit || {}, cs = k.activeCase, info = (k.cases || []).find(c => c.id === cs) || {};
+  const runs = Object.values(state.runs || {}), joined = runs.filter(r => r.joined).length;
+  const calls = runs.filter(r => ((r.calls || {})[cs] || {}).status === 'recorded');
+  const unit = s.mode === 'team' ? 'teams' : 'students';
+  const phase = s.state === 'closed' ? 'Session closed' : PHASE[s.state === 'lobby' ? 'lobby' : k.phase] || '';
+  document.getElementById('now').textContent = `${info.label || ''}${(k.cases || []).length > 1 ? ` of ${(k.cases || []).length}` : ''} · ${phase}`;
+  let h = '';
+  if (s.state === 'lobby') h = `<p class="counts">${joined} ${joined === 1 ? 'student has' : 'students have'} joined from the class link.</p>`;
+  else if (k.phase !== 'closed') h = `<p class="big" id="clock"></p><p class="counts">${calls.length} of ${joined} ${unit} have ${s.mode === 'team' ? 'committed a call' : 'made a call'}.</p>`;
+  else {
+    const n = c => calls.filter(r => r.calls[cs].call === c).length;
+    const names = k.callNames || {};
+    h = `<div class="split"><div><p class="n">${n('infra')}</p><p>${esc(names.infra)}</p></div><div><p class="n">${n('bubble')}</p><p>${esc(names.bubble)}</p></div></div>
+      <p class="counts">${joined - calls.length ? `No call: ${joined - calls.length}` : ''}</p>`;
+  }
+  if (h !== last) { document.getElementById('board').innerHTML = h; last = h; }
+  const clock = document.getElementById('clock'); if (clock) clock.textContent = left();
+}
+setInterval(poll, 2000); poll();
+setInterval(() => { const clock = document.getElementById('clock'); if (clock) clock.textContent = left(); }, 500);
+</script>
+</body>
+</html>

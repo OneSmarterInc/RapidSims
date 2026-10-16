@@ -139,7 +139,8 @@ function check(opts = {}) {
   const ctx = (where, s) => { const h = findContextHits(s); if (h.length) err('context', `${where}: [${h.join(', ')}] in "${s.slice(0, 70)}"`); };
   for (const [cs, p] of Object.entries(packs)) strings(p).forEach((s) => ctx(`pack ${cs}`, s));
   strings(copy.notes).concat(strings(copy.reveal)).forEach((s) => ctx('copy', s));
-  pub.forEach(({ where, text }) => ctx(where, text));
+  // Code keys and action names (one word, no spaces) are not content a reader sees.
+  pub.forEach(({ where, text }) => { if (!/^[\w-]+$/.test(text.trim())) ctx(where, text); });
 
   // 8. sim id
   const id = opts.simId || config.simId;

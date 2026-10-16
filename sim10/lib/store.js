@@ -18,6 +18,7 @@ function memoryStore() {
     async mget(keys) { return keys.map((k) => (kv.has(k) ? JSON.parse(kv.get(k)) : null)); },
     async sadd(k, m) { if (!sets.has(k)) sets.set(k, new Set()); sets.get(k).add(m); },
     async smembers(k) { return [...(sets.get(k) || [])]; },
+    async del(...ks) { for (const k of ks) { kv.delete(k); sets.delete(k); } },
   };
 }
 
@@ -41,6 +42,7 @@ function upstashStore(url, token) {
     async mget(keys) { if (!keys.length) return []; const r = await cmd(['MGET', ...keys]); return r.map((x) => (x == null ? null : JSON.parse(x))); },
     async sadd(k, m) { await cmd(['SADD', k, m]); await cmd(['EXPIRE', k, String(TTL)]); },
     async smembers(k) { return (await cmd(['SMEMBERS', k])) || []; },
+    async del(...ks) { if (ks.length) await cmd(['DEL', ...ks]); },
   };
 }
 
@@ -59,7 +61,8 @@ function defaultStore() {
       },
       async mget(keys) { if (!keys.length) return []; return (await redisCommand(['MGET', ...keys])).map(x => x == null ? null : JSON.parse(x)); },
       async sadd(k, m) { await redisCommand(['SADD', k, m]); await redisCommand(['EXPIRE', k, String(TTL)]); },
-      async smembers(k) { return (await redisCommand(['SMEMBERS', k])) || []; }
+      async smembers(k) { return (await redisCommand(['SMEMBERS', k])) || []; },
+      async del(...ks) { if (ks.length) await redisCommand(['DEL', ...ks]); }
     };
     return shared;
   }

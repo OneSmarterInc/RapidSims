@@ -90,23 +90,7 @@ const MIN = 60000;
     await page.waitForFunction(()=>document.querySelector('#dock').innerText.includes('committed'));
     assert((await E.studentState(store,team.code,member.pid,now)).teamCommitted);
 
-    // Host mode preselection, stable focus, join URL and notes-free projector.
-    await page.goto(`${base}/host?play=individual`); await page.locator('#setup').waitFor({state:'visible'});
-    assert(await page.locator('input[name=mode][value=individual]').isChecked());
-    await page.setViewportSize({width:1440,height:1000}); await shot(page,'faculty-setup.png');
-    await page.goto(`${base}/console?code=${team.code}`); await page.locator('#notes-body h3').first().waitFor({state:'attached'});
-    assert((await page.locator('#join-url').getAttribute('href')).includes('session='+team.code));
-    now += 10*MIN; await page.evaluate(()=>poll());
-    await page.locator('[data-act=reveal]').focus(); await page.evaluate(()=>poll());
-    assert(await page.locator('[data-act=reveal]').evaluate(el=>el===document.activeElement));
-    await shot(page,'faculty-console.png');
-    await page.goto(`${base}/console?code=${team.code}&projector=1`); await page.locator('#board .panel').first().waitFor();
-    assert.equal(await page.locator('#notes').count(),0); assert.equal(await page.locator('#notes-body').count(),0);
-    await shot(page,'projector.png');
-    await page.route('**/api/console?*', route=>route.fulfill({status:401,contentType:'application/json',body:JSON.stringify({message:'Expired'})}));
-    await page.evaluate(()=>poll()); await page.locator('#recovery').waitFor({state:'visible'});
-    assert((await page.locator('#err').innerText()).includes('Sign-in expired'));
-    await page.unroute('**/api/console?*');
+    now += 10*MIN;
     await page.goto(`${base}/play?code=${team.code}`);
     await page.locator('#result').waitFor({state:'visible'});
     for (let stage=1;stage<=3;stage++) {
@@ -120,6 +104,6 @@ const MIN = 60000;
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'reveal tables must scroll within their panel');
     await page.locator('#reveal').scrollIntoViewIfNeeded(); await shot(page,'reveal-mobile.png');
     assert.deepEqual(errors,[]);
-    console.log('Browser checks passed: desktop/mobile layout, saved answers, hide/show, failed save/retry, team confirmation, host mode, focus, join link, projector and expired sign-in.');
+    console.log('Browser checks passed: desktop/mobile layout, saved answers, hide/show, failed save/retry, team confirmation and the staged reveal. The faculty pages are walked by tools/kit-browser-run.js.');
   } finally { if(browser)await browser.close(); await new Promise(resolve=>server.close(resolve)); }
 })().catch(error=>{console.error(error);process.exitCode=1});

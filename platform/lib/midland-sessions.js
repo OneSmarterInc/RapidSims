@@ -14,7 +14,8 @@ const KIT_SIMS = {
   'rapid-06-switch': { app: 'sim06', env: 'SIM06_SESSION_URL', practice: 1 },
   'rapid-07-bought': { app: 'sim07', env: 'SIM07_SESSION_URL', practice: 1 },
   'rapid-08-later': { app: 'sim08', env: 'SIM08_SESSION_URL', practice: 1 },
-  'rapid-09-money-land': { app: 'sim09', env: 'SIM09_SESSION_URL', practice: 1 }
+  'rapid-09-money-land': { app: 'sim09', env: 'SIM09_SESSION_URL', practice: 1 },
+  'rapid-10-bubble': { app: 'sim10', env: 'SIM10_SESSION_URL', practice: 1 }
 };
 let apps = {};
 try { apps = require('../../ec2/apps.json'); } catch { apps = {}; }
