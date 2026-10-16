@@ -47,7 +47,7 @@
       ]
     },
     {
-      "source": "/instructor.html",
+      "source": "/live.html",
       "headers": [
         {
           "key": "Cache-Control",

@@ -9,7 +9,9 @@ const vm = require('vm');
 const C = require('./config/content.js');
 
 const read = (f) => fs.readFileSync(path.join(__dirname, 'public', f), 'utf8');
-const pages = { student: read('index.html'), launcher: read('launch.html'), instructor: read('instructor.html') };
+const pages = { student: read('index.html'), launcher: read('launch.html'), instructor: read('live.html') };
+// The shared faculty pages (kit/) load these. History, values and names arrive from the server with the faculty session.
+const kitFiles = ['instructor.html', 'money-faculty.js', 'money-debrief.js'];
 const problems = [];
 const refuse = (m) => problems.push(m);
 
@@ -30,6 +32,14 @@ for (const [name, html] of Object.entries(pages)) {
     try { new vm.Script(js); } catch (e) { refuse(`${name} page script does not parse: ${e.message}`); }
   }
 }
+for (const f of kitFiles) {
+  const text = read(f);
+  for (const s of secret) if (s && text.includes(s)) refuse(`${f} contains scenario content: "${s.slice(0, 50)}"`);
+  if (REAL_NAMES.test(text)) refuse(`${f} names a real company`);
+  if (/\b(room|bridge)\b/i.test(text.replace(/\.room\b|\broom:/g, ''))) refuse(`${f} uses "room" or "bridge"; say "class" or "session"`);
+  if (f.endsWith('.js')) { try { new vm.Script(text); } catch (e) { refuse(`${f} does not parse: ${e.message}`); } }
+}
+for (const [name, html] of Object.entries(pages)) if (/\broom\b/i.test(html.replace(/\.room\b|\broom:/g, ''))) refuse(`${name} page uses "room"; say "class" or "session"`);
 for (const m of ['x-access-code', "sessionStorage.setItem('m09-access'", "sessionStorage.removeItem('m09-access'", '/api/config']) {
   if (!pages.launcher.includes(m)) refuse('access gate missing: ' + m);
 }
