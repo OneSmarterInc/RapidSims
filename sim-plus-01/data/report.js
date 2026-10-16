@@ -63,7 +63,7 @@ const OUTCOMES = {
       severity: 'dodge',
       configured: 'Flagged for a second study. No change at go-live.',
       consequence:
-        'No harm fires, but the participant had full access to this desk. Escaping the decision is not making it.'
+        'The review desk stays as it is for now. Ruth was available for a full appointment, so the call was yours to make.'
     }
   },
   log: {
@@ -76,8 +76,7 @@ const OUTCOMES = {
       severity: 'partial',
       configured: 'Receipt log generated automatically at intake.',
       consequence:
-        'The effort goes away and the latency mostly does. A control with no reader is now maintained at no cost, ' +
-        'which is cheaper than the alternative and still not a reason to have it.'
+        'The effort goes away and the latency mostly does. The log still has no reader; it now costs nothing to keep.'
     },
     keep: {
       severity: 'miss',
@@ -87,7 +86,7 @@ const OUTCOMES = {
     cannot_assess: {
       severity: 'dodge',
       configured: 'Flagged for a second study.',
-      consequence: 'Terry answers every question about this log truthfully. The access was there.'
+      consequence: 'The log stays as it is for now. Terry answers every question about it, so the call was yours to make.'
     }
   },
   vendor: {
@@ -95,8 +94,8 @@ const OUTCOMES = {
       severity: 'correct',
       configured: 'Flagged. Vendor terms and error rates requested before configuration.',
       consequence:
-        'Correct. Nobody inside Wexford can describe what happens between sending a fax and receiving a file. ' +
-        'Recording that as a gap is the only defensible position available.'
+        'This records the one step nobody inside Wexford can see. Nobody inside can describe what happens between sending a fax ' +
+        'and receiving a file, so asking for the vendor\'s terms first is the defensible position.'
     },
     keep: {
       severity: 'miss',
@@ -109,12 +108,12 @@ const OUTCOMES = {
       severity: 'miss',
       configured: 'Conversion brought in-house under the new platform.',
       consequence:
-        'Possibly correct, but recommended without any knowledge of the vendor\'s volume, terms, or error rate.'
+        'This may be right. It was recommended before anyone knew the vendor\'s volume, terms or error rate.'
     },
     eliminate: {
       severity: 'miss',
       configured: 'Vendor contract terminated.',
-      consequence: 'Four hundred faxes a day now have nowhere to go. Recommended without visibility into the step.'
+      consequence: 'Four hundred faxes a day now have nowhere to go. Nobody inside Wexford could see this step.'
     }
   },
   intake: {
@@ -128,7 +127,7 @@ const OUTCOMES = {
     eliminate: {
       severity: 'partial',
       configured: 'Release schedule removed; channels consolidated.',
-      consequence: 'Directionally right on the delay, vague about what replaces it.'
+      consequence: 'This removes the delay. The report leaves open what replaces the release schedule.'
     },
     keep: {
       severity: 'miss',
@@ -139,7 +138,7 @@ const OUTCOMES = {
     cannot_assess: {
       severity: 'dodge',
       configured: 'Flagged for a second study.',
-      consequence: 'Ray answers every question about this step plainly. The access was there.'
+      consequence: 'Intake stays as it is for now. Ray answered every question about this step, so the call was yours to make.'
     }
   }
 };

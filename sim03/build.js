@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// The path-prefix detector: /simNN, /sim-NN or /simplusNN.
-const PREFIX = /location\.pathname\.match\(\/\^\\\/sim(?:\(\?:plus\)\?)?-\?\\d\+\/\)/;
+// The path-prefix detector: /simNN, /sim-NN, /simplusNN or /sim-plus-NN.
+const PREFIX = /location\.pathname\.match\(\/\^\\\/sim(?:\(\?:-?\?plus\)\?)?-\?\\d\+\/\)/;
 // RapidSim 03 ships committed source HTML. This build step is assertion-only:
 // it never rewrites source files. It refuses deployment if student-facing
 // ambiguity leaks, path-prefixing breaks, browser JavaScript does not parse,

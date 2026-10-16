@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// The path-prefix detector: /simNN, /sim-NN or /simplusNN.
-const PREFIX = /location\.pathname\.match\(\/\^\\\/sim(?:\(\?:plus\)\?)?-\?\\d\+\/\)/;
+// The path-prefix detector: /simNN, /sim-NN, /simplusNN or /sim-plus-NN.
+const PREFIX = /location\.pathname\.match\(\/\^\\\/sim(?:\(\?:-?\?plus\)\?)?-\?\\d\+\/\)/;
 // RapidSim 07 build gate. Assertion-only: it never rewrites source. It refuses
 // deployment if anything before the reveal names the companies or points
 // forward, if placeholder content remains, if identity is wrong, or if the

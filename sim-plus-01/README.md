@@ -188,6 +188,15 @@ Tuesday-to-Thursday gap must not be able to expire a session.
 Intro brief and partial chart. Instructor transcript view — that wants
 its own platform spec, since Sims 01 and 02 need it too.
 
+## Faculty pages (shared template)
+
+Faculty sign in from the platform and run the class on the shared faculty pages (`public/instructor.html`, with
+`patience-faculty.js` and `patience-debrief.js`; server side `lib/kit.js`, `lib/kit-api.js`, `api/session.js`).
+Students from the class link play inside the class's open session: they wait until Start, each plays their own run,
+and a closed session freezes runs while keeping filed reports readable. Results band each student by the call on the
+first-pass review desk; the debrief has seven slides; Rehearse opens one practice student. The old run-ID lookup page
+(`api/instructor.js`, `FACULTY_CODE`) is gone. Browser walk: `node tools/kit-browser-run.js` (needs Playwright).
+
 ## Faculty playback and deployment diagnostics
 
 Faster observation playback is available only when the server verifies a faculty or faculty-preview launch (including supported legacy launch IDs), or a configured standalone faculty credential is explicitly supplied in `x-faculty-code`. The `faculty=1` URL flag grants no capability. Student playback remains 1×. Current question-starter behavior and the 180-minute catalogue setting are unchanged pending the teaching-format decision.

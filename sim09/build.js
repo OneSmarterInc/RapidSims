@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// The path-prefix detector: /simNN, /sim-NN or /simplusNN.
-const PREFIX = /location\.pathname\.match\(\/\^\\\/sim(?:\(\?:plus\)\?)?-\?\\d\+\/\)/;
+// The path-prefix detector: /simNN, /sim-NN, /simplusNN or /sim-plus-NN.
+const PREFIX = /location\.pathname\.match\(\/\^\\\/sim(?:\(\?:-?\?plus\)\?)?-\?\\d\+\/\)/;
 // Assertion-only build gate: it never rewrites source. It refuses to pass if
 // history, stage values or real names reach a browser page, if a page would
 // break under the /sim09 path prefix, if a script does not parse, if the access

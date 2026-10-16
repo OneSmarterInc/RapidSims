@@ -25,6 +25,12 @@ module.exports = {
     await cmd(['HSET', `${NS}sess:${code}:p`, id, JSON.stringify(obj)]);
     await cmd(['EXPIRE', `${NS}sess:${code}:p`, String(TTL)]);
   },
+  // Only when the student is not there yet, so a course import never overwrites a student who has joined.
+  async addParticipantIfNew(code, id, obj) {
+    await cmd(['HSETNX', `${NS}sess:${code}:p`, id, JSON.stringify(obj)]);
+    await cmd(['EXPIRE', `${NS}sess:${code}:p`, String(TTL)]);
+  },
+  async getParticipant(code, id) { return J(await cmd(['HGET', `${NS}sess:${code}:p`, id])); },
   async getParticipants(code) {
     const flat = await cmd(['HGETALL', `${NS}sess:${code}:p`]) || [];
     const out = {};

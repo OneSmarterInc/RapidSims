@@ -435,8 +435,8 @@ function catTab() {
   const matching = all
     .filter(si => f0 === 'All' || (f0 === 'Published') === !!si.published)
     .filter(si => matches('cat', [si.title, si.id, si.tagline, si.description, String(si.number||'')]));
-  const rapid = matching.filter(si => (Number(si.minutes) || 0) < 60);
-  const rapidPlus = matching.filter(si => (Number(si.minutes) || 0) >= 60);
+  const rapid = matching.filter(si => !RapidSimsIdentity.isPlus(si));
+  const rapidPlus = matching.filter(si => RapidSimsIdentity.isPlus(si));
   const list = rapid.concat(rapidPlus);
   const P = paged('cat', list);
   return `
@@ -472,9 +472,9 @@ function catTab() {
     <div class="panel">
     ${P.rows.length ? P.rows.map((si, index) => {
       const revs = (D.grants || []).filter(g => g.sim_id === si.id);
-      const plus = (Number(si.minutes) || 0) >= 60;
+      const plus = RapidSimsIdentity.isPlus(si);
       const prev = index > 0 ? P.rows[index - 1] : null;
-      const prevPlus = prev ? (Number(prev.minutes) || 0) >= 60 : null;
+      const prevPlus = prev ? RapidSimsIdentity.isPlus(prev) : null;
       const beginsLine = index === 0 || prevPlus !== plus;
       const lineHead = beginsLine ? `<div class="section" style="padding:14px 18px;margin:0;border-top:${index ? '1px solid var(--line)' : '0'}">
         <span>${plus ? 'RapidSims+' : 'RapidSims'} <span class="count">${plus ? rapidPlus.length : rapid.length}</span></span>

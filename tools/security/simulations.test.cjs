@@ -6,13 +6,16 @@ process.env.LAUNCH_SECRET=crypto.randomBytes(32).toString('hex');
 process.env.REPORT_SECRET=crypto.randomBytes(32).toString('hex');
 delete process.env.REPORT_KEYS_JSON;delete process.env.PLATFORM_URL;
 delete process.env.ACCESS_CODE;delete process.env.FACULTY_CODE;delete process.env.FACULTY_CODES;
-const memory=new Map(), queue=new Map();
+const memory=new Map(), queue=new Map(), hashes=new Map();
 const clone=v=>v===undefined?undefined:structuredClone(v);
 const transport=require.resolve('../../ec2/redis-command');
 require.cache[transport]={id:transport,filename:transport,loaded:true,exports:{configured:()=>true,command:async a=>{
   if(a[0]==='SET'){memory.set(a[1],a[2]);return 'OK';}
   if(a[0]==='GET')return memory.get(a[1]) || null;
-  if(a[0]==='HGETALL')return [];
+  if(a[0]==='HGETALL')return [...(hashes.get(a[1])||new Map())].flat();
+  if(a[0]==='HSET'||a[0]==='HSETNX'){const h=hashes.get(a[1])||new Map();if(a[0]==='HSET'||!h.has(a[2]))h.set(a[2],a[3]);hashes.set(a[1],h);return 1;}
+  if(a[0]==='HGET')return (hashes.get(a[1])||new Map()).get(a[2])||null;
+  if(a[0]==='EXPIRE')return 1;
   if(a[0]==='ZCARD')return queue.size;
   if(a[0]==='ZADD'){queue.set(a[3],Number(a[2]));return 1;}
   if(a[0]==='ZRANGEBYSCORE')return [...queue].filter(([,t])=>t<=Number(a[3])).map(([id])=>id).slice(0,Number(a[6]));
@@ -64,11 +67,15 @@ test('RapidSim+ run ownership blocks another student and another course',async()
   const handler=require('../../sim-plus-01/api/run');
   async function call(token,body){const response=res();await handler({method:'POST',headers:{'x-launch-token':token},body},response);return response;}
   const own=tokenFor('rapidsimplus-01','A');
+  // Students play inside their class's session, which the faculty member opens and starts.
+  const session=require('../../sim-plus-01/api/session'),fac=tokenFor('rapidsimplus-01','teacherA','faculty','course');
+  const created=res();await session({method:'POST',headers:{'x-launch-token':fac},body:{action:'create'}},created);assert.equal(created.code,200);
+  const startedSession=res();await session({method:'POST',headers:{'x-launch-token':fac},body:{action:'control',code:created.data.code,set:'start'}},startedSession);assert.equal(startedSession.code,200);
   const started=await call(own,{action:'start',order:['terry','ray','ruth'],observationSeconds:30});
   assert.equal(started.code,200);const runId=started.data.runId;
   for(const token of [tokenFor('rapidsimplus-01','B'),tokenFor('rapidsimplus-01','A','student','other')]){
-    assert.equal((await call(token,{action:'resume',runId})).code,403);
-    assert.equal((await call(token,{action:'ask',runId,question:'Why?'})).code,403);
+    // Another student's run is never theirs: their own session record has no run, and another class has no session.
+    for(const body of [{action:'resume',runId},{action:'ask',runId,question:'Why?'}]){const r=await call(token,body);assert.ok([403,404,409].includes(r.code),String(r.code));assert.equal(r.data.state,undefined);}
   }
   assert.equal((await call(own,{action:'resume',runId})).code,200);
 });
