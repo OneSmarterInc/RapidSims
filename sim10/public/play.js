@@ -86,7 +86,7 @@ function render(v) {
   $('#solo-done').hidden = !(v.caseId === v.cases[v.cases.length - 1] && v.reveal?.stage >= 3);
   const nth = v.cases.indexOf(v.caseId) + 1;
   $('#case-label').textContent = v.cases.length > 1 ? `Company ${nth} of ${v.cases.length}` : 'Company 1';
-  $('#phase-label').textContent = v.sessionClosed ? 'Session closed' : v.phase === 'read' ? `${PHASE_NAMES.read}: ${v.mode === 'team' ? 'private calls' : 'calls'} open when it ends` : (v.reveal?.stage >= 3 ? 'Review complete' : PHASE_NAMES[v.phase]);
+  $('#phase-label').textContent = v.sessionClosed ? 'Session closed' : v.phase === 'read' ? `${PHASE_NAMES.read}: ${v.mode === 'team' ? 'private calls' : 'calls'} open when it ends` : (v.reveal?.stage >= 3 ? 'Review complete' : v.solo && v.phase === 'closed' && v.result?.status === 'recorded' ? 'Call locked' : PHASE_NAMES[v.phase]);
 
   $('#waiting').hidden = v.phase !== 'waiting';
   $('#waiting-team').textContent = v.mode === 'team' ? (v.team != null ? `You're in ${v.teamLabel}.` : 'Your instructor will put you on a team.') : '';
