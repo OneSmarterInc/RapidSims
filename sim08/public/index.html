@@ -106,7 +106,8 @@ table.short .rep{display:block;font:12px var(--mono);color:var(--dimmer)}
 .recap{margin-top:30px;border-top:1px solid var(--line);max-width:64ch}
 .recap h3{font:500 13px var(--mono);color:var(--amber);margin:18px 0 8px}
 .recap textarea{width:100%;min-height:90px;background:var(--panel,#161E2E);color:var(--bone);border:1px solid var(--line2);padding:10px;font:inherit;margin:6px 0 14px}
-.rvq{display:block;margin-top:10px}.skip{margin-top:22px}
+.rvq{display:block;margin-top:10px}.skip{margin-top:22px}[data-skip-slot] .skip{margin:12px 0 18px}
+table.short.compact td,table.short.compact th{padding:8px 10px}table.short.compact .nm{white-space:normal}
 .recap li{color:var(--soft);margin:0 0 6px 20px}
 .join{max-width:460px}
 .field{margin-top:18px}
@@ -264,6 +265,11 @@ function track(){
 }
 const money=n=>'$'+Number(n).toLocaleString('en-US');
 const vname=k=>(S.view.vendors||[]).find(v=>v.key===k)?.name||'';
+// The compact shortlist for a narrow column: vendor, implementation and the three-year quote.
+function shortlistCompact(){
+  const rows=(S.view.vendors||[]).map(v=>`<tr><td><span class="nm">${esc(v.name)}</span></td><td>${esc(v.implementation)}</td><td class="num">${money(v.threeYear)}</td></tr>`).join('');
+  return `<table class="short compact"><thead><tr><th>Vendor</th><th>Implementation</th><th>Three-year quote</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
 function shortlist(){
   const rows=(S.view.vendors||[]).map(v=>`<tr><td><span class="nm">${esc(v.name)}</span><span class="rep">${esc(v.rep)}</span></td><td>${esc(v.pitch)}</td><td>${esc(v.implementation)}</td><td class="num">${money(v.fee)}<br>+ ${money(v.monthly)}/mo</td><td class="num">${money(v.threeYear)}</td></tr>`).join('');
   return `<div class="wide"><table class="short"><thead><tr><th>Vendor</th><th>Proposal</th><th>Implementation</th><th>Price</th><th>Three-year quote</th></tr></thead><tbody>${rows}</tbody></table></div>`;
@@ -281,7 +287,8 @@ function render(){
   renderMain();
   const v=S.view;if(!v||!v.canSkip||!NEXT[v.clock.phase])return;
   const box=document.createElement('div');box.className='skip';box.innerHTML=`<button class="btn pri" id="skip">Go to the ${esc(NEXT[v.clock.phase])} now</button>`;
-  app.appendChild(box);
+  // Next to the vote or the question count when the part has one; otherwise at the end.
+  (app.querySelector('[data-skip-slot]')||app).appendChild(box);
   document.getElementById('skip').onclick=async e=>{e.target.disabled=true;
     try{const d=await sessionApi({action:'skip',code:S.code,participantId:S.pid});S.view=d.view;S.remaining=d.view.clock.remaining;S.syncedAt=performance.now();S.shown='';S.confirming=null;render()}
     catch(err){S.error=err.message;e.target.disabled=false;render()}};
@@ -316,8 +323,8 @@ function renderQuestions(paused,err){
     if(S.confirming&&S.confirming.q===q.id)return `<li><div class="confirm" role="group" aria-label="Confirm question"><p>${esc(q.text)}</p><p>${esc(CFG.copy.confirmAsk)}${team?' '+esc(CFG.copy.confirmTeam):''}</p><div class="decide"><button class="btn pri" id="yes">${esc(CFG.copy.go)}</button><button class="btn" id="no">${esc(CFG.copy.back)}</button></div></div></li>`;
     return `<li class="${q.asked?'spent':''}"><span>${esc(q.text)}</span>${q.asked?'':`<button class="btn" data-q="${esc(q.id)}" ${v.canAsk&&!S.busy?'':'disabled'}>Ask</button>`}</li>`;
   }).join('');
-  app.innerHTML=`${paused}<div class="cols"><section><div class="kicker">${esc(CFG.copy.menuHeading)}</div><p class="body">${esc(CFG.copy.menuLead)}</p><div class="left">${esc(left)}</div>${err}<ul class="menu">${items}</ul></section>
-  <section><div class="kicker">${esc(CFG.copy.answersHeading)}</div>${answersBlock()}<h3 class="kicker" style="margin-top:22px">${esc(CFG.copy.proposalsHeading)}</h3>${shortlist()}</section></div>`;
+  app.innerHTML=`${paused}<div class="cols"><section><div class="kicker">${esc(CFG.copy.menuHeading)}</div><p class="body">${esc(CFG.copy.menuLead)}</p><div class="left">${esc(left)}</div><div data-skip-slot></div>${err}<ul class="menu">${items}</ul></section>
+  <section><div class="kicker">${esc(CFG.copy.answersHeading)}</div>${answersBlock()}<h3 class="kicker" style="margin-top:22px">${esc(CFG.copy.proposalsHeading)}</h3>${shortlistCompact()}</section></div>`;
   app.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{S.confirming={q:b.dataset.q};S.error='';render();document.getElementById('yes')?.focus()});
   const yes=document.getElementById('yes'),no=document.getElementById('no');
   if(no)no.onclick=()=>{S.confirming=null;render()};
@@ -339,14 +346,14 @@ function renderCommit(paused,err){
   const v=S.view,team=S.session.mode==='team';
   const opts=v.vendors.map(x=>({key:x.key,text:x.name}));
   app.innerHTML=`${paused}<div class="cols"><section><div class="kicker">${esc(CFG.copy.commitHeading)}</div><p class="body">${esc(CFG.copy.commitLead)}${team?' '+esc(CFG.copy.commitTeam):''}</p>${err}
-  ${choiceBlock('vendor',opts,v.myVendorVote,v.canVoteVendor,CFG.copy.confirmVendor,CFG.copy.votedVendor)}${shortlist()}</section>
+  ${choiceBlock('vendor',opts,v.myVendorVote,v.canVoteVendor,CFG.copy.confirmVendor,CFG.copy.votedVendor)}<div data-skip-slot></div><h3 class="kicker" style="margin-top:22px">${esc(CFG.copy.proposalsHeading)}</h3>${shortlistCompact()}</section>
   <section><div class="kicker">${esc(CFG.copy.answersHeading)}</div>${answersBlock()}</section></div>`;
   wireChoice('vendor');
 }
 function renderPlan(paused,err){
   const v=S.view,team=S.session.mode==='team';
   app.innerHTML=`${paused}<div class="cols"><section><div class="kicker">${esc(CFG.copy.planHeading)}</div><h2>${esc(fill(CFG.copy.planLead,{vendor:v.vendor.name}))}</h2>${team?`<p class="body">${esc(CFG.copy.commitTeam)}</p>`:''}${err}
-  ${choiceBlock('plan',v.plans,v.myPlanVote,v.canVotePlan,CFG.copy.confirmPlan,CFG.copy.votedPlan)}</section>
+  ${choiceBlock('plan',v.plans,v.myPlanVote,v.canVotePlan,CFG.copy.confirmPlan,CFG.copy.votedPlan)}<div data-skip-slot></div></section>
   <section><div class="kicker">${esc(CFG.copy.answersHeading)}</div>${answersBlock()}</section></div>`;
   wireChoice('plan');
 }

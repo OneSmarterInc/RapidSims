@@ -120,6 +120,7 @@ const token = (sub, name, role) => { const body = Buffer.from(JSON.stringify({ k
     const send = (sub, body) => st[sub].evaluate(async ([c, b, t, pid]) => (await fetch('/sim08/api/session', { method: 'POST', headers: { 'content-type': 'application/json', 'x-launch-token': t },
       body: JSON.stringify({ ...b, code: c, participantId: pid }) })).status, [code, body, token(sub, sub, 'student'), `platform:${sub}`]);
     await send('ben', { action: 'ask', question: 'q01' });
+    await ana.screenshot({ path: path.join(artifacts, '02b-student-questions.png'), fullPage: true });
     await advanceTo('commit');
     await ana.locator('[data-k="kestrel"]').waitFor();
     await ana.locator('[data-k="kestrel"]').click(); await ana.locator('#yes').click();
@@ -155,7 +156,8 @@ const token = (sub, name, role) => { const body = Buffer.from(JSON.stringify({ k
       if (i < 5) await fac.locator('[data-md="next"]').click();
     }
     await fac.locator('[data-md-go="2"]').click();
-    ok((await fac.locator('.lt-q').count()) === 16, 'Where the warnings were: all sixteen questions');
+    const quiet = await fac.locator('.md-slide').innerText();
+    ok((await fac.locator('.lt-q').count()) < 16 && /other questions?, nobody asked/i.test(quiet), 'Where the warnings were: warning or asked questions, the rest in one line');
     await fac.locator('[data-md-go="4"]').click();
     ok((await fac.locator('.md-slide').innerText()).includes('The front desk question.'), 'What students said shows the review');
 

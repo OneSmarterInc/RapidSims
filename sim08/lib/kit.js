@@ -14,7 +14,7 @@ const LESSON_QUESTIONS = [
 ];
 // The second is the closing question from the instructor's debrief.
 const REVIEW_QUESTIONS = [
-  'Which question would you spend again, and which would you trade?',
+  'Which of your questions was most useful, and which would you swap for a different one now?',
   C.DEBRIEF.turn
 ];
 const LESSONS = [
