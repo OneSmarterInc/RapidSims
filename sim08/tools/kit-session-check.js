@@ -136,7 +136,11 @@ const sVote = (code, who, kind, choice) => api({ action: 'vote', code, participa
   const m = D.model(F.debrief.input(TEAMS, { state: fs2 }));
   eq([m.ready, m.slides.map(s => s.key)], [true, ['glance', 'split', 'questions', 'plans', 'said', 'lessons']], 'Six slides');
   eq(m.slides[0].body.tiles.length, 3, 'D0: three outcomes');
-  eq(m.slides[1].body.cards.length, 0, 'D1: nobody bought the same vendor, so no pair');
+  eq([m.slides[1].body.cards.map(c => c.band), m.slides[1].ask], [['adopted', 'knew'], 'Who came closest to asking the question that mattered, and what stopped them?'], 'D1: no pair, so the two furthest apart, and a new question');
+  eq(m.slides[0].headline, 'One adopted the system. One funded the right plan without finding the risk. One found the risk and funded the wrong plan.', 'D0: one line per outcome reached');
+  ok(m.slides[0].evidence.endsWith('2 of 3 students have something running beside the new system.'), 'D0: have with a count above one');
+  ok(F.noPause({ clock: { phase: 'report' } }) && !F.noPause({ clock: { phase: 'questions' } }), 'No Pause once the report is open');
+  eq(m.slides[2].body.rows.length + m.slides[2].body.quiet, 16, 'D2: every question is a row or in the quiet line');
   ok(m.slides[2].headline.startsWith('Two of three'), 'D2: two found their vendor\'s risk');
   eq(m.slides[3].body.grid.find(g => g.name === C.VENDORS[0].name).cells.find(c => c.fit).n, 1, 'D3: Ana funded the plan that fitted');
   eq(m.slides[4].body.cards.map(c => c.name), ['Ana'], 'D4: what students said');
@@ -196,6 +200,7 @@ const sVote = (code, who, kind, choice) => api({ action: 'vote', code, participa
   eq((await api({ action: 'faculty_state', code: pc })).body.runs['individual:' + pid].band, 'adopted', 'See the faculty view of the practice run');
   eq((await api({ action: 'course_sessions' })).body.sessions.some(s => s.code === pc), false, 'Practice stays out of the Sessions page');
   eq((await api({ action: 'practice_finish' })).status, 200, 'End practice');
+  eq(K.REVIEW_QUESTIONS[0], 'Which of your questions was most useful, and which would you swap for a different one now?', 'Review question 1, reworded');
   eq(K.REVIEW_QUESTIONS[1], C.DEBRIEF.turn, 'The closing question is the second review question');
   console.log(`PASS kit-session-check: ${n} assertions`);
 })().catch(e => { console.error(e); process.exit(1); });

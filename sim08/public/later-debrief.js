@@ -8,6 +8,7 @@ const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&a
 const word = n => WORDS[n] || String(n);
 const cap1 = s => s ? s[0].toUpperCase() + s.slice(1) : s;
 const RANK = { adopted: 0, lucky: 1, knew: 1, shadow: 2 };
+const HEAD = { adopted: 'adopted the system.', lucky: 'funded the right plan without finding the risk.', knew: 'found the risk and funded the wrong plan.', shadow: 'ended with a shadow system.' };
 
 function model(input) {
   const K = input.kit || {}, B = K.bands || {}, order = K.order || [], vendors = K.vendors || [], questions = K.questions || [], plans = K.plans || [];
@@ -18,6 +19,7 @@ function model(input) {
   if (!base.ready) return base;
   const counted = rows.filter(r => !r.late), m = counted.length || n;
   const ofN = k => `${k} of ${m} ${m === 1 ? unit : units}`;
+  const has = k => (m === 1 || k === 1 ? 'has' : 'have');
   const vname = k => (vendors.find(v => v.key === k) || {}).name || '';
   const by = b => rows.filter(r => r.band === b);
 
@@ -25,9 +27,10 @@ function model(input) {
   const tiles = order.map(b => ({ band: b, rows: by(b) })).filter(x => x.rows.length);
   const adopted = by('adopted').length, shadow = by('shadow').length;
   base.slides.push({ key: 'glance', kicker: 'Eighteen months on', lesson: 1,
-    headline: esc(`${adopted ? cap1(word(adopted)) : 'No'} ${adopted === 1 ? unit : units} adopted the system. ${shadow ? cap1(word(shadow)) : 'None'} ended with a shadow system.`),
+    // One line per outcome this class reached.
+    headline: esc(tiles.map(x => `${cap1(word(x.rows.length))} ${HEAD[x.band]}`).join(' ')),
     sub: tiles.length === 1 ? `Every ${unit} landed in the same place.` : `${cap1(word(tiles.length))} different outcomes from the same three vendors.`,
-    evidence: `${ofN(counted.filter(r => r.band !== 'adopted').length)} have something running beside the new system.`,
+    evidence: (k => `${ofN(k)} ${has(k)} something running beside the new system.`)(counted.filter(r => r.band !== 'adopted').length),
     ask: 'Where did the work go that the new system did not do?',
     body: { kind: 'tiles', tiles: tiles.map(x => ({ label: B[x.band].label, cls: B[x.band].cls, phrase: B[x.band].phrase,
       names: x.rows.map(r => `${r.name} · ${vname(r.vendor)}`) })) } });
@@ -48,12 +51,15 @@ function model(input) {
     questions: (r.questionIds || []).map(id => { const q = questions.find(x => x.id === id) || {}; return { text: q.text || id, route: (q.routes || {})[r.vendor] || null }; }),
     plan: (plans.find(p => p.key === r.plan) || {}).text || 'None funded' });
   const matched = counted.filter(r => (plans.find(p => p.key === r.plan) || { matches: [] }).matches.includes(r.vendor)).length;
+  // With no pair, the two most different outcomes stand side by side (or the one, in a class of one).
+  const spread = counted.slice().sort((a, b) => RANK[a.band] - RANK[b.band]);
+  const fallback = spread.length > 1 ? [spread[0], spread[spread.length - 1]] : spread.slice(0, 1);
   base.slides.push({ key: 'split', kicker: 'Same vendor, different place', lesson: 3,
-    headline: pair ? esc(`${pair.a.name} and ${pair.b.name} both bought ${vname(pair.vendor)}.`) : 'Nobody who chose the same vendor landed differently.',
-    sub: pair ? 'They ended up in different places.' : '',
+    headline: pair ? esc(`${pair.a.name} and ${pair.b.name} both bought ${vname(pair.vendor)}.`) : `Nobody who chose the same vendor landed differently.`,
+    sub: pair ? 'They ended up in different places.' : fallback.length > 1 ? `Here are the two ${units} who landed furthest apart.` : `Here is how this ${unit} got there.`,
     evidence: `${ofN(matched)} funded the go-live plan that fitted their vendor.`,
-    ask: esc(pair ? 'Before anything else, what did one of you know that the other didn\'t?' : fill(K.disagreementNone, {})),
-    body: { kind: 'pair', cards: pair ? [card(pair.a), card(pair.b)] : [] } });
+    ask: pair ? 'Before anything else, what did one of you know that the other didn\'t?' : 'Who came closest to asking the question that mattered, and what stopped them?',
+    body: { kind: 'pair', cards: (pair ? [pair.a, pair.b] : fallback).map(card) } });
 
   // D2 · the questions the class spent, with the warnings marked
   const asked = questions.map(q => ({ text: q.text, n: counted.filter(r => (r.questionIds || []).includes(q.id)).length,
@@ -64,7 +70,7 @@ function model(input) {
     sub: 'Each question went to all three vendors. The marks show where a vendor gave something away.',
     evidence: `${ofN(found)} found their vendor's risk before choosing.`,
     ask: 'Which question did you skip because it felt less like diligence?',
-    body: { kind: 'questions', rows: asked, total: m } });
+    body: { kind: 'questions', rows: asked.filter(r => r.n || r.warns.length), quiet: asked.filter(r => !r.n && !r.warns.length).length, total: m } });
 
   // D3 · go-live plans against the vendor chosen
   const grid = vendors.map(v => ({ name: v.name, cells: plans.map(p => ({ n: counted.filter(r => r.vendor === v.key && r.plan === p.key).length, fit: (p.matches || []).includes(v.key) })),
@@ -100,7 +106,7 @@ function bodyHTML(s, ui) {
     <small>Questions spent</small><ol>${c.questions.map(q => `<li>${esc(q.text)}${q.route ? ` <em class="lt-w">${q.route === 'direct' ? 'warning' : 'partial'}</em>` : ''}</li>`).join('') || '<li>None</li>'}</ol>
     <small>Go-live plan</small><p>${esc(c.plan)}</p></div>`).join('')}</div>` : '';
   if (b.kind === 'questions') return `<div class="lt-qs">${b.rows.map(r => `<div class="lt-q${r.warns.length ? ' lt-qw' : ''}"><span class="lt-n">${r.n}</span><span class="lt-qt">${esc(r.text)}</span><span class="lt-qv">${r.warns.map(w => `<i class="${w.kind === 'direct' ? 'lt-d' : 'lt-p'}">${esc(w.name)}</i>`).join('')}</span></div>`).join('')}</div>
-    <p class="md-note">The number shows how many asked it. A solid mark: that vendor's answer gave its risk away. An outlined mark: half of it.</p>`;
+    ${b.quiet ? `<p class="md-note">${cap1(word(b.quiet))} other question${b.quiet === 1 ? '' : 's'}, nobody asked.</p>` : ''}<p class="md-note">The number shows how many asked it. A solid mark: that vendor's answer gave its risk away. An outlined mark: half of it.</p>`;
   if (b.kind === 'plans') return `<table class="lt-grid"><thead><tr><th>Vendor</th>${b.plans.map(p => `<th>Plan ${p.n}</th>`).join('')}<th>None</th></tr></thead><tbody>${b.grid.map(g => `<tr><td>${esc(g.name)}</td>${g.cells.map(c => `<td class="${c.fit ? 'lt-fit' : ''}">${c.n}</td>`).join('')}<td>${g.none}</td></tr>`).join('')}</tbody></table>
     <ol class="lt-plans">${b.plans.map(p => `<li>${esc(p.text)}</li>`).join('')}</ol>`;
   if (b.kind === 'said') {

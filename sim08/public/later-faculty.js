@@ -28,6 +28,8 @@ const liveLink=s=>{const lt=global.FacultySession&&FacultySession.page?FacultySe
 const LaterSettings={
  id:'rapid-08-later', title:'Eighteen Months Later', code:'SIM08', modes:['individual','team'], defaultMode:null,
  storage:{token:'m08-faculty-lt',session:'m08-kit-session',course:'m08-faculty-course'},
+ // A practice run, or a session at the report, has nothing left to pause.
+ noPause:s=>(s.clock||{}).phase==='report',
  noLead:true, teamRule:'The team shares six questions. The vendor and the go-live plan are private votes; the majority decides.',
  questions:[
   // The prompts arrive with the faculty session (state.kit.reviewQuestions).
