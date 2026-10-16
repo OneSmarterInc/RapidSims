@@ -127,12 +127,7 @@ function createApp({ store: injectedStore, clock = () => Date.now() } = {}) {
             if (s.soloPid !== ownerPid || (s.courseId && launch.course !== s.courseId)) {
               throw new engine.SimError('forbidden', 'This private run belongs to another RapidSims account.');
             }
-            // A Rehearse practice run starts its clock when its practice student first opens it.
-            if (s.practice && !s.runs.A.startedAt) {
-              const me = await store.get(engine.K.part(s.code, ownerPid));
-              await store.set(engine.K.sess(s.code), { ...s, state: 'running', startedAt: now, runs: { ...s.runs, A: { ...s.runs.A, startedAt: now } } });
-              if (me) await store.set(engine.K.part(s.code, ownerPid), { ...me, joinedAt: now, launchId: launch.run || null });
-            }
+
             return send(res, 200, { code: s.code, mode: s.mode, teams: s.teams, cases: s.cases, platform: true, solo: true, pid: ownerPid });
           }
           return send(res, 200, { code: s.code, mode: s.mode, teams: s.teams, cases: s.cases, platform: s.platformAuth, joinUrl: s.platformAuth ? engine.platformJoinUrl(s) : null });
@@ -154,6 +149,13 @@ function createApp({ store: injectedStore, clock = () => Date.now() } = {}) {
           return send(res, 200, { ok: true, ...r });
         }
         case 'GET /api/state': {
+          const s0 = await engine.getSession(store, q('code'));
+          // A Rehearse practice run starts its clock when the play page first loads the figures.
+          if (s0.practice && !s0.runs.A.startedAt && pid === s0.soloPid) {
+            const me = await store.get(engine.K.part(s0.code, pid));
+            await store.compareAndSet(engine.K.sess(s0.code), s0, { ...s0, state: 'running', startedAt: now, runs: { ...s0.runs, A: { ...s0.runs.A, startedAt: now } } });
+            if (me && !me.joinedAt) await store.set(engine.K.part(s0.code, pid), { ...me, joinedAt: now, launchId: launch && launch.run || null });
+          }
           const v = await engine.studentState(store, q('code'), pid, now);
           const s = await engine.getSession(store, q('code'));
           // After the last company's outcome: the four questions and, for a signed-in student, the review.

@@ -182,8 +182,16 @@ async function advanceSolo(store, code, pid, launch, expected, now) {
   const s = await checkIdentity(store, code, pid, launch);
   await participant(store, s, pid);
   if (!s.solo) fail('forbidden', 'Only the host can advance a class session.');
-  const cs = activeCase(s);
-  if (phaseOf(s, cs, now).name !== 'closed') fail('conflict', 'The reveal opens after the clock runs out.');
+  const cs = activeCase(s), ph = phaseOf(s, cs, now);
+  // A private run moves on when its player is ready: reading ends, or the call locks, at once.
+  if (ph.name === 'read' || ph.name === 'verdict') {
+    if (expected.caseId !== cs || expected.phase !== ph.name) fail('conflict', 'This run has moved on. Refresh to see the current part.');
+    const moved = JSON.parse(JSON.stringify(s));
+    moved.runs[cs].startedAt -= ph.endsAt - now;
+    if (!await store.compareAndSet(K.sess(s.code), s, moved)) fail('conflict', 'This run has moved on. Refresh to see the current part.');
+    return;
+  }
+  if (ph.name !== 'closed') fail('conflict', 'The reveal opens after the clock runs out.');
   if (expected.caseId !== cs || expected.stage !== s.runs[cs].reveal) fail('conflict', 'This run has moved on. Refresh to see the current part.');
   const next = JSON.parse(JSON.stringify(s));
   if (next.runs[cs].reveal < 3) next.runs[cs].reveal++;
@@ -403,6 +411,7 @@ async function studentState(store, code, pid, now) {
     phase: ph.name, startsAt: ph.startsAt || null, endsAt: ph.endsAt, serverNow: now,
     rules: { minMind: config.minMindChangerChars, minReason: config.minLineReasonChars },
   };
+  if (s.solo && (ph.name === 'read' || ph.name === 'verdict')) view.nextPart = ph.name === 'read' ? 'I’m ready to make my call' : 'Lock my call';
   if (s.solo && ph.name === 'closed') {
     view.soloStage = s.runs[cs].reveal;
     view.nextPart = s.runs[cs].reveal < 3 ? 'Show next part'

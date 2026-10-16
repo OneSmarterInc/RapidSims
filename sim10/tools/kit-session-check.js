@@ -178,14 +178,26 @@ const bar = async (code) => { const d = await fstate(code); return F.controls(d.
   const pa = token({ sub: 'practice-fac-ana', name: 'Practice Ana' }), pid = 'platform:practice-fac-ana', pc = ps.body.code;
   const me = { 'x-launch-token': pa, 'x-pid': pid };
   eq((await api({ action: 'course_session' }, pa)).body.code, pc, 'The practice student finds the practice run');
-  eq((await call('GET', `/api/session?code=${pc}`, null, { 'x-launch-token': pa })).body.pid, pid, 'Opening it starts the clock');
+  eq((await call('GET', `/api/session?code=${pc}`, null, { 'x-launch-token': pa })).body.pid, pid, 'The practice student opens the run');
+  eq((await api({ action: 'practice_status' })).body.students[0].status, 'Ready to start', 'The clock waits for the play page (#50)');
+  eq((await call('GET', `/api/state?code=${pc}`, null, me)).body.phase, 'read', 'The play page starts the clock');
   eq((await call('GET', `/api/session?code=${pc}`, null, { 'x-launch-token': st.ben })).status, 403, 'A real student cannot open practice');
   eq((await api({ action: 'practice_status' })).body.students[0].status, 'Reading: company 1', 'Rehearse shows the part in play');
-  for (const cs of ['A', 'B']) {
+  let pv0 = (await call('GET', `/api/state?code=${pc}`, null, me)).body;
+  eq(pv0.nextPart, 'I’m ready to make my call', 'A practice student can end the reading early (#48)');
+  eq((await call('POST', '/api/solo/advance', { code: pc, caseId: 'A', phase: 'read' }, me)).status, 200, 'Ready to make the call');
+  pv0 = (await call('GET', `/api/state?code=${pc}`, null, me)).body;
+  eq([pv0.phase, pv0.nextPart], ['verdict', 'Lock my call'], 'The call opens at once');
+  await call('POST', '/api/verdict', { code: pc, caseId: 'A', fields: answer('bubble', 'bs.cash', 'Cash is falling fast.', MIND) }, me);
+  eq((await call('POST', '/api/solo/advance', { code: pc, caseId: 'A', phase: 'verdict' }, me)).status, 200, 'Lock my call');
+  eq((await call('GET', `/api/state?code=${pc}`, null, me)).body.result.call, 'bubble', 'The locked call is recorded');
+  eq((await call('POST', '/api/solo/advance', { code: pc, caseId: 'A', phase: 'verdict' }, me)).status, 409, 'A repeated press does nothing');
+  for (let stage = 0; stage < 4; stage++) await call('POST', '/api/solo/advance', { code: pc, caseId: 'A', stage }, me);
+  for (const cs of ['B']) {
     clockMs += 6 * MIN;
     await call('POST', '/api/verdict', { code: pc, caseId: cs, fields: answer('infra', 'bs.cash', 'Cash covers the build.', MIND) }, me);
     clockMs += 4 * MIN;
-    for (let stage = 0; stage < (cs === 'A' ? 4 : 3); stage++) eq((await call('POST', '/api/solo/advance', { code: pc, caseId: cs, stage }, me)).status, 200, `Practice: next part (${cs} ${stage})`);
+    for (let stage = 0; stage < 3; stage++) eq((await call('POST', '/api/solo/advance', { code: pc, caseId: cs, stage }, me)).status, 200, `Practice: next part (${cs} ${stage})`);
   }
   const pv = (await call('GET', `/api/state?code=${pc}`, null, me)).body;
   ok(pv.afterReveal && pv.review.open, 'The practice student reaches the review');
@@ -193,7 +205,7 @@ const bar = async (code) => { const d = await fstate(code); return F.controls(d.
   const prev = reports.length;
   await api({ action: 'review', code: pc, reflection1: 'a', reflection2: 'b' }, pa);
   eq(reports.length, prev, 'Practice never reports');
-  eq((await api({ action: 'faculty_state', code: pc })).body.runs['individual:' + pid].band, 'infra', 'See the faculty view of the practice run');
+  eq((await api({ action: 'faculty_state', code: pc })).body.runs['individual:' + pid].band, 'mixed', 'See the faculty view of the practice run');
   eq((await api({ action: 'course_sessions' })).body.sessions.some(s => s.code === pc), false, 'Practice stays out of the Sessions page');
   eq((await api({ action: 'practice_finish' })).status, 200, 'Finish Rehearse');
   eq((await api({ action: 'practice_status' })).body.code, null, 'The practice run is gone');

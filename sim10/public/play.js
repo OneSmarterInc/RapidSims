@@ -23,7 +23,9 @@ $('#solo-next').addEventListener('click', async () => {
   if (button.disabled || !view?.nextPart) return;
   button.disabled = true;
   try {
-    await api('POST', 'api/solo/advance', { code: CODE, caseId: view.caseId, stage: view.soloStage }, headers);
+    // Locking a call saves the latest draft first.
+    if (view.phase === 'verdict' && draftQueue) await draftQueue.flush();
+    await api('POST', 'api/solo/advance', { code: CODE, caseId: view.caseId, stage: view.soloStage, phase: view.phase }, headers);
     await poll();
   } catch (e) { $('#err').textContent = e.message; }
   finally { button.disabled = false; }
@@ -405,7 +407,7 @@ function renderResult(v) {
       <p><b>Why:</b> ${blank('reason', r.lineWhy ? `too short: \u201c${esc(r.lineWhy)}\u201d` : 'left blank') || esc(r.lineWhy)}</p>
       <p><b>What would have changed ${v.mode === 'team' ? 'your' : 'your'} mind:</b> ${blank('mind', r.mind ? `too short: \u201c${esc(r.mind)}\u201d` : 'left blank') || esc(r.mind)}</p>`;
   }
-  if (!v.reveal) html += '<p class="muted">Your instructor will lead the discussion, then show what happened.</p>';
+  if (!v.reveal) html += v.solo ? '<p class="muted">Show each part when you’re ready.</p>' : '<p class="muted">Your instructor will lead the discussion, then show what happened.</p>';
   html += '</div>';
   if (el.innerHTML !== html) el.innerHTML = html;
   el.hidden = false;
