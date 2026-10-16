@@ -1,0 +1,31 @@
+/* Infrastructure or Bubble? debrief bodies. Sizes in em off the shared slide base (kit/debrief.css). */
+.bb-names{display:flex;flex-wrap:wrap;gap:.4em;margin-top:.5em}
+.bb-names span{font:1em var(--mono);padding:.2em .55em;border:1px solid var(--line2);border-radius:.3em;color:var(--soft)}
+.bb-splits{display:flex;gap:2em;flex-wrap:wrap;margin-bottom:1em}
+.bb-split{flex:1;min-width:20em;display:flex;flex-direction:column;gap:.5em}
+.bb-split>b,.bb-case{font:600 .95em var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--amber)}
+.bb-row{display:grid;grid-template-columns:16em 1fr 3em;gap:1em;align-items:center}
+.bb-l{font-size:1.1em;color:var(--ink)}.bb-v{font:600 1.3em var(--mono);color:var(--amber);text-align:right}
+.bb-bar{height:1.5em;background:var(--panel2);border:1px solid var(--line2);border-radius:.3em;overflow:hidden}.bb-bar i{display:block;height:100%}
+.bb-bar i.bb-b{background:var(--b)}.bb-bar i.bb-v{background:var(--v)}
+.bb-pairs,.bb-views{display:flex;gap:1.6em;flex-wrap:wrap}
+.bb-pair,.bb-view{flex:1;min-width:24em;display:flex;flex-direction:column;gap:.5em}
+.bb-cards{display:flex;gap:1em;flex-wrap:wrap}
+.bb-card{flex:1;min-width:13em;display:flex;flex-direction:column;gap:.3em;padding:.9em 1.1em;border:1px solid var(--line2);border-radius:.4em;background:var(--panel)}
+.bb-card b{font:500 1.4em var(--serif);color:var(--ink)}
+.bb-card small{font:600 .85em var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-top:.3em}
+.md-slide .bb-card p{margin:0;color:var(--ink);font-size:1.02em;line-height:1.4}
+.bb-minority{display:flex;flex-direction:column;gap:.6em;padding:1.1em 1.3em;border:1px solid var(--line2);border-radius:.4em;background:var(--panel)}
+.md-slide .bb-minority p{margin:0;font:400 1.3em/1.45 var(--serif);color:var(--ink)}
+.bb-grid{border-collapse:collapse;font:1.05em var(--mono)}
+.md-slide .bb-grid th,.md-slide .bb-grid td{padding:.4em .9em;border-bottom:1px solid var(--line2);text-align:right;color:var(--ink)}
+.md-slide .bb-grid th{color:var(--soft);font-weight:400;font-size:.8em;text-transform:uppercase;letter-spacing:.05em}
+.md-slide .bb-grid td:first-child,.md-slide .bb-grid th:first-child{text-align:left}
+.md-slide .bb-grid th.bb-seen{color:var(--amber)}
+.md-slide .bb-q{font-size:.95em}
+.md-slide .bb-asset{margin:0;font-size:1.15em;line-height:1.45;color:var(--soft);max-width:70em}
+.md-slide .bb-out{margin:.3em 0 0;padding-left:1.2em;font-size:1.1em;line-height:1.45;color:var(--ink)}
+.bb-qn{display:block;color:var(--dim);font-size:1em;margin-top:.5em}
+/* Before Start: the chosen number of companies. */
+.fw-cases[aria-pressed=true]{border-color:currentColor;font-weight:700;box-shadow:inset 0 0 0 1px currentColor}
+@media(max-width:800px){.bb-row{grid-template-columns:1fr 3em}.bb-row .bb-bar{display:none}}

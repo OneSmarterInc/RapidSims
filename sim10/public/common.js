@@ -69,7 +69,7 @@ function clockText(ms) {
 }
 
 const PHASE_NAMES = {
-  waiting: 'Waiting for the host to start',
+  waiting: 'Waiting for your instructor to start',
   read: 'Reading time',
   verdict: 'Make your call',
   private: 'Your private call',

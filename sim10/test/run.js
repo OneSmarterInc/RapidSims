@@ -322,11 +322,15 @@ async function withPlatform(fn) {
 test('http: faculty token makes a course-bound session; students join by account', async () => {
   process.env.LAUNCH_SECRET = SECRET; delete process.env.ACCESS_CODE; delete process.env.FACULTY_CODES;
   await withServer(async ({ call }) => {
-    assert.strictEqual((await call('POST', '/api/session', { mode: 'individual', cases: ['A'] })).status, 401, 'no faculty, no session');
+    assert.strictEqual((await call('POST', '/api/session', { action: 'create', mode: 'individual' })).status, 401, 'no faculty, no session');
+    process.env.FACULTY_CODES = 'Vikram:fac-123';
+    assert.strictEqual((await call('POST', '/api/session', { action: 'create', mode: 'individual' }, { 'X-Faculty-Code': 'fac-123' })).status, 401, 'facilitator codes open nothing');
+    delete process.env.FACULTY_CODES;
     const fac = { 'X-Launch-Token': tok({ sub: 'f1', role: 'faculty', course: 'c1', mode: 'session', name: 'V' }) };
-    const created = await call('POST', '/api/session', { mode: 'individual', cases: ['A'] }, fac);
+    const created = await call('POST', '/api/session', { action: 'create', mode: 'individual' }, fac);
     assert.strictEqual(created.status, 200);
-    const { code } = created.body;
+    const { code } = created.body.session;
+    assert(!created.body.session.hostKey, 'no host key leaves the server');
     const info = await call('GET', `/api/session?code=${code}`);
     assert(info.body.platform && info.body.joinUrl.includes(`session=${code}`) && info.body.joinUrl.includes('course=c1'));
     const entry = await call('GET', `/api/join?session=${code}`);
@@ -346,29 +350,33 @@ test('http: faculty token makes a course-bound session; students join by account
   });
 });
 
-test('http: standalone access fails closed; codes open it; students never see each other', async () => {
+test('http: a class session runs from the session bar; students never see each other', async () => {
   process.env.LAUNCH_SECRET = SECRET; delete process.env.ACCESS_CODE;
-  process.env.FACULTY_CODES = 'Vikram:fac-123, Chuck:fac-456';
   await withServer(async ({ call, clock }) => {
-    assert.strictEqual((await call('POST', '/api/session', { mode: 'individual', cases: ['A'] }, { 'X-Faculty-Code': 'nope' })).status, 401);
-    const created = await call('POST', '/api/session', { mode: 'individual', cases: ['A'] }, { 'X-Faculty-Code': 'fac-456' });
-    assert.strictEqual(created.status, 200);
-    const { code, hostKey } = created.body;
-    assert.strictEqual((await call('POST', '/api/join', { code })).status, 503, 'no ACCESS_CODE configured: closed');
-    process.env.ACCESS_CODE = 'class-code';
-    assert.strictEqual((await call('POST', '/api/join', { code }, { 'X-Access-Code': 'wrong' })).status, 401);
-    const acc = { 'X-Access-Code': 'class-code' };
-    const j1 = (await call('POST', '/api/join', { code }, acc)).body; const j2 = (await call('POST', '/api/join', { code }, acc)).body;
-    assert.strictEqual((await call('GET', `/api/console?code=${code}`, null, { 'X-Pid': j1.pid })).status, 403);
-    await call('POST', '/api/host/start', { code, caseId: 'A' }, { 'X-Host-Key': hostKey });
-    clock.now += 13 * MIN;
-    await call('POST', '/api/verdict', { code, caseId: 'A', fields: { call: 'bubble', mind: 'secret reasoning of student one' } }, { 'X-Pid': j1.pid });
-    const s2 = await call('GET', `/api/state?code=${code}`, null, { 'X-Pid': j2.pid });
+    const fac = { 'X-Launch-Token': tok({ sub: 'f1', role: 'faculty', course: 'c1', mode: 'session' }) };
+    const code = (await call('POST', '/api/session', { action: 'create', mode: 'individual' }, fac)).body.session.code;
+    const ctl = (set) => call('POST', '/api/session', { action: 'control', code, set }, fac);
+    assert.strictEqual((await ctl('cases_one')).status, 200);
+    const a = { 'X-Launch-Token': tok({ sub: 'sA', role: 'student', course: 'c1' }), 'X-Pid': 'platform:sA' };
+    const b = { 'X-Launch-Token': tok({ sub: 'sB', role: 'student', course: 'c1' }), 'X-Pid': 'platform:sB' };
+    await call('POST', '/api/join', { code }, a); await call('POST', '/api/join', { code }, b);
+    assert.strictEqual((await call('GET', `/api/state?code=${code}`, null, a)).body.phase, 'waiting');
+    assert.strictEqual((await ctl('start')).status, 200);
+    assert.strictEqual((await call('GET', `/api/state?code=${code}`, null, a)).body.phase, 'read');
+    assert.strictEqual((await ctl('advance')).status, 200, 'Open the calls now');
+    assert.strictEqual((await call('GET', `/api/state?code=${code}`, null, a)).body.phase, 'verdict');
+    await call('POST', '/api/verdict', { code, caseId: 'A', fields: { call: 'bubble', mind: 'secret reasoning of student one' } }, a);
+    const s2 = await call('GET', `/api/state?code=${code}`, null, b);
     assert.strictEqual(s2.status, 200);
     assert(!JSON.stringify(s2.body).includes('secret reasoning'));
-    assert.strictEqual((await call('GET', `/api/state?code=${code}`, null, { 'X-Pid': 'made-up' })).status, 403);
+    assert.strictEqual((await call('GET', `/api/state?code=${code}`, null, { ...a, 'X-Pid': 'made-up' })).status, 403);
+    assert.strictEqual((await ctl('close')).status, 200);
+    assert.strictEqual((await call('POST', '/api/verdict', { code, caseId: 'A', fields: { call: 'infra' } }, a)).status, 423, 'a closed session takes no new answers');
+    clock.now += 30 * MIN;
+    assert.strictEqual((await call('GET', `/api/state?code=${code}`, null, a)).body.phase, 'verdict', 'the clock holds while closed');
+    assert.strictEqual((await ctl('reopen')).status, 200);
+    assert.strictEqual((await call('POST', '/api/verdict', { code, caseId: 'A', fields: { call: 'infra' } }, a)).status, 200, 'reopened: the clock continues');
   });
-  delete process.env.ACCESS_CODE; delete process.env.FACULTY_CODES;
 });
 
 test('platform: one catalogue announcement per cold start, signed, with this sim\'s facts', async () => {
@@ -391,25 +399,33 @@ test('platform: completion reported once, after the last outcome, with calls and
   await withPlatform(async (got) => {
     await withServer(async ({ call, clock }) => {
       const fac = { 'X-Launch-Token': tok({ sub: 'f1', role: 'faculty', course: 'c1', mode: 'session' }) };
-      const { code, hostKey } = (await call('POST', '/api/session', { mode: 'individual', cases: ['A'] }, fac)).body;
+      const code = (await call('POST', '/api/session', { action: 'create', mode: 'individual' }, fac)).body.session.code;
+      const ctl = (set) => call('POST', '/api/session', { action: 'control', code, set }, fac);
+      await ctl('cases_one');
       const a = { 'X-Launch-Token': tok({ sub: 'sA', role: 'student', course: 'c1' }), 'X-Pid': 'platform:sA' };
       await call('POST', '/api/join', { code }, a);
-      const host = { 'X-Host-Key': hostKey };
-      await call('POST', '/api/host/start', { code, caseId: 'A' }, host);
+      await ctl('start');
       clock.now += 13 * MIN;
       await call('POST', '/api/verdict', { code, caseId: 'A', fields: { call: 'bubble', line: 'bs.cash', lineWhy: 'Cash halves in one quarter.', mind: longMind } }, a);
       clock.now += 10 * MIN;
-      assert.strictEqual((await call('POST', '/api/finish', { code }, a)).status, 409, 'not finished before the outcome');
-      for (let i = 0; i < 3; i++) await call('POST', '/api/host/reveal', { code, caseId: 'A' }, host);
-      const r1 = await call('POST', '/api/finish', { code }, a);
-      const r2 = await call('POST', '/api/finish', { code }, a);
-      assert.strictEqual(r1.body.reported, true); assert.strictEqual(r2.body.already, true);
+      for (let i = 0; i < 2; i++) await ctl('reveal');
+      assert.strictEqual(got.filter((g) => g.path === '/api/complete').length, 0, 'not reported before the outcome');
+      assert.strictEqual((await call('POST', '/api/session', { action: 'review', code, reflection1: 'x', reflection2: 'y' }, a)).status, 409, 'review opens after the outcome');
+      await ctl('reveal');
+      assert.strictEqual((await call('POST', '/api/finish', { code }, a)).body.reported, true, 'the server reports for class sessions');
       const comp = got.filter((g) => g.path === '/api/complete');
       assert.strictEqual(comp.length, 1, 'reported exactly once');
       const p = comp[0].payload;
       assert(p && p.sub === 'sA' && p.sim === 'rapid-10-bubble' && p.course === 'c1');
+      assert.strictEqual(p.summary.sessionCode, code);
+      assert.strictEqual(p.summary.bandLabel, 'Bubble');
       const c = p.summary.companies[0];
-      assert.deepStrictEqual([c.company, c.call, c.line, c.status], ['Global Crossing Ltd.', 'bubble', 'Cash and cash equivalents', 'recorded']);
+      assert.deepStrictEqual([c.company, c.call, c.line, c.status], ['Company 1', 'Bubble', 'Cash and cash equivalents', 'recorded']);
+      const st = (await call('GET', `/api/state?code=${code}`, null, a)).body;
+      assert.strictEqual(st.afterReveal.length, 4); assert.strictEqual(st.review.open, true);
+      assert.strictEqual((await call('POST', '/api/session', { action: 'review', code, reflection1: 'It did.', reflection2: 'Capital spending.' }, a)).status, 200);
+      const rev = got.filter((g) => g.path === '/api/complete');
+      assert.strictEqual(rev.length, 2); assert.strictEqual(rev[1].payload.metrics.revision, 2);
       assert(JSON.stringify(p.summary).length < 6000, 'fits the platform summary limit');
     });
   });
@@ -531,35 +547,13 @@ test('solo recovery: anonymous, other-account, other-course and invalid-token re
   });
 });
 
-test('solo recovery: platform sign-in cannot take over a guest private run', async () => {
-  process.env.ACCESS_CODE = 'guest-recovery-test';
-  try {
-    await withServer(async ({ call }) => {
-      const made = await call('POST', '/api/solo', { cases: ['A'] }, { 'X-Access-Code': process.env.ACCESS_CODE });
-      assert.strictEqual(made.status, 200);
-      const { code, pid } = made.body;
-      for (const headers of [{}, { 'X-Access-Code': process.env.ACCESS_CODE },
-        { 'X-Launch-Token': tok({ sub: pid, role: 'student' }) }]) {
-        assert.strictEqual((await call('GET', `/api/session?code=${code}`, null, headers)).status, 403);
-      }
-      assert.strictEqual((await call('GET', `/api/state?code=${code}`, null, { 'X-Pid': pid })).status, 200,
-        'the original guest capability still works');
-    });
-  } finally { delete process.env.ACCESS_CODE; }
-});
-
-test('solo: direct play requires access, guest identity is private, class players cannot advance themselves', async () => {
-  delete process.env.ACCESS_CODE;
+test('solo: direct play needs a RapidSims launch; class players cannot advance themselves', async () => {
+  process.env.ACCESS_CODE = 'solo-code';
   await withServer(async ({ call }) => {
     assert.strictEqual((await call('POST', '/api/solo', { cases: ['A'] })).status, 503);
-    process.env.ACCESS_CODE = 'solo-code';
-    assert.strictEqual((await call('POST', '/api/solo', { cases: ['A'] })).status, 401);
-    const r = await call('POST', '/api/solo', { cases: ['A'] }, { 'X-Access-Code': 'solo-code' });
-    assert.strictEqual(r.status, 200);
-    assert.strictEqual((await call('GET', `/api/state?code=${r.body.code}`, null, { 'X-Pid': r.body.pid })).status, 200);
-    assert.strictEqual((await call('GET', `/api/state?code=${r.body.code}`, null, { 'X-Pid': 'wrong' })).status, 403);
-    const fac = { 'X-Launch-Token': tok({ sub: 'fac', role: 'faculty' }) };
-    const s = (await call('POST', '/api/session', { mode: 'individual', cases: ['A'] }, fac)).body;
+    assert.strictEqual((await call('POST', '/api/solo', { cases: ['A'] }, { 'X-Access-Code': 'solo-code' })).status, 503, 'access codes open nothing');
+    const fac = { 'X-Launch-Token': tok({ sub: 'fac', role: 'faculty', mode: 'session' }) };
+    const s = (await call('POST', '/api/session', { action: 'create', mode: 'individual' }, fac)).body.session;
     const student = { 'X-Launch-Token': tok({ sub: 'student', role: 'student' }) };
     const j = (await call('POST', '/api/join', { code: s.code }, student)).body;
     assert.strictEqual((await call('POST', '/api/solo/advance', { code: s.code, caseId: 'A', stage: 0 }, { ...student, 'X-Pid': j.pid })).status, 403);
@@ -579,7 +573,7 @@ test('production: missing Redis fails clearly; dev access and accelerated clocks
       assert.strictEqual(r.status, 503); assert(r.body.message.includes('Redis'));
     }, { useDefault: true });
     await withServer(async ({ call }) => {
-      assert.strictEqual((await call('POST', '/api/session', { mode: 'individual', cases: ['A'] })).status, 401);
+      assert.strictEqual((await call('POST', '/api/session', { action: 'create', mode: 'individual' })).status, 401);
       assert.strictEqual((await call('POST', '/api/solo', { cases: ['A'] })).status, 503, 'dev bypass does not enable direct entry');
     });
     const { s } = await setup('individual');
@@ -609,11 +603,13 @@ test('mount path: prefixed pages and APIs work without exposing server content',
   process.env.BASE_PATH = '/sim10/';
   try {
     await withServer(async ({ call }) => {
-      for (const p of ['/sim10', '/sim10/', '/sim10/play', '/sim10/host', '/sim10/console']) {
+      for (const p of ['/sim10', '/sim10/', '/sim10/play']) {
         const r = await call('GET', p);
         assert.strictEqual(r.status, 200, p);
         assert(r.body.includes('<base href="/sim10/">'), p);
       }
+      for (const p of ['/sim10/instructor', '/sim10/live.html', '/sim10/kit/faculty-workspace.js']) assert.strictEqual((await call('GET', p)).status, 200, p);
+      for (const p of ['/sim10/host', '/sim10/console']) assert.strictEqual((await call('GET', p)).status, 404, p);
       assert.strictEqual((await call('GET', '/sim10/api/health')).status, 200);
       assert.strictEqual((await call('GET', '/sim100/api/health')).status, 404);
       assert.strictEqual((await call('GET', '/sim10/data/config.js')).status, 404);

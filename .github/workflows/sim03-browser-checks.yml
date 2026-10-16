@@ -77,6 +77,8 @@ jobs:
           node platform/tools/sim03-faculty-auth-browser-check.js
       - name: Upload screenshots, browser traces, and test results
         if: always()
+        # A full artifact quota must not fail the checks; the tests above decide.
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: sim03-browser-results

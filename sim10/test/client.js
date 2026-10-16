@@ -75,7 +75,7 @@ async function check({ call, tok }) {
   const previous = process.env.BASE_PATH;
   process.env.BASE_PATH = '/sim10/';
   try {
-    for (const file of ['index.html', 'play.html', 'host.html', 'console.html']) {
+    for (const file of ['index.html', 'play.html']) {
       const html = fs.readFileSync(path.join(publicDir, file), 'utf8');
       assert.equal(browserMount(html, '/sim10/play', '/'), '/sim10/', `${file} corrects the base behind the platform rewrite`);
       assert.equal(browserMount(html, '/play', '/sim10/'), '/', `${file} corrects the base on the sim's own domain`);
@@ -108,11 +108,11 @@ async function check({ call, tok }) {
 
     const fac = tok({ sub: 'faculty', role: 'faculty', course: 'c1', mode: 'session' });
     const facultyPage = await page(`https://fixture/sim10/#lt=${fac}`, call);
-    assert.equal(facultyPage.target(), 'https://fixture/sim10/host');
-    const individualLaunch = await page(`https://fixture/sim10/?play=individual#lt=${fac}`, call);
-    assert.equal(individualLaunch.target(), 'https://fixture/sim10/host?play=individual');
-    const made = await call('POST', '/sim10/api/session', { mode: 'individual', cases: ['A'] }, { 'X-Launch-Token': fac });
-    const classCode = made.body.code;
+    assert.equal(facultyPage.target(), `https://fixture/sim10/instructor.html#lt=${encodeURIComponent(fac)}`, 'faculty land on the shared Sessions pages');
+    const made = await call('POST', '/sim10/api/session', { action: 'create', mode: 'individual' }, { 'X-Launch-Token': fac });
+    const classCode = made.body.session.code;
+    const fromClassLink = await page(`https://fixture/sim10/#lt=${token}`, call, storage());
+    assert.equal(fromClassLink.target(), `https://fixture/sim10/?session=${classCode}#lt=${encodeURIComponent(token)}`, 'the class link lands in the open session');
     const first = await page(`https://fixture/sim10/?session=${classCode}#lt=${token}`, call, root.ss);
     assert.equal(first.ss.getItem('s10:' + classCode), 'platform:first');
     const secondToken = tok({ sub: 'second', role: 'student', course: 'c1' });
@@ -154,25 +154,12 @@ async function check({ call, tok }) {
     process.env.ACCESS_CODE = 'entry-code-test';
     try {
       const direct = await page('https://fixture/sim10/', call);
-      assert.equal(direct.el('access-gate').hidden, false);
-      assert.equal(direct.el('entry-options').hidden, true, 'direct visitor sees no play/join choices before code verification');
-      const guest = await page('https://fixture/sim10/?guest=1', call);
-      assert.equal(guest.el('access-gate').hidden, false);
-      assert.equal(guest.el('entry-error').textContent, '', 'a guest is not told the code is invalid before entering one');
-      direct.el('entry-code').value = 'wrong'; await direct.submit('access-gate');
-      assert.equal(direct.el('entry-options').hidden, true);
-      assert.equal(direct.ss.getItem('s10-access'), null, 'wrong code is not remembered');
-      direct.el('entry-code').value = 'entry-code-test'; await direct.submit('access-gate');
-      assert.equal(direct.el('entry-options').hidden, false);
-      assert.equal(direct.el('access-gate').hidden, true);
-      const refreshed = await page('https://fixture/sim10/', call, direct.ss);
-      assert.equal(refreshed.el('entry-options').hidden, false, 'remembered code is revalidated on refresh');
-      process.env.ACCESS_CODE = 'rotated-code';
-      const rotated = await page('https://fixture/sim10/', call, direct.ss);
-      assert.equal(rotated.el('entry-options').hidden, true, 'revoked code closes the entry gate');
+      assert.equal(direct.el('access-gate').hidden, true, 'no access-code entry');
+      assert.equal(direct.el('entry-options').hidden, true, 'a direct visitor sees no play or join choices');
+      assert(direct.el('entry-status').textContent.includes('RapidSims'));
       const forged = await page('https://fixture/sim10/#lt=not.a.valid.token', call);
       assert.equal(forged.el('entry-options').hidden, true, 'invalid launch cannot bypass the gate');
-      assert(forged.el('entry-error').textContent.includes('RapidSims'));
+      assert(forged.el('entry-status').textContent.includes('RapidSims'));
     const invitation = await page(`https://fixture/sim10/?session=${classCode}`, call);
     assert(new URL(invitation.target()).pathname === '/session.html', 'unsigned class invitation goes to platform sign-in');
 

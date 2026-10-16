@@ -43,6 +43,8 @@ function phaseList(session) {
 }
 
 function phaseOf(session, cs, now) {
+  // A closed class session holds its clock where it stopped; reopening moves it on from there.
+  if (session.state === 'closed' && session.closedAt) now = Math.min(now, session.closedAt);
   const run = session.runs[cs];
   if (!run || !run.startedAt) return { name: 'waiting', endsAt: null };
   let t = run.startedAt;
@@ -52,6 +54,9 @@ function phaseOf(session, cs, now) {
   }
   return { name: 'closed', endsAt: t };
 }
+
+// Teams: the class's teams once the session starts (faculty split them), or numbered teams in older sessions.
+const teamList = (s) => (Array.isArray(s.teamIds) ? s.teamIds : Array.from({ length: s.teams || 0 }, (_, i) => i + 1));
 
 // Which case a student should be looking at now.
 function activeCase(session) {
@@ -115,6 +120,17 @@ async function join(store, code, opts, now, launch = null) {
     if (s.courseId && launch.course !== s.courseId) fail('forbidden', 'This session belongs to a different course.');
     pid = `platform:${launch.sub}`;
     const existing = await store.get(K.part(s.code, pid));
+    if (s.kit) {
+      // A class session: faculty put students on teams; joining never chooses one.
+      if (s.state === 'closed') fail('closed', 'This session is closed.');
+      if (String(launch.sub).startsWith('practice-')) fail('forbidden', 'Practice students join their own practice run only.');
+      if (!existing && s.mode === 'team' && s.state !== 'lobby') fail('conflict', 'This team session has started. Ask your instructor to add you to the next one.');
+      const rec = { ...(existing || { pid, groupId: null, teamLabel: '', team: null }), pid, name: String(launch.name || (existing && existing.name) || 'Student').slice(0, 60),
+        joinedAt: (existing && existing.joinedAt) || now, launchId: launch.run || (existing && existing.launchId) || null };
+      await store.set(K.part(s.code, pid), rec);
+      await store.sadd(K.pids(s.code), pid);
+      return { code: s.code, pid, team: rec.team, rejoined: !!existing };
+    }
     if (existing) return { code: s.code, pid, team: existing.team, rejoined: true };
   } else {
     pid = newId();
@@ -145,6 +161,9 @@ async function participant(store, s, pid) {
   if (!p) fail('forbidden', 'Join the session first.');
   return p;
 }
+// A closed class session keeps every saved answer and takes no new ones.
+function writable(s) { if (s.state === 'closed') fail('closed', 'This session is closed. Your saved answer is recorded.'); }
+function onTeam(p) { if (p.team == null) fail('forbidden', 'Your instructor has not put you on a team yet.'); }
 
 // Solo uses the same decision clocks and reveals as class play. Only its owner
 // can release the next part; the private host capability never leaves the server.
@@ -221,6 +240,7 @@ function cleanFields(cs, f) {
 async function saveIndividual(store, code, pid, cs, fields, now) {
   const s = await getSession(store, code); await participant(store, s, pid);
   if (s.mode !== 'individual') fail('bad_request', 'This is a team session.');
+  writable(s);
   const ph = phaseOf(s, cs, now).name;
   if (ph !== 'verdict') fail('closed', ph === 'closed' ? 'Time is up. Your call is recorded as it stood.' : 'Calls open when the reading time ends.');
   const cur = (await store.get(K.resp(s.code, cs, pid))) || {};
@@ -230,8 +250,9 @@ async function saveIndividual(store, code, pid, cs, fields, now) {
 }
 
 async function savePrivate(store, code, pid, cs, call, now) {
-  const s = await getSession(store, code); await participant(store, s, pid);
+  const s = await getSession(store, code); const p = await participant(store, s, pid);
   if (s.mode !== 'team') fail('bad_request', 'This is an individual session.');
+  writable(s); onTeam(p);
   const ph = phaseOf(s, cs, now).name;
   if (ph !== 'private') fail('closed', 'Private calls are taken in the private-call window only.');
   if (!CALLS.includes(call)) fail('bad_request', 'Call must be infrastructure or bubble.');
@@ -243,6 +264,7 @@ async function savePrivate(store, code, pid, cs, call, now) {
 async function saveTeamDraft(store, code, pid, cs, fields, now) {
   const s = await getSession(store, code); const p = await participant(store, s, pid);
   if (s.mode !== 'team') fail('bad_request', 'This is an individual session.');
+  writable(s); onTeam(p);
   if (phaseOf(s, cs, now).name !== 'team') fail('closed', 'The team call is open in the team window only.');
   if (await store.get(K.commit(s.code, cs, p.team))) fail('conflict', 'Your team has already committed its call.');
   const key = K.draft(s.code, cs, p.team);
@@ -258,6 +280,7 @@ async function saveTeamDraft(store, code, pid, cs, fields, now) {
 async function commitTeam(store, code, pid, cs, now, expected) {
   const s = await getSession(store, code); const p = await participant(store, s, pid);
   if (s.mode !== 'team') fail('bad_request', 'This is an individual session.');
+  writable(s); onTeam(p);
   if (phaseOf(s, cs, now).name !== 'team') fail('closed', 'The team call is open in the team window only.');
   const d = await store.get(K.draft(s.code, cs, p.team));
   if (!d || !d.call) fail('bad_request', 'Choose the team\'s call before committing.');
@@ -289,7 +312,7 @@ async function collect(store, s, cs) {
   const resps = await store.mget(parts.map((p) => K.resp(s.code, cs, p.pid)));
   const out = { parts, resps: Object.fromEntries(parts.map((p, i) => [p.pid, resps[i]])) };
   if (s.mode === 'team') {
-    const ts = Array.from({ length: s.teams }, (_, i) => i + 1);
+    const ts = teamList(s);
     const commits = await store.mget(ts.map((t) => K.commit(s.code, cs, t)));
     out.commits = Object.fromEntries(ts.map((t, i) => [t, commits[i]]));
   }
@@ -320,7 +343,7 @@ function matchPairs(items) {
 
 function teamMovement(s, data) {
   const res = { moved: 0, held: 0, split: 0, noVerdict: 0 };
-  for (let t = 1; t <= s.teams; t++) {
+  for (const t of teamList(s)) {
     const c = data.commits[t];
     if (!c) { res.noVerdict++; continue; }
     const members = data.parts.filter((p) => p.team === t);
@@ -375,8 +398,8 @@ async function studentState(store, code, pid, now) {
   const cs = activeCase(s);
   const ph = phaseOf(s, cs, now);
   const view = {
-    code: s.code, mode: s.mode, cases: s.cases, caseId: cs, team: p.team,
-    solo: !!s.solo,
+    code: s.code, mode: s.mode, cases: s.cases, caseId: cs, team: p.team, teamLabel: p.teamLabel || (p.team != null ? `Team ${p.team}` : ''),
+    solo: !!s.solo, sessionClosed: s.state === 'closed',
     phase: ph.name, startsAt: ph.startsAt || null, endsAt: ph.endsAt, serverNow: now,
     rules: { minMind: config.minMindChangerChars, minReason: config.minLineReasonChars },
   };
@@ -454,7 +477,7 @@ async function consoleState(store, code, hostKey, now) {
 }
 
 module.exports = {
-  SimError, createSession, createSolo, advanceSolo, getSession, join, checkIdentity, completionFor, markReported, platformJoinUrl, startCase, advanceReveal, project,
+  SimError, K, teamList, collect, verdictsOf, teamMovement, pickerLabel, createSession, createSolo, advanceSolo, getSession, join, checkIdentity, completionFor, markReported, platformJoinUrl, startCase, advanceReveal, project,
   saveIndividual, savePrivate, saveTeamDraft, commitTeam, studentState, consoleState,
   evaluate, matchPairs, phaseOf, activeCase, guard, pack,
 };

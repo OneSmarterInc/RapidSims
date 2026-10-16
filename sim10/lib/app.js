@@ -6,35 +6,25 @@ const engine = require('./engine');
 const L = require('./launch');
 const { defaultStore } = require('./store');
 const { health } = require('./health');
+const K = require('./kit');
+const { kitAction } = require('./kit-api');
 
 const PUBLIC = path.join(__dirname, '..', 'public');
 const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'application/javascript; charset=utf-8', '.svg': 'image/svg+xml' };
-const PAGES = { '/': 'index.html', '/play': 'play.html', '/host': 'host.html', '/console': 'console.html' };
+const PAGES = { '/': 'index.html', '/play': 'play.html', '/instructor': 'instructor.html', '/live': 'live.html' };
 const STATUS = { bad_request: 400, unauthorized: 401, forbidden: 403, not_found: 404, conflict: 409, closed: 423, unavailable: 503 };
 const DEV = () => !process.env.VERCEL && process.env.DEV_OPEN === '1';
 
-// Faculty: a platform launch token for this sim, or a standalone FACULTY_CODES
-// entry ("Name:code,Other:code"). Fails closed when neither is configured.
-function facultyOf(req, launch) {
+// Faculty sign in with the platform launch only (template: claude/RapidSims-Faculty-Template.md).
+function facultyOf(launch) {
   if (L.isFaculty(launch)) return { platformAuth: true, courseId: launch.course || null, name: launch.name || 'Facilitator' };
-  const given = String(req.headers['x-faculty-code'] || '').trim();
-  const roster = String(process.env.FACULTY_CODES || '').split(',').map((x) => x.trim()).filter(Boolean)
-    .filter((x) => x.lastIndexOf(':') > 0)
-    .map((x) => { const i = x.lastIndexOf(':'); return { name: x.slice(0, i).trim(), code: x.slice(i + 1).trim() }; })
-    .filter((x) => x.name && x.code);
-  const hit = given && roster.find((r) => r.code === given);
-  if (hit) return { platformAuth: false, name: hit.name };
-  if (DEV()) return { platformAuth: false, name: 'Local host' };
   return null;
 }
 
-// Standalone (non-platform) student entry needs ACCESS_CODE; unset means closed.
-function standaloneOk(req) {
+// Students open this sim from RapidSims. A local playtest (DEV_OPEN=1) may open it directly.
+function standaloneOk() {
   if (DEV()) return true;
-  const need = process.env.ACCESS_CODE;
-  if (!need) throw new engine.SimError('unavailable', 'Open this sim from RapidSims. Direct access is not set up.');
-  if (req.headers['x-access-code'] !== need) throw new engine.SimError('unauthorized', 'Enter the class access code.');
-  return true;
+  throw new engine.SimError('unavailable', 'Open this sim from RapidSims.');
 }
 
 function send(res, status, body, headers = {}) {
@@ -79,18 +69,24 @@ function createApp({ store: injectedStore, clock = () => Date.now() } = {}) {
     const rawToken = req.headers['x-launch-token'];
     const launch = rawToken ? L.launchFor(String(rawToken), now) : null;
     if (rawToken && !launch && p.startsWith('/api/')) return send(res, 401, { error: 'launch_token_invalid', message: 'Your RapidSims sign-in is not valid for this sim. Open it again from RapidSims.' });
-    const hostKey = req.headers['x-host-key'];
     try {
       if (req.method === 'GET' && PAGES[p]) return serveStatic(res, PAGES[p]);
-      if (req.method === 'GET' && /^\/[a-z0-9-]+\.(css|js|svg)$/.test(p)) return serveStatic(res, p.slice(1));
+      if (req.method === 'GET' && /^\/[a-z0-9-]+\.(css|js|svg|html)$/.test(p)) return serveStatic(res, p.slice(1));
+      // The shared faculty pages live in the platform (served beside the sim on EC2).
+      if (req.method === 'GET' && /^\/kit\/[a-z0-9-]+\.(css|js)$/.test(p)) {
+        const file = path.join(__dirname, '..', '..', 'platform', 'public', 'kit', p.slice(5));
+        if (!fs.existsSync(file)) return send(res, 404, 'Not found');
+        res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)], 'Cache-Control': 'no-cache' });
+        return res.end(fs.readFileSync(file, 'utf8'));
+      }
 
       if (p === '/api/manifest') return send(res, 200, { simId: config.simId, title: config.title, tagline: config.tagline, description: config.description, minutes: config.minutes, route: config.route });
       if (req.method === 'GET' && p === '/api/access') {
-        if (!launch) standaloneOk(req);
+        if (!launch) standaloneOk();
         return send(res, 200, { ok: true });
       }
       if (req.method === 'GET' && p === '/api/whoami') {
-        const f = facultyOf(req, launch);
+        const f = facultyOf(launch);
         return send(res, 200, { faculty: !!f, platform: !!(f && f.platformAuth), student: !!launch && !L.isFaculty(launch) });
       }
       const store = injectedStore || defaultStore();
@@ -110,7 +106,7 @@ function createApp({ store: injectedStore, clock = () => Date.now() } = {}) {
 
       switch (`${req.method} ${p}`) {
         case 'POST /api/solo': {
-          if (!launch) standaloneOk(req);
+          if (!launch) standaloneOk();
           if (launch && launch.mode === 'session') throw new engine.SimError('forbidden', 'Use the class session setup for this launch.');
           return send(res, 200, await engine.createSolo(store, body, now, launch));
         }
@@ -118,11 +114,10 @@ function createApp({ store: injectedStore, clock = () => Date.now() } = {}) {
           await engine.advanceSolo(store, body.code, pid, launch, body, now);
           return send(res, 200, { ok: true });
         }
+        // The shared faculty pages' actions, and the class link and review for students.
         case 'POST /api/session': {
-          const who = facultyOf(req, launch);
-          if (!who) throw new engine.SimError('unauthorized', 'Open this sim from RapidSims as faculty, or enter your facilitator code.');
-          const s = await engine.createSession(store, body, now, who);
-          return send(res, 200, { code: s.code, hostKey: s.hostKey });
+          const r = await kitAction(req, body, launch, store, now);
+          return send(res, r.status, r.body);
         }
         case 'GET /api/session': {
           const s = await engine.getSession(store, q('code'));
@@ -132,33 +127,47 @@ function createApp({ store: injectedStore, clock = () => Date.now() } = {}) {
             if (s.soloPid !== ownerPid || (s.courseId && launch.course !== s.courseId)) {
               throw new engine.SimError('forbidden', 'This private run belongs to another RapidSims account.');
             }
+            // A Rehearse practice run starts its clock when its practice student first opens it.
+            if (s.practice && !s.runs.A.startedAt) {
+              const me = await store.get(engine.K.part(s.code, ownerPid));
+              await store.set(engine.K.sess(s.code), { ...s, state: 'running', startedAt: now, runs: { ...s.runs, A: { ...s.runs.A, startedAt: now } } });
+              if (me) await store.set(engine.K.part(s.code, ownerPid), { ...me, joinedAt: now, launchId: launch.run || null });
+            }
             return send(res, 200, { code: s.code, mode: s.mode, teams: s.teams, cases: s.cases, platform: true, solo: true, pid: ownerPid });
           }
           return send(res, 200, { code: s.code, mode: s.mode, teams: s.teams, cases: s.cases, platform: s.platformAuth, joinUrl: s.platformAuth ? engine.platformJoinUrl(s) : null });
         }
         case 'POST /api/join': {
           const s = await engine.getSession(store, body.code);
-          if (!s.platformAuth) standaloneOk(req);
+          if (!s.platformAuth) standaloneOk();
           return send(res, 200, await engine.join(store, body.code, body, now, launch));
         }
         case 'POST /api/finish': {
           if (!launch) return send(res, 200, { ok: true, reported: false, reason: 'not_platform_launch' });
           const s = await engine.checkIdentity(store, body.code, pid, launch);
           if (!s.platformAuth) return send(res, 200, { ok: true, reported: false, reason: 'standalone' });
+          // Class sessions and practice runs report from the server when the last outcome is shown.
+          if (s.kit) return send(res, 200, { ok: true, reported: true });
           const done = await engine.completionFor(store, s.code, pid, now);
           if (!done) throw new engine.SimError('conflict', 'Not finished yet.');
           const r = await engine.markReported(store, s.code, pid, () => L.reportCompletion({ launch, runId: s.code, ...done }), now);
           return send(res, 200, { ok: true, ...r });
         }
-        case 'GET /api/state': return send(res, 200, await engine.studentState(store, q('code'), pid, now));
+        case 'GET /api/state': {
+          const v = await engine.studentState(store, q('code'), pid, now);
+          const s = await engine.getSession(store, q('code'));
+          // After the last company's outcome: the four questions and, for a signed-in student, the review.
+          if (s.kit && K.finished(s, now)) {
+            const me = await store.get(engine.K.part(s.code, pid));
+            v.afterReveal = K.LESSON_QUESTIONS;
+            v.review = { open: String(pid || '').startsWith('platform:'), questions: K.REVIEW_QUESTIONS, sent: !!(me && me.review) };
+          }
+          return send(res, 200, v);
+        }
         case 'POST /api/verdict': return send(res, 200, await engine.saveIndividual(store, body.code, pid, body.caseId, body.fields || {}, now));
         case 'POST /api/private': return send(res, 200, await engine.savePrivate(store, body.code, pid, body.caseId, body.call, now));
         case 'POST /api/team/draft': return send(res, 200, await engine.saveTeamDraft(store, body.code, pid, body.caseId, body.fields || {}, now));
         case 'POST /api/team/commit': return send(res, 200, await engine.commitTeam(store, body.code, pid, body.caseId, now, body.expected));
-        case 'GET /api/console': return send(res, 200, await engine.consoleState(store, q('code'), hostKey, now));
-        case 'POST /api/host/start': await engine.startCase(store, body.code, hostKey, body.caseId, now); return send(res, 200, { ok: true });
-        case 'POST /api/host/reveal': await engine.advanceReveal(store, body.code, hostKey, body.caseId, now); return send(res, 200, { ok: true });
-        case 'POST /api/host/project': await engine.project(store, body.code, hostKey, body.caseId, body, now); return send(res, 200, { ok: true });
         default: return send(res, 404, { error: 'not_found', message: 'Unknown route.' });
       }
     } catch (e) {

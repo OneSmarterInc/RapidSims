@@ -11,7 +11,7 @@ DEV_OPEN=1 node server.js                            # local, no launch token
 DEV_OPEN=1 SIM10_CLOCK_SCALE=0.05 node server.js     # same, clock at 1/20 speed
 ```
 
-Pages: `/` private play or class join, `/host` session setup (instructor), `/console?code=` projector, `/play?code=` student.
+Pages: `/` the class link or a private run, `/play?code=` student, `instructor.html` the shared faculty pages (platform/public/kit/) with `bubble-faculty.js` and `bubble-debrief.js`, `live.html?session=` the Live screen for the projector. Faculty sign in with the platform launch only; the faculty actions run on `POST /api/session` (`lib/kit-api.js`). See claude/RapidSims-Faculty-Template.md.
 
 ## Deploy
 
@@ -26,7 +26,6 @@ Its own Vercel project; `vercel.json` sends every path to `api/index.js`. Variab
 | `SIM_URL` | `https://rapidsims.flexee.org/sim10`. Set explicitly; never derived |
 | `BASE_PATH` | `/sim10/` |
 | `KV_REST_API_URL`, `KV_REST_API_TOKEN` | Required Upstash store for solo and class play. Missing production storage returns a clear 503 error |
-| `ACCESS_CODE`, `FACULTY_CODES` | Optional standalone access. Unset means closed, as in sim08 |
 | `DEV_OPEN` | Never set on Vercel |
 
 The production origin is `https://sim10.vercel.app`; the platform `/sim10` rewrites point to it. Deploy the platform configuration as well as this sim. On the first application API request the sim announces itself to `PLATFORM_URL/api/register` and appears in the admin catalogue unpublished. The health endpoint is read-only.
@@ -34,10 +33,10 @@ The production origin is `https://sim10.vercel.app`; the platform `/sim10` rewri
 ## Platform contract (matches `platform/lib/launch.js` and sim08)
 
 - Token arrives as `#lt=` or `?lt=`, is kept for the tab and scoped to each run/session, and is sent as `X-Launch-Token` on every call. It must name `sim: rapid-10-bubble`, a person (`sub`) and a role of `student`, `faculty` or `faculty_preview`.
-- A direct visit asks for `ACCESS_CODE` before showing play/join options. Signed platform launches skip this prompt after server verification. Remembered codes are revalidated on refresh.
+- Students and faculty open this sim from RapidSims. A local playtest (`DEV_OPEN=1`) may open it directly.
 - Student Play offers a private individual run with one or two companies. The reading and decision clocks start immediately; the owner releases each reveal afterward. Solo sessions cannot be joined or controlled by others.
-- Faculty launched with `mode: session` land on setup. Their sessions are bound to their course; students join through the platform's session page and are identified as `platform:<sub>`.
-- After the last company's outcome is revealed, each platform student's calls, lines and reasons are reported to `PLATFORM_URL/api/complete`.
+- Faculty launched with `mode: session` land on the shared Sessions pages. Their sessions are bound to their course; students land in the open session from the class link and are identified as `platform:<sub>`. Faculty split teams; any member commits the team's call.
+- After the last company's outcome (or when the session closes), the server reports each student's calls, band and session (revision 1); the review sends revision 2. Rehearse runs never report.
 
 ## Where things live
 

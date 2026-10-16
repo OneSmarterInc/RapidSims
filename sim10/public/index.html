@@ -52,10 +52,9 @@ base.href = mount;
       <button class="btn" id="solo-start" type="submit">Start a new run</button>
       <button class="btn" id="solo-resume" type="button" hidden>Resume your run</button>
     </form>
-    <p><a href="host" id="host-link" hidden>Run a class session</a></p>
   </section>
   <section class="panel"><h2>Join a class session</h2>
-  <p class="muted">Enter the code your host shows on screen.</p>
+  <p class="muted">Enter the code your instructor gives you.</p>
   <form id="join" autocomplete="off">
     <div class="field">
       <label for="code">Session code</label>
@@ -91,7 +90,6 @@ function showEntry() {
   $('#access-gate').hidden = true;
   $('#entry-options').hidden = false;
   $('#solo').hidden = !!preset || who?.mode === 'session';
-  $('#host-link').hidden = !who || !['faculty', 'faculty_preview'].includes(who.role);
   savedSolo = null;
   try { savedSolo = JSON.parse(sessionStorage.getItem(soloKey()) || 'null'); } catch {}
   soloResume.hidden = !savedSolo?.code || !savedSolo?.pid;
@@ -101,15 +99,21 @@ async function verifyEntry() {
   $('#entry-error').textContent = '';
   try {
     await api('GET', 'api/access');
-    if (who && ['faculty', 'faculty_preview'].includes(who.role) && who.mode === 'session') { const play = new URLSearchParams(location.search).get('play'); location.replace('host' + (['team', 'individual'].includes(play) ? '?play=' + play : '')); return; }
+    // Faculty land on the shared Sessions pages.
+    if (who && ['faculty', 'faculty_preview'].includes(who.role) && who.mode === 'session') { location.replace('instructor.html' + location.search + '#lt=' + encodeURIComponent(launchToken())); return; }
+    // A student from the class link lands in the class's open session, or a practice student in theirs.
+    if (!preset && who && who.role === 'student' && who.course) {
+      try { const c = await api('POST', 'api/session', { action: 'course_session' }); if (c.code) { sessionStorage.setItem(`s10-lt:${c.code}`, launchToken()); location.replace(`./?session=${encodeURIComponent(c.code)}#lt=${encodeURIComponent(launchToken())}`); return; } } catch {}
+    }
     showEntry();
     if (preset && launchToken()) await go();
   } catch (e) {
+    // Students and faculty open this sim from RapidSims.
     entryAllowed = false;
     $('#entry-options').hidden = true;
-    $('#access-gate').hidden = false;
-    if (e.code === 'unauthorized') sessionStorage.removeItem('s10-access');
-    $('#entry-error').textContent = e.code === 'unauthorized' ? 'Enter a valid access code.' : e.message;
+    $('#access-gate').hidden = true;
+    $('#entry-status').hidden = false; $('#entry-status').textContent = e.message;
+    $('#account-link').hidden = false;
   } finally { button.disabled = false; }
 }
 $('#access-gate').addEventListener('submit', async (e) => {
@@ -161,11 +165,6 @@ async function go() {
     if (!info) {
       info = await api('GET', `api/session?code=${encodeURIComponent(code)}`);
       if (info.platform && !launchToken()) { location.href = info.joinUrl; return; }
-      if (info.mode === 'team' && (launchToken() || !sessionStorage.getItem(participantKey(code)))) {
-        teamEl.innerHTML = '<option value="">Choose your team</option>' + Array.from({ length: info.teams }, (_, i) => `<option value="${i + 1}">Team ${i + 1}</option>`).join('');
-        teamField.hidden = false; teamEl.focus();
-        return;
-      }
     }
     if (info.solo) {
       sessionStorage.setItem(participantKey(code), info.pid);
@@ -173,9 +172,8 @@ async function go() {
       location.replace(`play?code=${encodeURIComponent(code)}`);
       return;
     }
-    if (info.mode === 'team' && !teamField.hidden && !teamEl.value) { err.textContent = 'Choose your team to join.'; return; }
     if (launchToken() || !sessionStorage.getItem(participantKey(code))) {
-      const j = await api('POST', 'api/join', { code, team: info.mode === 'team' ? Number(teamEl.value) : undefined });
+      const j = await api('POST', 'api/join', { code });
       sessionStorage.setItem(participantKey(code), j.pid);
     }
     rememberLaunch(code);
@@ -217,14 +215,7 @@ async function initEntry() {
       return;
     }
   }
-  const manual = new URLSearchParams(location.search).get('guest') === '1';
-  if (manual && !sessionStorage.getItem('s10-access')) {
-    $('#access-gate').hidden = false;
-    $('#entry-options').hidden = true;
-    $('#entry-status').hidden = true;
-    return;
-  }
-  if (!preset && !launchToken() && !manual && /^\/sim10(?:\/|$)/.test(location.pathname)) {
+  if (!preset && !launchToken() && /^\/sim10(?:\/|$)/.test(location.pathname)) {
     $('#access-gate').hidden = true;
     $('#entry-status').hidden = false;
     $('#entry-status').textContent = 'Checking your RapidSims sign-in…';

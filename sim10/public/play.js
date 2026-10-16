@@ -84,10 +84,10 @@ function render(v) {
   $('#solo-done').hidden = !(v.caseId === v.cases[v.cases.length - 1] && v.reveal?.stage >= 3);
   const nth = v.cases.indexOf(v.caseId) + 1;
   $('#case-label').textContent = v.cases.length > 1 ? `Company ${nth} of ${v.cases.length}` : 'Company 1';
-  $('#phase-label').textContent = v.phase === 'read' ? `${PHASE_NAMES.read}: ${v.mode === 'team' ? 'private calls' : 'calls'} open when it ends` : (v.reveal?.stage >= 3 ? 'Review complete' : PHASE_NAMES[v.phase]);
+  $('#phase-label').textContent = v.sessionClosed ? 'Session closed' : v.phase === 'read' ? `${PHASE_NAMES.read}: ${v.mode === 'team' ? 'private calls' : 'calls'} open when it ends` : (v.reveal?.stage >= 3 ? 'Review complete' : PHASE_NAMES[v.phase]);
 
   $('#waiting').hidden = v.phase !== 'waiting';
-  $('#waiting-team').textContent = v.team ? `You're in Team ${v.team}.` : '';
+  $('#waiting-team').textContent = v.mode === 'team' ? (v.team != null ? `You're in ${v.teamLabel}.` : 'Your instructor will put you on a team.') : '';
   $('#pack-wrap').hidden = v.phase === 'waiting';
   if (v.phase === 'waiting') { $('#dock').hidden = true; $('#result').hidden = true; $('#reveal').hidden = true; return; }
 
@@ -109,6 +109,7 @@ function render(v) {
   showUnsaved();
   updateClock();
   maybeFinish(v);
+  renderReview(v);
   document.body.classList.toggle('citing', canCite(v));
   markCited(currentLine(v));
 }
@@ -218,7 +219,7 @@ function renderDock(v) {
       key = 'team:committed'; title = 'Your team\u2019s call is committed';
       body = `<p>${esc(CALL_NAMES[v.teamCommitted.call])}</p>`;
     } else {
-      key = 'team:draft'; title = `Team ${v.team}: agree one call`;
+      key = 'team:draft'; title = `${v.teamLabel}: agree one call`;
       body = formHtml(v, { ...(v.teamDraft || {}), ...draftQueue?.dirty }, { commit: true });
     }
   }
@@ -404,7 +405,7 @@ function renderResult(v) {
       <p><b>Why:</b> ${blank('reason', r.lineWhy ? `too short: \u201c${esc(r.lineWhy)}\u201d` : 'left blank') || esc(r.lineWhy)}</p>
       <p><b>What would have changed ${v.mode === 'team' ? 'your' : 'your'} mind:</b> ${blank('mind', r.mind ? `too short: \u201c${esc(r.mind)}\u201d` : 'left blank') || esc(r.mind)}</p>`;
   }
-  if (!v.reveal) html += '<p class="muted">Your host will lead the discussion, then reveal what happened.</p>';
+  if (!v.reveal) html += '<p class="muted">Your instructor will lead the discussion, then show what happened.</p>';
   html += '</div>';
   if (el.innerHTML !== html) el.innerHTML = html;
   el.hidden = false;
@@ -449,4 +450,29 @@ function maybeFinish(v) {
   api('POST', 'api/finish', { code: CODE }, headers)
     .then(r => { finishSent = !!r.reported; $('#completion-status').textContent = r.reported ? 'Your answers are recorded and progress is updated.' : 'Your answers are recorded. Progress is still syncing; keep this tab open.'; })
     .catch(() => { finishSent = false; $('#completion-status').textContent = 'Your answers are recorded. Progress has not synced yet; retrying.'; });
+}
+
+// After the last company's outcome: the four questions and the two review questions.
+let reviewKey = null;
+function renderReview(v) {
+  const el = $('#review');
+  if (!v.afterReveal) { el.hidden = true; return; }
+  const key = JSON.stringify([v.review && v.review.open, v.review && v.review.sent]);
+  if (key === reviewKey) return;
+  reviewKey = key;
+  const r = v.review || {};
+  el.innerHTML = `<div class="panel"><h2>Questions to discuss</h2><ol>${v.afterReveal.map((q) => `<li>${esc(q)}</li>`).join('')}</ol></div>`
+    + (r.open ? (r.sent ? '<div class="panel"><h2>Review sent</h2><p>Your answers are with your instructor.</p></div>'
+      : `<form class="panel" id="review-form"><h2>Your review</h2>${r.questions.map((q, i) => `<div class="field"><label for="rv${i + 1}">${esc(q)}</label><textarea id="rv${i + 1}" maxlength="1500" rows="3"></textarea></div>`).join('')}
+        <p class="error" id="review-error" role="alert"></p><button class="btn" id="review-send" type="submit">Send review</button></form>`) : '');
+  el.hidden = false;
+  const form = $('#review-form');
+  if (form) form.onsubmit = async (e) => {
+    e.preventDefault();
+    const a = $('#rv1').value.trim(), b = $('#rv2').value.trim();
+    if (!a || !b) { $('#review-error').textContent = 'Answer both questions, then send.'; return; }
+    $('#review-send').disabled = true;
+    try { await api('POST', 'api/session', { action: 'review', code: CODE, reflection1: a, reflection2: b }, headers); reviewKey = null; await poll(); }
+    catch (err) { $('#review-error').textContent = err.message; $('#review-send').disabled = false; }
+  };
 }
