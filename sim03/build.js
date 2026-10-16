@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// The path-prefix detector: /simNN, /sim-NN or /simplusNN.
+const PREFIX = /location\.pathname\.match\(\/\^\\\/sim(?:\(\?:plus\)\?)?-\?\\d\+\/\)/;
 // RapidSim 03 ships committed source HTML. This build step is assertion-only:
 // it never rewrites source files. It refuses deployment if student-facing
 // ambiguity leaks, path-prefixing breaks, browser JavaScript does not parse,
@@ -71,11 +73,11 @@ if (!instructor.includes("Heat wave middle starts at ≥")) {
 
 for (const [name, source] of [['student', index], ['instructor', instructor]]) {
   if (/fetch\s*\(\s*['"]\/api\//.test(source)) refuse(`${name} client contains an unprefixed /api fetch`);
-  if (!source.includes("location.pathname.match(/^\\/sim-?\\d+/)")) {
+  if (!PREFIX.test(source)) {
     refuse(`${name} client is missing the simulation path-prefix detector`);
   }
 }
-if (!launcher.includes("location.pathname.match(/^\\/sim-?\\d+/)")) {
+if (!PREFIX.test(launcher)) {
   refuse('launch router is missing the simulation path-prefix detector');
 }
 for (const marker of ['Access code','x-access-code',"sessionStorage.setItem('m03-access'","sessionStorage.removeItem('m03-access')",'/api/config']) {

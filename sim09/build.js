@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// The path-prefix detector: /simNN, /sim-NN or /simplusNN.
+const PREFIX = /location\.pathname\.match\(\/\^\\\/sim(?:\(\?:plus\)\?)?-\?\\d\+\/\)/;
 // Assertion-only build gate: it never rewrites source. It refuses to pass if
 // history, stage values or real names reach a browser page, if a page would
 // break under the /sim09 path prefix, if a script does not parse, if the access
@@ -26,7 +28,7 @@ for (const [name, html] of Object.entries(pages)) {
   for (const s of secret) if (s && html.includes(s)) refuse(`${name} page contains scenario content: "${s.slice(0, 50)}"`);
   if (REAL_NAMES.test(html)) refuse(`${name} page names a real company: ${html.match(REAL_NAMES)[0]}`);
   if (/fetch\s*\(\s*['"`]\/api\//.test(html)) refuse(`${name} page has an unprefixed /api fetch`);
-  if (!html.includes("location.pathname.match(/^\\/sim-?\\d+/)")) refuse(`${name} page is missing the path-prefix detector`);
+  if (!PREFIX.test(html)) refuse(`${name} page is missing the path-prefix detector`);
   if (/m05-|m03-|Midland|Loopwell|Dana/.test(html)) refuse(`${name} page still carries another sim's names or storage keys`);
   for (const [, js] of html.matchAll(/<script>([\s\S]*?)<\/script>/g)) {
     try { new vm.Script(js); } catch (e) { refuse(`${name} page script does not parse: ${e.message}`); }

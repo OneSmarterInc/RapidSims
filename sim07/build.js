@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+// The path-prefix detector: /simNN, /sim-NN or /simplusNN.
+const PREFIX = /location\.pathname\.match\(\/\^\\\/sim(?:\(\?:plus\)\?)?-\?\\d\+\/\)/;
 // RapidSim 07 build gate. Assertion-only: it never rewrites source. It refuses
 // deployment if anything before the reveal names the companies or points
 // forward, if placeholder content remains, if identity is wrong, or if the
@@ -90,7 +92,7 @@ for (const w of ['Score:', 'Grade:', 'Rank:', 'Correct answer', 'You were wrong'
 
 // 6. Path prefix, access guard, parsing.
 for (const [name, html] of Object.entries(pages)) {
-  if (!html.includes("location.pathname.match(/^\\/sim-?\\d+/)")) refuse(`${name} page is missing the path-prefix detector`);
+  if (!PREFIX.test(html)) refuse(`${name} page is missing the path-prefix detector`);
   if (/fetch\s*\(\s*['"]\/api\//.test(html)) refuse(`${name} page contains an unprefixed /api fetch`);
 }
 if (!read('api/config.js').includes('checkConfigAccess(req, res)')) refuse('config endpoint is not behind the access guard');
