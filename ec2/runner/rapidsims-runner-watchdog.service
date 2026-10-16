@@ -1,0 +1,8 @@
+[Unit]
+Description=Restart the RapidSims GitHub Actions runner if it has stopped
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/rapidsims-runner-watchdog
