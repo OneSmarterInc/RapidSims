@@ -78,20 +78,21 @@ function addNotice(table, noticeId, now) {
 }
 
 // A seat's own floor metric for the current sheet. Its own numbers only; no pass or fail.
+// Each number with the seat's own floor beside it, and whether the sheet as it stands is within it (#67).
 function myNumbers(seat, dials) {
-  const m = M.metrics(dials, 0), pct = x => `${(x * 100).toFixed(1)}%`, mil = x => `$${(x / 1e6).toFixed(1)} million`;
+  const m = M.metrics(dials, 0), s = C.seats, pct = x => `${(x * 100).toFixed(1)}%`, mil = x => `$${(x / 1e6).toFixed(1)} million`;
   switch (seat) {
     case 'utility': return [
-      { label: 'Build backed by contracted minimum payments', value: pct(m.utilityBacking) },
-      { label: 'Cost to shareholders if demand misses', value: mil(m.misses.shareholderCost) }];
+      { label: 'Build backed by contracted minimum payments', value: pct(m.utilityBacking), floor: `At least ${Math.round(s.utility.minBackingShare * 100)}%`, ok: m.utilityBacking >= s.utility.minBackingShare },
+      { label: 'Cost to shareholders if demand misses', value: mil(m.misses.shareholderCost), floor: `Under ${mil(s.utility.maxShareholderCost)}`, ok: m.misses.shareholderCost <= s.utility.maxShareholderCost }];
     case 'developer': return [
-      { label: "Halvorsen's total contingent obligation", value: mil(m.developerObligation) }];
+      { label: "Halvorsen's total contingent obligation", value: mil(m.developerObligation), floor: `Under the lender's ${mil(s.developer.covenantCap)} cap`, ok: m.developerObligation <= s.developer.covenantCap }];
     case 'manufacturers': return [
-      { label: 'Industrial rate rise if demand arrives', value: pct(m.arrives.industrialRateRise) },
-      { label: 'Industrial rate rise if demand misses', value: pct(m.misses.industrialRateRise) },
-      { label: 'Member plants inside the tariff', value: m.captured ? 'Yes' : 'No' }];
+      { label: 'Industrial rate rise if demand arrives', value: pct(m.arrives.industrialRateRise), floor: `At most ${pct(s.manufacturers.maxRateRise)}`, ok: m.arrives.industrialRateRise <= s.manufacturers.maxRateRise },
+      { label: 'Industrial rate rise if demand misses', value: pct(m.misses.industrialRateRise), floor: `At most ${pct(s.manufacturers.maxRateRise)}`, ok: m.misses.industrialRateRise <= s.manufacturers.maxRateRise },
+      { label: 'Member plants inside the tariff', value: m.captured ? 'Yes' : 'No', floor: 'Every member plant outside the tariff', ok: !m.captured }];
     case 'advocate': return [
-      { label: "Hammonds' monthly bill rise if demand misses", value: `$${m.misses.householdMonthly.toFixed(2)}` }];
+      { label: "Hammonds' monthly bill rise if demand misses", value: `$${m.misses.householdMonthly.toFixed(2)}`, floor: `At most $${s.advocate.maxMonthlyBillRise.toFixed(2)}`, ok: m.misses.householdMonthly <= s.advocate.maxMonthlyBillRise }];
   }
   return [];
 }

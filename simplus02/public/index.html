@@ -23,7 +23,7 @@
 <title>Who Pays for the Wire?</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css"></head>
+<link rel="stylesheet" href="style.css?v=20261016d"></head>
 <body><main id="app"><p class="dim">Loading…</p></main>
 <script>
 const SEAT = { utility: 'Crestline Power', developer: 'Halvorsen Digital', manufacturers: 'Industrial Energy Users', advocate: 'Consumer Advocate' };
@@ -46,7 +46,7 @@ async function api(action, extra = {}, path = 'api/session') {
   return j;
 }
 const MESSAGES = { no_such_session: 'That session was not found. Open it again from your class page.', seating_closed: 'This session has started. Ask your instructor to add you to the next one.',
-  sign_in_required: 'Open this simulation from your class page on RapidSims.', session_closed: 'This session is closed. Your outcome is on your class page.', practice_only: 'Practice students join their own practice table only.', private_session: 'This is a practice table.', answers_required: 'Answer both questions, then send.', wrong_course: 'This session belongs to another course.', not_negotiating: 'The term sheet is not open right now.', busy_retry: 'Someone else changed the sheet at the same moment. Try again.' };
+  sign_in_required: 'Open this simulation from your class page on RapidSims.', session_closed: 'This session is closed. Your outcome is on your class page.', practice_only: 'Practice students join their own practice team only.', private_session: 'This is a practice team.', answers_required: 'Answer both questions, then send.', wrong_course: 'This session belongs to another course.', not_negotiating: 'The term sheet is not open right now.', busy_retry: 'Someone else changed the sheet at the same moment. Try again.' };
 const say = e => { err = MESSAGES[e.message] || e.message; render(); };
 
 function joinScreen() {
@@ -62,7 +62,7 @@ const values = d => { const out = []; for (let v = d.min; v <= d.max + 1e-9; v +
 
 function header() {
   return `<div class="bar"><div><h1 style="font-size:26px">${esc(SEAT[view.seat] || 'Who Pays for the Wire?')}</h1>
-  <span class="dim mono">${esc(PHASE[view.phase])}${view.table ? ' · ' + esc(view.tableLabel || 'Table ' + view.table) : ''}${view.coCounsel && view.coCounsel.length ? ' · with ' + esc(view.coCounsel.join(', ')) : ''}</span></div>
+  <span class="dim mono">${esc(PHASE[view.phase])}${view.table ? ' · ' + esc(view.tableLabel || 'Team ' + view.table) : ''}${view.coCounsel && view.coCounsel.length ? ' · with ' + esc(view.coCounsel.join(', ')) : ''}</span></div>
   <div class="clock" id="clock">${clock()}</div></div>`;
 }
 
@@ -79,7 +79,7 @@ function sheet() {
   let html = '';
   for (const [g, dials] of Object.entries(s.groups)) {
     html += `<div class="group ${s.locked[g] ? 'locked' : ''}"><h3>${GROUP[g]} ${s.locked[g] ? '<span class="imposed">Locked</span>' : ''}
-      ${s.locked[g] && ed ? `<button data-unlock="${g}" style="margin-left:8px">Unlock</button>` : ''}</h3><div class="wrap"><table>`;
+      ${s.locked[g] && ed ? `<button data-unlock="${g}" style="margin-left:8px" title="Unlocking clears all four signatures. Every seat signs again.">Unlock</button>` : ''}</h3><div class="wrap"><table>`;
     for (const d of dials) {
       const info = view.dialsInfo[d], sigs = s.signatures[d], mine = sigs.includes(view.seat);
       const ctl = ed && !s.locked[g]
@@ -107,10 +107,10 @@ function logLine(e) {
 
 function negotiation() {
   return `${view.notices.map(n => `<div class="notice"><p style="margin:0">${esc(n.text)}</p></div>`).join('')}
-  <div class="grid2"><div><h2 style="margin-top:0">Term sheet</h2>${view.editable ? '' : '<p class="dim">The sheet is read-only until negotiation opens.</p>'}${sheet()}<p class="err">${esc(err)}</p></div>
-  <div><div class="panel"><h3 style="margin-top:0">Your numbers</h3>${view.myNumbers.map(n => `<p><span class="dim">${esc(n.label)}</span><br><span class="mono" style="font-size:18px">${esc(n.value)}</span></p>`).join('')}
-  <p class="dim" style="font-size:14px">For the sheet as it stands now. Compare with your floor.</p></div>
-  <div class="panel"><h3 style="margin-top:0">What has happened at this table</h3><div class="log">${view.log.slice().reverse().map(logLine).join('<br>') || 'Nothing yet.'}</div></div>
+  <div class="grid2"><div><h2 style="margin-top:0">Term sheet</h2>${view.editable ? '' : '<p class="dim">The sheet is read-only until negotiation opens.</p>'}<p class="dim legend">Signatures: ${Object.keys(SEAT).map(k => `${INIT[k]} ${esc(SEAT[k])}`).join(' · ')}. Your circle is dotted.${view.editable ? ' Click Sign to sign a term.' : ''}</p>${sheet()}<p class="err">${esc(err)}</p></div>
+  <div><div class="panel"><h3 style="margin-top:0">Your numbers</h3>${view.myNumbers.map(n => `<p><span class="dim">${esc(n.label)}</span><br><span class="mono" style="font-size:18px">${esc(n.value)}</span>${n.floor ? `<br><span class="floor ${n.ok ? 'within' : 'past'}">Your floor: ${esc(n.floor)} · ${n.ok ? 'Within your floor' : 'Past your floor'}</span>` : ''}</p>`).join('')}
+  <p class="dim" style="font-size:14px">For the sheet as it stands now.</p></div>
+  <div class="panel"><h3 style="margin-top:0">What has happened in your team</h3><div class="log">${view.log.slice().reverse().map(logLine).join('<br>') || 'Nothing yet.'}</div></div>
   <details class="panel"><summary class="mono dim">Your brief</summary>${briefs()}</details></div></div>`;
 }
 
@@ -118,10 +118,11 @@ function outcome() {
   const o = view.outcome, who = { advocate: 'Walt and Joyce Hammond', manufacturers: 'Linda Petrakis', developer: 'Marcus Reyes', utility: 'Dana Okafor' };
   const terms = Object.entries(o.terms).map(([d, v]) => `<tr><td>${esc(view.dialsInfo[d].short)}</td><td>${o.imposed.includes(d) ? `<span class="imposed">${v}, set by the Commission</span>` : `<span class="mono">${v}, signed</span>`}</td></tr>`).join('');
   const col = (title, sc) => `<div class="panel"><h3 style="margin-top:0">${title}</h3>${Object.keys(who).map(k => `<p>${esc(sc[k])}</p>`).join('')}</div>`;
-  return `${reviewPanel()}<h2>The terms your table ends with</h2><div class="wrap"><table>${terms}</table></div>
+  return `<h2 style="margin-top:0">The terms your team ends with</h2><div class="wrap"><table>${terms}</table></div>
   ${o.freezeMonths ? `<p style="margin-top:12px">The connection freeze runs ${o.freezeMonths} more months while the Commission decides.</p>` : '<p style="margin-top:12px">Nothing was imposed, so connections reopen now.</p>'}
   <h2>What happens next</h2><p class="dim">Nobody could know which of these would happen. Both are shown.</p>
-  <div class="scen">${col('If the forecast demand arrives', o.arrives)}${col('If it does not', o.misses)}</div>`;
+  <div class="scen">${col('If the forecast demand arrives', o.arrives)}${col('If it does not', o.misses)}</div>
+  ${reviewPanel()}`;
 }
 
 // After the deadline: the four questions and the two review questions.
@@ -153,10 +154,10 @@ function render() {
   if (!me || !view) return joinScreen();
   if (view.walkthrough && !view.walkthrough.complete) return orientation();
   if (view.phase === 'lobby' && view.walkthrough) {
-    app.innerHTML = `<h1>Who Pays for the Wire?</h1><p>You're ready, ${esc(view.name)}. Walkthrough complete.</p><p class="dim">Your instructor puts you at a table and starts the briefing. Your seat appears then.</p>`;
+    app.innerHTML = `<h1>Who Pays for the Wire?</h1><p>You're ready, ${esc(view.name)}. Walkthrough complete.</p><p class="dim">Your instructor puts you in a team and starts the briefing. Your seat appears then.</p>`;
     return;
   }
-  if (!view.seated) { app.innerHTML = `<h1>Who Pays for the Wire?</h1><p>You're in, ${esc(view.name)}. Your instructor puts you at a table and starts the briefing.</p>`; return; }
+  if (!view.seated) { app.innerHTML = `<h1>Who Pays for the Wire?</h1><p>You're in, ${esc(view.name)}. Your instructor puts you in a team and starts the briefing.</p>`; return; }
   let body = '';
   if (view.phase === 'briefing') body = briefs();
   else if (['openings', 'negotiation'].includes(view.phase)) body = negotiation();
@@ -166,7 +167,7 @@ function render() {
   app.querySelectorAll('select[data-dial]').forEach(el => el.onchange = () => act('move', { dial: el.dataset.dial, value: Number(el.value) }));
   app.querySelectorAll('[data-sign]').forEach(el => el.onclick = () => act('sign', { dial: el.dataset.sign }));
   app.querySelectorAll('[data-unsign]').forEach(el => el.onclick = () => act('unsign', { dial: el.dataset.unsign }));
-  app.querySelectorAll('[data-unlock]').forEach(el => el.onclick = () => act('unlock', { group: el.dataset.unlock }));
+  app.querySelectorAll('[data-unlock]').forEach(el => el.onclick = () => { if (confirm(`Unlock the ${GROUP[el.dataset.unlock].toLowerCase()}? All four signatures are cleared and every seat signs again.`)) act('unlock', { group: el.dataset.unlock }); });
   ['rv1', 'rv2'].forEach((id, i) => { const el = document.getElementById(id); if (el) el.oninput = () => { draft[i] = el.value; }; });
   const rv = document.getElementById('rvgo');
   if (rv) rv.onclick = () => { if (!draft[0].trim() || !draft[1].trim()) { err = 'Answer both questions, then send.'; return render(); } act('review', { reflection1: draft[0], reflection2: draft[1] }); };

@@ -25,3 +25,5 @@ table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:8px 6px;
 .big{font:500 64px var(--mono);letter-spacing:.08em;color:var(--amber)}
 tr.pick{background:var(--panel)}tr.row{cursor:pointer}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+.legend{font-size:14px;margin:0 0 8px}.floor{font-size:13px}.floor.within{color:var(--dim)}.floor.past{color:var(--amber)}

@@ -9,7 +9,7 @@ const groupOf = d => Object.keys(C.settlementGroups).find(g => C.settlementGroup
 
 // Seat plan for a room of n students: tables of four, leftovers double a seat as co-counsel.
 function planTables(n) {
-  if (n < 4) throw new Error('A table needs at least four students');
+  if (n < 4) throw new Error('A team needs at least four students');
   const tables = Math.floor(n / 4);
   const plan = Array.from({ length: tables }, () => Object.fromEntries(SEATS.map(s => [s, 1])));
   for (let i = 0; i < n - tables * 4; i++) plan[i % tables][SEATS[Math.floor(i / tables) % 4]]++;

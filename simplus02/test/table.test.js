@@ -4,7 +4,7 @@ const { playForward } = require('../engine/playforward');
 const C = require('../data/config');
 let fails = 0;
 const check = (n, ok, d = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${d ? '  — ' + d : ''}`); if (!ok) fails++; };
-const throws = f => { try { f(); return false; } catch (e) { return e.code === 'REJECTED' || /table needs/.test(e.message); } };
+const throws = f => { try { f(); return false; } catch (e) { return e.code === 'REJECTED' || /team needs/.test(e.message); } };
 const signAll = (st, dials) => { for (const d of dials) for (const s of T.SEATS) T.sign(st, s, d); };
 
 // Seating

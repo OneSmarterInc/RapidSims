@@ -1,6 +1,6 @@
 'use strict';
 // Server only. What the shared faculty pages (platform/public/kit/) need from Who Pays for the Wire?: one run per
-// table with its band (which groups of terms the table signed), the debrief content (the reveal, the debrief
+// team with its band (which groups of terms the team signed), the debrief content (the reveal, the debrief
 // prompts and the lessons), and the completion each student reports. Approved Oct 16, 2026.
 const C = require('../data/config');
 const T = require('../engine/table');
@@ -10,11 +10,13 @@ const { staffNotices, seatBriefs, walkthrough } = require('../data/content');
 const reveal = require('../data/reveal');
 
 const MIN = 60000;
+// The ten-minute notice is offered only when it is true (#69).
+const noticeOpen = (id, sess, now) => id !== 'tenminutes' || (sess.phaseEndsAt && sess.phaseEndsAt - now <= 12 * MIN);
 // Shown after the deadline, so they never steer the negotiation.
 const LESSON_QUESTIONS = [
   'Which risk did your party accept, and why?',
   'Which term made another seat’s agreement possible?',
-  'What did the deadline change at your table?',
+  'What did the deadline change for your team?',
   'What would change if the Commission could approve a package without every party signing?'
 ];
 // The second is the closing question.
@@ -28,22 +30,22 @@ const LESSONS = [
   { head: 'A known fallback changes the bargaining.', text: 'Terms left open went to the Commission, and each one extended the connection freeze.' },
   { head: 'A regulator can approve a package without every signature.', text: 'In Ohio, the Commission chose between two settlements. The data-centre parties had backed the other one.' }
 ];
-// Neutral tones: which groups a table signed, never a verdict on the terms.
+// Neutral tones: which groups a team signed, never a verdict on the terms.
 const BANDS = {
-  both: { label: 'Both settled', cls: 'b', phrase: 'The table signed every term' },
-  money: { label: 'Money settled', cls: 'v', phrase: 'The table signed the money terms; the Commission set the threshold' },
-  threshold: { label: 'Threshold settled', cls: 'y', phrase: 'The table signed the threshold; the Commission set the money terms' },
+  both: { label: 'Both settled', cls: 'b', phrase: 'The team signed every term' },
+  money: { label: 'Money settled', cls: 'v', phrase: 'The team signed the money terms; the Commission set the threshold' },
+  threshold: { label: 'Threshold settled', cls: 'y', phrase: 'The team signed the threshold; the Commission set the money terms' },
   commission: { label: 'Commission set both', cls: 'n', phrase: 'The Commission set every term' }
 };
 const ORDER = ['both', 'money', 'threshold', 'commission'];
 const SEAT_NAMES = Object.fromEntries(Object.entries(seatBriefs).map(([k, b]) => [k, b.seat]));
 // The debrief prompts from the instructor's specification.
 const DEBRIEF_NOTES = [
-  'Start with two contrasting table outcomes. Ask which risks the parties accepted, which terms made another seat’s agreement possible, and what the deadline changed.',
-  'The fictional model illustrates risk allocation; matching the real tariff is not the objective.',
+  'Start with two contrasting team outcomes. Ask which risks the parties accepted, which terms made another seat’s agreement possible, and what the deadline changed.',
+  'The model shows how the terms move risk between the seats. Its numbers are fictional.',
   'Use the non-unanimous settlement: the Commission adopted a package the data-centre parties did not sign. Ask what changes when the regulator can approve a package without every party signing.',
-  'Keep the demand figures distinct: about 30,000 MW of interest, 13,022.7 MW of paid study requests and 5,642 MW of new binding contracts, additional to 12,219 MW contracted earlier. These were scheduled projects, not current consumption.',
-  'Minimum billing demand determines demand charges; 85% is not a percentage of the whole bill. A four-year ramp plus eight years gives a twelve-year contract.'
+  'Keep the demand figures distinct: about 30,000 MW of interest, 13,022.7 MW of paid study requests and 5,642 MW of new binding contracts, additional to 12,219 MW contracted earlier. These were projects scheduled to come online through 2035.',
+  'Minimum billing demand determines demand charges; The 85% applies to demand charges only. A four-year ramp plus eight years gives a twelve-year contract.'
 ];
 
 function bandOf(result) {
@@ -88,7 +90,7 @@ function facultyKit(sess, roster, tables, now) {
   }
   const kit = {
     bands: BANDS, order: ORDER, phase: sess.phase, ended: sess.phase === 'closed', extended: !!sess.extended, next: nextStep(sess),
-    seatNames: SEAT_NAMES, dials: C.dials, groups: C.settlementGroups, staffNotices: staffNotices.map(({ id, label }) => ({ id, label })),
+    seatNames: SEAT_NAMES, dials: C.dials, groups: C.settlementGroups, staffNotices: staffNotices.filter(n => noticeOpen(n.id, sess, now)).map(({ id, label, text }) => ({ id, label, text })),
     walkthrough: walkthroughOf(sess, roster), walkthroughScreens: walkthrough.length,
     // The real proceeding and the debrief prompts. Faculty only, from the server.
     reveal: { heading: reveal.heading, projector: reveal.projectorParagraphs, paragraphs: reveal.paragraphs, sources: reveal.sources, note: reveal.facilitatorNote },
@@ -105,7 +107,7 @@ function completion(sess, roster, pid, table, revision) {
   const summary = {
     ...(sess.practice ? {} : { sessionCode: sess.code, sessionName: sess.name || null, sessionCreatedAt: sess.createdAt || null }),
     band, year3Band: band, bandLabel: b.label, bandTone: b.cls, reviewQuestions: REVIEW_QUESTIONS,
-    result: { overall: `${b.label}. ${SEAT_NAMES[me.seat] || 'No seat'} at ${me.teamLabel || table.label || table.id}. The Commission set ${r.imposed.length} term${r.imposed.length === 1 ? '' : 's'}${r.freezeMonths ? `; the freeze runs ${r.freezeMonths} more months` : ''}.` },
+    result: { overall: `${b.label}. ${SEAT_NAMES[me.seat] || 'No seat'} in ${me.teamLabel || table.label || table.id}. The Commission set ${r.imposed.length} term${r.imposed.length === 1 ? '' : 's'}${r.freezeMonths ? `; the freeze runs ${r.freezeMonths} more months` : ''}.` },
     table: table.label || table.id, seat: me.seat, seatName: SEAT_NAMES[me.seat] || null, settledGroups: r.settled, imposedTerms: r.imposed, terms: r.terms, freezeMonths: r.freezeMonths,
     teamRunId: me.groupId, teamLabel: me.teamLabel || '', teamMembers: humans(roster).filter(p => p.groupId === me.groupId).map(p => p.name),
     reflection1: (me.review && me.review.reflection1) || '', reflection2: (me.review && me.review.reflection2) || ''
@@ -130,4 +132,4 @@ function seatTeams(sess, roster) {
   return { roster: next, tables, tableIds, tableOf };
 }
 
-module.exports = { LESSON_QUESTIONS, REVIEW_QUESTIONS, LESSONS, BANDS, ORDER, SEAT_NAMES, bandOf, nextStep, facultyKit, completion, seatTeams, walkthroughOf };
+module.exports = { noticeOpen, LESSON_QUESTIONS, REVIEW_QUESTIONS, LESSONS, BANDS, ORDER, SEAT_NAMES, bandOf, nextStep, facultyKit, completion, seatTeams, walkthroughOf };

@@ -15,12 +15,12 @@ module.exports = {
     teaches: 'How contract terms distribute risk, and how a shared deadline changes bargaining between parties with different constraints.',
     tangle: 'Everyone wants new demand, but each party wants someone else to carry the cost if that demand disappears.',
     turn: 'The deadline ends negotiation. Terms left unsigned are imposed together, and delays carry costs of their own.',
-    after: 'Compare the term sheets across tables and examine the costs when demand arrives and when it misses.',
+    after: 'Compare the term sheets across teams and examine the costs when demand arrives and when it misses.',
     discussion: 'Which risk did your party accept? What did you need from the other seats to accept it?',
-    sessionShape: 'An instructor opens and seats a live room. Each table needs four students; additional students share seats as co-counsel.',
+    sessionShape: 'An instructor opens a live session and splits the class into teams. Each team needs four students; additional students share seats as co-counsel.',
     beats: ['Read your confidential seat brief.', 'Make opening statements and negotiate the term sheet.', 'Review the settled and imposed terms and their consequences.'],
     durationNote: '65 minutes of timed play, with one optional ten-minute extension; allow additional time for the walkthrough, seating and debrief.',
     catalogueFacts: [{ label: 'Play', value: 'Groups of four or more, with an instructor' }, { label: 'Time', value: '65 minutes plus debrief' }],
-    tryIt: 'Negotiate a tariff at a live class table and compare its consequences when demand arrives and when it misses.'
+    tryIt: 'Negotiate a tariff in a live class team and compare its consequences when demand arrives and when it misses.'
   }
 };

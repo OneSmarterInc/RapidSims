@@ -11,7 +11,7 @@ const publicBrief = {
     `Crestline Power is a regulated electric utility. Four years ago, data centres used about 100 MW of its system. Today they use about 600 MW, and requests to connect new ones total more than ${S.requestsMW.toLocaleString('en-US')} MW, which is more than Crestline's entire peak load.`,
     `Crestline has frozen new data-centre connections and asked the state Commission to approve new terms for very large customers. It has already begun a ${$b(S.buildCost)} transmission build to serve the requested load.`,
     `If a customer's load never arrives, the wire built for it still has to be paid for. This proceeding decides who pays: the data centres, Crestline's shareholders, industrial customers or households.`,
-    `Four parties sit at the table. You represent one of them. You will negotiate five terms. Any term you cannot all sign by the deadline will be set by the Commission, and the Commission has told you, in general terms, what it will impose.`,
+    `Your team has four parties. You represent one of them. You will negotiate five terms. Any term you cannot all sign by the deadline will be set by the Commission, and the Commission has told you, in general terms, what it will impose.`,
   ],
   commissionFallback: [
     `Minimum take-or-pay: ${F.top[0]}–${F.top[1]}% of subscribed capacity.`,
@@ -73,20 +73,20 @@ const staffNotices = [
 // Public orientation only. Private seat constraints arrive in the timed briefing.
 const walkthrough = [
   { heading: 'What this proceeding decides', paragraphs: [
-    'New data centres want electricity, and Crestline Power must build the wires to deliver it. Nobody knows how much of the promised demand will arrive. Your table must decide who carries that risk.',
-    'Four parties share one table: the utility, a data-centre developer, industrial energy users, and a consumer advocate. You will receive your party’s private brief after the instructor starts the briefing.',
+    'New data centres want electricity, and Crestline Power must build the wires to deliver it. Nobody knows how much of the promised demand will arrive. Your team must decide who carries that risk.',
+    'Your team has four parties: the utility, a data-centre developer, industrial energy users, and a consumer advocate. You will receive your party’s private brief after the instructor starts the briefing.',
   ] },
   { heading: 'How the term sheet works', paragraphs: [
     'The sheet has five terms: minimum payment, contract length, exit fee, collateral, and the size threshold. During negotiation, any seat can change an open term. A change clears the signatures on that term.',
     'Each seat signs for itself. The four money terms lock together only when all four seats have signed every one of them. The size threshold locks separately. A seat can unlock a group to reopen it for discussion.',
   ] },
   { heading: 'What the deadline does', paragraphs: [
-    'This walkthrough has no timer. Once everyone has finished and is at a table, your instructor starts the timed briefing, opening statements, and negotiation.',
+    'This walkthrough has no timer. Once everyone has finished and is in a team, your instructor starts the timed briefing, opening statements, and negotiation.',
     'At the negotiation deadline, signed and locked groups stand. The Commission imposes every term in an unlocked group, and each imposed term adds three to four months to the connection freeze. Your instructor can add ten minutes once, or close the sheet early.',
   ] },
   { heading: 'What you see afterwards', paragraphs: [
-    'You will see the terms your table ends with, which ones the Commission imposed, and how long the connection freeze continues.',
-    'Then you will see what happens to all four parties in two possible futures: if the forecast demand arrives, and if it does not. During the debrief, your instructor can compare tables and reveal the real proceeding behind this simulation.',
+    'You will see the terms your team ends with, which ones the Commission imposed, and how long the connection freeze continues.',
+    'Then you will see what happens to all four parties in two possible futures: if the forecast demand arrives, and if it does not. During the debrief, your instructor can compare teams and reveal the real proceeding behind this simulation.',
   ] },
 ];
 
