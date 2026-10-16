@@ -274,7 +274,11 @@ function staticPath(pathname) {
     const stat = fs.statSync(candidate);
     return stat.isFile() ? candidate : stat.isDirectory() && fs.existsSync(path.join(candidate, 'index.html'))
       ? path.join(candidate, 'index.html') : null;
-  } catch { return null; }
+  } catch {
+    // A page linked without its extension (sim10's play, instructor, live) is served as its .html file.
+    if (!path.extname(candidate) && fs.existsSync(candidate + '.html')) return candidate + '.html';
+    return null;
+  }
 }
 
 async function handle(req, res) {
