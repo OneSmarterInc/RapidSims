@@ -16,6 +16,8 @@ function facultyAccess(req) {
   // Only the verified server-side launch can grant the faculty capability.
   const p = req.launch;
   if (p && p.sub && acceptsLaunchId(p.sim) && ['faculty', 'faculty_preview'].includes(p.role)) return true;
+  // A Rehearse practice student is the faculty member playing, so the observation can play faster too.
+  if (p && acceptsLaunchId(p.sim) && p.role === 'student' && String(p.sub || '').startsWith('practice-')) return true;
   const want = Buffer.from(String(process.env.FACULTY_CODE || ''));
   const given = Buffer.from(String(req.headers['x-faculty-code'] || ''));
   return want.length > 0 && want.length === given.length && crypto.timingSafeEqual(want, given);

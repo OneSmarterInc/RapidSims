@@ -18,7 +18,9 @@
     const value = identity(sim);
     return `${value.plus ? 'RapidSim+ ' : 'RapidSim '}${value.number ? String(value.number).padStart(2, '0') : ''}`.trim();
   }
-  const api = { identity, number, label };
+  // A RapidSim+ by its identity, or by length (an hour or more) for rows without one (#62).
+  function isPlus(sim) { return identity(sim).plus || (Number(sim.minutes) || 0) >= 60; }
+  const api = { identity, number, label, isPlus };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.RapidSimsIdentity = api;
 })(typeof window !== 'undefined' ? window : globalThis);

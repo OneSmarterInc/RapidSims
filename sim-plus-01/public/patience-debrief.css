@@ -1,0 +1,11 @@
+/* Why Don't They Have Any Patience? debrief bodies and faculty tabs. Sizes in em off the shared slide base (kit/debrief.css). */
+.pc-names{display:flex;flex-wrap:wrap;gap:.4em;margin-top:.5em}
+.pc-names span{font:1em var(--mono);padding:.2em .55em;border:1px solid var(--line2);border-radius:.3em;color:var(--soft)}
+.pc-grid{border-collapse:collapse;font:1.05em var(--mono);width:100%}
+.md-slide .pc-grid th,.md-slide .pc-grid td{padding:.45em .9em;border-bottom:1px solid var(--line2);text-align:left;color:var(--ink);vertical-align:top}
+.md-slide .pc-grid th{color:var(--soft);font-weight:400;font-size:.8em;text-transform:uppercase;letter-spacing:.05em}
+.md-slide .pc-grid td.pc-line{font:1em var(--sans,inherit);line-height:1.4}
+.md-slide .pc-reveal p{margin:0 0 .8em;font:400 1.3em/1.5 var(--serif);color:var(--ink);max-width:62em}
+.pc-q{display:block;color:var(--dim);font-size:1em;margin-top:.5em}
+/* Faculty Interviews tab: the turn where Ruth stopped volunteering. */
+.event-row.pc-closed{border-left:3px solid #b42318;padding-left:10px}

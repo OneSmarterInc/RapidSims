@@ -9,7 +9,7 @@ function launchToken(loc){return new URLSearchParams(String(loc.hash||'').slice(
 const MODE_TEXT={team:"<b>Team</b><span>One member enters the team's decisions. Everyone writes their own review.</span>",individual:'<b>Individual</b><span>Every student makes every decision.</span>'};
 function start(SIM){
 const app=document.getElementById('app');function esc(s){const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML}
-const BASE=(location.pathname.match(/^\/sim(?:plus)?-?\d+/)||[''])[0];
+const BASE=(location.pathname.match(/^\/sim(?:-?plus)?-?\d+/)||[''])[0];
 const FACULTY_TOKEN_KEY=SIM.storage.token;
 const incomingLT=launchToken(location);
 let LT=incomingLT||sessionStorage.getItem(FACULTY_TOKEN_KEY)||null;

@@ -10,9 +10,13 @@ const { WINDOWS, AVAILABILITY, feasibleOrderings } = require('../data/calendar')
 const { serialize, hydrate } = require('../lib/session');
 const { reportCompletion, reportTranscript } = require('../lib/launch');
 const { buildEnvelope } = require('../src/transcript');
+const KA = require('../lib/kit-api');
+const K = require('../lib/kit');
 
 const key = (id) => `run03:${id}`;
-const participantKey = (sub) => `run03:participant:${sub}`;
+const participantKey = (sub, code) => code ? `run03:participant:${code}:${sub}` : `run03:participant:${sub}`;
+// A student from the class link plays inside a faculty session; a faculty member trying the sim plays on their own.
+const inSession = (launch) => !!(launch && launch.role === 'student');
 const id = () => crypto.randomBytes(12).toString('hex');
 const load = async (runId) => { const raw = await store.getRaw(key(runId)); return raw ? hydrate(raw) : null; };
 const save = (runId, session) => store.putRaw(key(runId), serialize(session));
@@ -31,12 +35,12 @@ const CHART_FIELDS = {
   review: ['step', 'owner', 'receiver', 'catches', 'dependsOn']
 };
 
-async function resolveRunId(req, requested) {
+async function resolveRunId(req, requested, code) {
   const explicit = String(requested || '').trim();
   if (explicit) return explicit;
   const sub = req.launch && req.launch.sub;
   if (!sub) return '';
-  const pointer = await store.getRaw(participantKey(sub));
+  const pointer = await store.getRaw(participantKey(sub, code));
   return pointer && pointer.runId ? String(pointer.runId) : '';
 }
 
@@ -70,6 +74,11 @@ function participantOutcome(s, result) {
     completedChart: s.completedChart,
     observationSeconds: s.observationSeconds
   };
+}
+
+// The review after the report: its two questions, and whether the student has sent it.
+function reviewState(sess, me) {
+  return sess ? { open: true, sent: !!(me && me.review), questions: K.REVIEW_QUESTIONS } : { open: false };
 }
 
 function publicState(s) {
@@ -112,6 +121,30 @@ module.exports = async (req, res) => {
   if (!store.configured()) return res.status(503).json({ error: 'no_store', message: 'Session storage is not configured.' });
   const b = body(req);
   try {
+    // A student's session: the class's open session (or a practice student's own), checked against the launch.
+    let sess = null, me = null;
+    if (inSession(req.launch)) {
+      // The class's open session; otherwise the last one this student joined, so a filed report stays readable after close.
+      const lastKey = `kit:student:${req.launch.course || ''}:${req.launch.sub}`;
+      const code = String(b.code || '').toUpperCase().trim() || await KA.entryCode(req.launch) || ((await store.getRaw(lastKey)) || {}).code || '';
+      sess = code ? await store.getSession(code) : null;
+      const pid = `platform:${req.launch.sub}`;
+      const allowed = sess && sess.kit && sess.courseId === (req.launch.course || null) &&
+        (KA.isPracticeSub(req.launch.sub) ? sess.practice && code === await KA.entryCode(req.launch) : !sess.practice);
+      if (!allowed) return res.status(409).json({ error: 'no_open_session', message: 'Your instructor has not opened a session for this class yet. Open it again from your class page when it is ready.' });
+      me = await store.getParticipant(sess.code, pid);
+      if (!me || !me.joinedAt || me.launchId !== (req.launch.run || null)) {
+        if (!me && sess.state === 'closed') return res.status(409).json({ error: 'session_closed', message: 'This session is closed. Your instructor can open a new one.' });
+        me = { ...(me || { id: pid, groupId: pid, source: 'class-link', addedAt: Date.now() }), name: me && me.name || String(req.launch.name || 'Student').slice(0, 60),
+          joinedAt: (me && me.joinedAt) || Date.now(), launchId: req.launch.run || null };
+        await store.setParticipant(sess.code, pid, me);
+        await store.putRaw(lastKey, { code: sess.code });
+      }
+      if (b.action === 'entry') return res.status(200).json({ code: sess.code, state: sess.state, practice: !!sess.practice });
+      if (sess.state === 'lobby' && b.action !== 'brief') return res.status(409).json({ error: 'session_not_started', message: 'Your instructor starts the session shortly.' });
+      if (sess.state === 'closed' && !['brief', 'resume', 'review'].includes(b.action)) return res.status(409).json({ error: 'session_closed', message: 'This session is closed. Your saved work and report stay as they are.' });
+    } else if (b.action === 'entry') return res.status(200).json({ code: null, state: 'running', practice: false });
+
     if (b.action === 'brief') return res.status(200).json({
       faculty: facultyAccess(req),
       title: 'Why Don\'t They Have Any Patience?',
@@ -156,11 +189,12 @@ module.exports = async (req, res) => {
       if (!s.observationSeconds) return res.status(400).json({ error: 'observation_required', message: 'Record the observed seconds per claim before starting interviews.' });
       s.launch = req.launch || null;
       await save(runId, s);
-      if (req.launch && req.launch.sub) await store.putRaw(participantKey(req.launch.sub), { runId });
+      if (req.launch && req.launch.sub) await store.putRaw(participantKey(req.launch.sub, sess && sess.code), { runId });
+      if (sess) await store.setParticipant(sess.code, me.id, (me = { ...me, runId }));
       return res.status(200).json({ runId, state: publicState(s) });
     }
 
-    const runId = await resolveRunId(req, b.runId);
+    const runId = await resolveRunId(req, sess ? '' : b.runId, sess && sess.code);
     if (!runId) return res.status(404).json({ error: 'no_such_run' });
     const s = await load(runId);
     if (!s) return res.status(404).json({ error: 'no_such_run' });
@@ -206,7 +240,18 @@ module.exports = async (req, res) => {
       await save(runId, s);
       const result = review(s.submission, s.transcript);
       const who = req.launch || s.launch;
-      if (who) {
+      if (sess) {
+        await store.setParticipant(sess.code, me.id, (me = { ...me, filedAt: Date.now() }));
+        if (!sess.practice) {
+          const envelope = buildEnvelope(s, result, { sessionId: runId, observationSeconds: s.observationSeconds,
+            participant: { id: who.sub, displayName: who.name || null }, cohortId: who.course || null, completedAt: new Date().toISOString() });
+          const transcript = await reportTranscript({ launch: who, runId, envelope });
+          const completion = await KA.reportPerson(sess, me, 1);
+          if ((!transcript.ok && !transcript.queued) || (!completion.ok && !completion.queued)) {
+            return res.status(503).json({ error: 'report_not_queued', message: 'Your work is saved. Please retry submission so the instructor receives it.' });
+          }
+        }
+      } else if (who) {
         const envelope = buildEnvelope(s, result, {
           sessionId: runId,
           observationSeconds: s.observationSeconds,
@@ -220,13 +265,24 @@ module.exports = async (req, res) => {
           return res.status(503).json({ error: 'report_not_queued', message: 'Your work is saved. Please retry submission so the instructor receives it.' });
         }
       }
-      return res.status(200).json({ outcome: participantOutcome(s, result) });
+      return res.status(200).json({ outcome: participantOutcome(s, result), studentReview: reviewState(sess, me) });
     }
 
     if (b.action === 'review') {
       if (!s.submission) return res.status(409).json({ error: 'report_not_submitted' });
       const result = review(s.submission, s.transcript);
-      return res.status(200).json({ outcome: participantOutcome(s, result) });
+      return res.status(200).json({ outcome: participantOutcome(s, result), studentReview: reviewState(sess, me) });
+    }
+
+    // The two review questions after the report. Revision 2 of the student's completion.
+    if (b.action === 'review_answers') {
+      if (!sess) return res.status(409).json({ error: 'no_session' });
+      if (!s.submission) return res.status(409).json({ error: 'report_not_submitted' });
+      const a1 = String(b.reflection1 || '').trim().slice(0, 1500), a2 = String(b.reflection2 || '').trim().slice(0, 1500);
+      if (!a1 || !a2) return res.status(400).json({ error: 'answers_required', message: 'Answer both questions, then send.' });
+      await store.setParticipant(sess.code, me.id, (me = { ...me, review: { reflection1: a1, reflection2: a2, at: Date.now() } }));
+      await KA.reportPerson(sess, me, 2);
+      return res.status(200).json({ studentReview: reviewState(sess, me) });
     }
 
     return res.status(400).json({ error: 'unknown_action' });
