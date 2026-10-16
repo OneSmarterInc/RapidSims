@@ -1,0 +1,16 @@
+/* Who Pays for the Wire? debrief bodies. Sizes in em off the shared slide base (kit/debrief.css). */
+.wr-names{display:flex;flex-wrap:wrap;gap:.4em;margin-top:.5em}
+.wr-names span{font:1em var(--mono);padding:.2em .55em;border:1px solid var(--line2);border-radius:.3em;color:var(--soft)}
+.wr-grid{border-collapse:collapse;font:1.05em var(--mono);margin-top:.8em}
+.md-slide .wr-grid th,.md-slide .wr-grid td{padding:.4em .9em;border-bottom:1px solid var(--line2);text-align:right;color:var(--ink)}
+.md-slide .wr-grid th{color:var(--soft);font-weight:400;font-size:.8em;text-transform:uppercase;letter-spacing:.05em}
+.md-slide .wr-grid td:first-child,.md-slide .wr-grid th:first-child{text-align:left}
+.md-slide .wr-grid td.wr-imposed{background:var(--n-bg);color:var(--n-t)}
+.md-slide .wr-small{font-size:.95em;margin:.3em 0}
+.wr-pair{display:flex;gap:1.4em;flex-wrap:wrap}
+.wr-card{flex:1;min-width:20em;display:flex;flex-direction:column;gap:.3em;padding:1em 1.2em;border:1px solid var(--line2);border-radius:.4em;background:var(--panel)}
+.wr-card b{font:500 1.5em var(--serif);color:var(--ink)}
+.wr-card small{font:600 .85em var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-top:.4em}
+.md-slide .wr-card p{margin:0;color:var(--ink);font-size:1em;line-height:1.4}
+.md-slide .wr-reveal p{margin:0 0 .8em;font:400 1.25em/1.5 var(--serif);color:var(--ink);max-width:70em}
+.wr-q{display:block;color:var(--dim);font-size:1em;margin-top:.5em}

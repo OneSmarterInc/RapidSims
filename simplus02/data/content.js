@@ -81,7 +81,7 @@ const walkthrough = [
     'Each seat signs for itself. The four money terms lock together only when all four seats have signed every one of them. The size threshold locks separately. A seat can unlock a group to reopen it for discussion.',
   ] },
   { heading: 'What the deadline does', paragraphs: [
-    'This walkthrough has no timer. Once everyone has finished and the room is seated, your instructor starts the timed briefing, opening statements, and negotiation.',
+    'This walkthrough has no timer. Once everyone has finished and is at a table, your instructor starts the timed briefing, opening statements, and negotiation.',
     'At the negotiation deadline, signed and locked groups stand. The Commission imposes every term in an unlocked group, and each imposed term adds three to four months to the connection freeze. Your instructor can add ten minutes once, or close the sheet early.',
   ] },
   { heading: 'What you see afterwards', paragraphs: [

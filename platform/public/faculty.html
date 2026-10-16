@@ -74,7 +74,7 @@ function practicePanel(courseId, d) {
   box.innerHTML = `<div class="faculty-practice-head"><b data-practice-title>${d.complete ? 'Practice session complete. Every practice student has finished.' : d.resumed ? 'Your practice session from earlier is still open.' : 'Your practice session is open.'}</b>
       <span>Open each practice student in its own tab. Practice students stay out of your roster, counts and results.</span></div>
     <div class="faculty-practice-grid">${d.students.map(x => `<div class="faculty-practice-card">
-      <b>${esc(x.name)}</b><span>${d.students.length === 1 || !PRACTICE_TEAM[rehearseSim()] ? 'Plays the whole run' : x.entersDecisions ? 'Enters the decisions' : 'Follows and reviews'}</span><span class="faculty-practice-status${x.finished ? ' done' : ''}" data-practice-status="${esc(x.name)}" aria-live="polite">${esc(x.status || '')}</span>
+      <b>${esc(x.name)}</b><span>${PRACTICE_SEATS[rehearseSim()] ? 'Plays one seat' : d.students.length === 1 || !PRACTICE_TEAM[rehearseSim()] ? 'Plays the whole run' : x.entersDecisions ? 'Enters the decisions' : 'Follows and reviews'}</span><span class="faculty-practice-status${x.finished ? ' done' : ''}" data-practice-status="${esc(x.name)}" aria-live="polite">${esc(x.status || '')}</span>
       <a class="btn sm ${x.finished ? 'faculty-practice-done' : x.entersDecisions || !PRACTICE_TEAM[rehearseSim()] ? 'pri' : ''}" data-practice-open="${esc(x.name)}" href="${esc(x.url)}" target="_blank" rel="noopener">${x.finished ? 'Completed' : 'Open'}</a></div>`).join('')}</div>
     <div class="faculty-practice-actions"><a class="btn sm" href="${esc(d.classUrl)}" target="_blank" rel="noopener">See the faculty view</a>
       <button class="btn sm" data-practice-over>Start over</button>
@@ -115,12 +115,13 @@ function watchPractice(courseId) {
 function renderRehearse() {
   const { course, sims } = F.course;
   const sim = sims.find(x => x.sim_id === rehearseSim()) || null;
-  const title = sim ? sim.title : 'this simulation', solo = PRACTICE_N[rehearseSim()] === 1, team = !!PRACTICE_TEAM[rehearseSim()];
+  const title = sim ? sim.title : 'this simulation', solo = PRACTICE_N[rehearseSim()] === 1, team = !!PRACTICE_TEAM[rehearseSim()], seats = !!PRACTICE_SEATS[rehearseSim()];
   const has = !!sim && isKit(sim.sim_id);
   app.innerHTML = `
     <div class="crumb"><a data-crumb-class>${esc(course.title)}</a> › ${esc(title)} › Rehearse</div>
     <div class="head"><div><h1>Rehearse ${esc(title)}</h1>
       <p class="hint" style="margin-top:6px;max-width:720px">${solo ? 'Play as a practice student to see what your class will see, from the brief to the review.'
+        : seats ? 'Play as four practice students at one table, one per seat, to see what your class will see. Start the table and move each phase on from its faculty view.'
         : team ? 'Play as three practice students to see what your class will see. One practice student enters the decisions. The other two follow each step and write their own reviews.'
         : 'Play as three practice students, each on their own run, to see what your class will see, from the brief to the review.'}</p></div></div>
     ${has ? '<div class="panel faculty-practice faculty-practice-page" data-midland-practice><div class="empty">Checking for a practice session…</div></div>'
@@ -137,7 +138,7 @@ function practiceIdle(courseId) {
   const box = app.querySelector('[data-midland-practice]');
   if (!box) return;
   box.innerHTML = `<div class="faculty-practice-head"><b>No practice session is open.</b>
-      <span>${PRACTICE_N[rehearseSim()] === 1 ? 'Start one to get a practice student. It opens in its own tab. Practice students stay out of your roster, counts and results.' : 'Start one to get three practice students. Each opens in its own tab. Practice students stay out of your roster, counts and results.'}</span></div>
+      <span>${PRACTICE_N[rehearseSim()] === 1 ? 'Start one to get a practice student. It opens in its own tab. Practice students stay out of your roster, counts and results.' : PRACTICE_SEATS[rehearseSim()] ? 'Start one to get four practice students, one per seat. Each opens in its own tab.' : 'Start one to get three practice students. Each opens in its own tab. Practice students stay out of your roster, counts and results.'}</span></div>
     <div class="faculty-practice-actions"><button class="btn pri" data-practice-start>Start practice</button></div>`;
   box.querySelector('[data-practice-start]').onclick = e => startMidlandPractice(courseId, e.currentTarget);
 }
@@ -284,10 +285,12 @@ function render() {
 /* ── left menu and Midland's session status ─────────────────────────────── */
 const MIDLAND = 'rapid-03-midland';
 // Sims on the shared faculty pages (kit): sessions, results and debrief in the class page, plus Rehearse.
-const KIT_SIMS = ['rapid-03-midland', 'rapid-01-disaster', 'rapid-02-relay', 'rapid-04-whose-number', 'rapid-05-approve', 'rapid-06-switch', 'rapid-07-bought', 'rapid-08-later', 'rapid-09-money-land', 'rapid-10-bubble'];
-const PRACTICE_N = { 'rapid-03-midland': 3, 'rapid-01-disaster': 1, 'rapid-02-relay': 1, 'rapid-04-whose-number': 3, 'rapid-05-approve': 1, 'rapid-06-switch': 1, 'rapid-07-bought': 1, 'rapid-08-later': 1, 'rapid-09-money-land': 1, 'rapid-10-bubble': 1 };
+const KIT_SIMS = ['rapid-03-midland', 'rapid-01-disaster', 'rapid-02-relay', 'rapid-04-whose-number', 'rapid-05-approve', 'rapid-06-switch', 'rapid-07-bought', 'rapid-08-later', 'rapid-09-money-land', 'rapid-10-bubble', 'rapidsimplus-02'];
+const PRACTICE_N = { 'rapid-03-midland': 3, 'rapid-01-disaster': 1, 'rapid-02-relay': 1, 'rapid-04-whose-number': 3, 'rapid-05-approve': 1, 'rapid-06-switch': 1, 'rapid-07-bought': 1, 'rapid-08-later': 1, 'rapid-09-money-land': 1, 'rapid-10-bubble': 1, 'rapidsimplus-02': 4 };
 // Practice students who form one team (Midland). Elsewhere each practice student plays their own run.
 const PRACTICE_TEAM = { 'rapid-03-midland': true };
+// Four practice students at one table, one per seat (Who Pays for the Wire?).
+const PRACTICE_SEATS = { 'rapidsimplus-02': true };
 const isKit = id => KIT_SIMS.includes(id);
 // The sim Rehearse is for: the one asked for, or the class's first sim on the kit.
 function rehearseSim() { return F.rehearseSim || (F.course?.sims || []).map(x => x.sim_id).find(isKit) || MIDLAND; }
@@ -633,7 +636,7 @@ function renderCourse() {
         const item = (html, hint) => `${html}<span class="faculty-more-hint">${hint}</span>`;
         const moreItems = [
           midland && open ? item(`<a class="btn sm" data-frame="${esc(x.sim_id)}" href="${sessionsHref}">All sessions</a>`, 'Start a new session or see earlier ones.') : '',
-          midland ? item(`<button class="btn sm" data-midland-rehearse="${esc(x.sim_id)}">Rehearse</button>`, PRACTICE_N[x.sim_id] === 1 ? 'Play as a practice student before class.' : 'Play as three practice students before class.') : '',
+          midland ? item(`<button class="btn sm" data-midland-rehearse="${esc(x.sim_id)}">Rehearse</button>`, PRACTICE_N[x.sim_id] === 1 ? 'Play as a practice student before class.' : PRACTICE_SEATS[x.sim_id] ? 'Play as four practice students, one per seat, before class.' : 'Play as three practice students before class.') : '',
           x.sim_id === 'rapid-05-approve' ? item(`<a class="btn sm" href="${launchHref(x.sim_id, course.id, '&mode=session&play=individual')}">Run individual</a>`, 'Every student plays alone.') : '',
           item(`<a class="btn sm" href="${launchHref(x.sim_id, course.id)}" target="_blank" rel="noopener">Play it yourself</a>`, 'Opens in a new tab, as a student sees it.'),
           F.me?.role === 'faculty' ? item(`<button class="btn sm faculty-result-btn" data-sim-results="${esc(x.sim_id)}">Past sessions</button>`, 'Every session’s results, newest first.') : '',

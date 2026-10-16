@@ -7,8 +7,9 @@ const { announce } = require('../lib/launch');
 const R = require('../lib/room');
 const T = require('../engine/table');
 const { walkthrough } = require('../data/content');
+const K = require('../lib/kit');
 
-const FACULTY_ACTIONS = new Set(['create', 'seat', 'phase', 'extend', 'notice', 'close', 'reveal', 'console']);
+const FACULTY_ACTIONS = new Set([]);
 const TABLE_ACTIONS = { move: T.move, sign: T.sign, unsign: T.unsign, unlock: T.unlock };
 const clone = v => JSON.parse(JSON.stringify(v));
 const busy = () => Object.assign(new Error('busy_retry'), { status: 409 });
@@ -36,103 +37,26 @@ async function settleDeadline(code, now) {
       return (await store.cas(keys.table(code, id), t, next)) ? true : undefined;
     });
   }
-  return retry(async () => {
+  const closed = await retry(async () => {
     const s = await store.get(keys.session(code));
     if (s.phase !== 'negotiation') return s;
-    const next = { ...s, phase: 'closed', phaseEndsAt: null };
-    return (await store.cas(keys.session(code), s, next)) ? next : undefined;
+    const next = { ...s, phase: 'closed', phaseEndsAt: null, deadlineAt: now };
+    return (await store.cas(keys.session(code), s, next)) ? { ...next, justClosed: true } : undefined;
   });
-}
-
-async function facultyAction(a, b, who, now) {
-  if (a === 'create') {
-    for (let i = 0; i < 5; i++) {
-      const code = R.newCode(), sess = { ...R.newSession(code, who.name, now), owner: who.owner,
-        platformAuth: !!who.launch, courseId: who.launch && who.launch.course || null };
-      if (await store.cas(keys.session(code), null, sess)) {
-        await store.cas(keys.roster(code), null, {});
-        if (sess.courseId) await retry(async () => {
-          const previous = await store.get(keys.course(sess.courseId));
-          return await store.cas(keys.course(sess.courseId), previous, { code }) ? true : undefined;
-        });
-        return { code };
-      }
-    }
-    throw busy();
-  }
-  const code = String(b.code || '').toUpperCase().trim();
-  let sess = await store.get(keys.session(code));
-  if (!sess) throw reject('no_such_session', 404);
-  if (!owns(sess, who)) throw reject('not_session_owner', 403);
-  sess = await settleDeadline(code, now);
-
-  if (a === 'seat') {
-    return retry(async () => {
-      const s = await store.get(keys.session(code)), roster = await store.get(keys.roster(code));
-      if (Object.keys(roster).length < 4) throw reject('A table needs at least four students');
-      const out = R.seatRoom(s, roster);
-      for (const [id, t] of Object.entries(out.tables)) await store.cas(keys.table(code, id), await store.get(keys.table(code, id)), t);
-      if (!await store.cas(keys.roster(code), roster, out.roster)) return undefined;
-      if (!await store.cas(keys.session(code), s, out.sess)) return undefined;
-      return { tables: out.sess.tableIds.length };
-    });
-  }
-  if (a === 'phase' || a === 'extend' || a === 'reveal') {
-    return retry(async () => {
-      const s = await store.get(keys.session(code));
-      let walkthroughOverride;
-      if (a === 'phase' && b.to === 'briefing' && s.phase === 'lobby' && s.tableIds.length) {
-        const roster = await store.get(keys.roster(code));
-        const waiting = Object.entries(roster).filter(([, p]) => p.table && !R.walkthroughComplete(s, p));
-        if (waiting.length) {
-          if (b.skipWalkthrough !== true) throw reject('walkthrough_incomplete', 409);
-          walkthroughOverride = { at: now, by: who.name, participants: waiting.map(([id, p]) => ({ id, name: p.name })) };
-        }
-      }
-      const next = a === 'phase' ? R.setPhase(s, String(b.to), now) : a === 'extend' ? R.extend(s) : { ...s, reveal: Boolean(b.on) };
-      if (walkthroughOverride) next.walkthroughOverride = walkthroughOverride;
-      return (await store.cas(keys.session(code), s, next)) ? { phase: next.phase, phaseEndsAt: next.phaseEndsAt } : undefined;
-    });
-  }
-  if (a === 'close') {
-    // Force the deadline now.
-    await retry(async () => {
-      const s = await store.get(keys.session(code));
-      if (s.phase !== 'negotiation') throw reject('Only negotiation can be closed');
-      return (await store.cas(keys.session(code), s, { ...s, phaseEndsAt: now })) ? true : undefined;
-    });
-    sess = await settleDeadline(code, now);
-    return { phase: sess.phase };
-  }
-  if (a === 'notice') {
-    const id = String(b.tableId || '');
-    if (!sess.tableIds.includes(id)) throw reject('no_such_table', 404);
-    return retry(async () => {
-      const t = await store.get(keys.table(code, id));
-      return (await store.cas(keys.table(code, id), t, R.addNotice(t, String(b.noticeId), now))) ? { ok: true } : undefined;
-    });
-  }
-  if (a === 'console') {
-    const roster = await store.get(keys.roster(code));
-    return R.consoleView(sess, roster, await loadTables(code, sess.tableIds), now);
-  }
+  // The deadline is each student's outcome: revision 1 reports once, from whichever request closed the tables.
+  if (closed.justClosed) { delete closed.justClosed; await require('../lib/kit-api').reportPeople(code, null, 1); }
+  return closed;
 }
 
 async function studentAction(a, req, b, now) {
   const code = String(b.code || '').toUpperCase().trim();
-  if (a === 'entry') {
-    const who = entrant(req, b);
-    if (!who || !who.launch) throw reject('sign_in_required', 401);
-    if (!who.launch.course) return { code: null };
-    const room = await store.get(keys.course(who.launch.course));
-    const sess = room && await store.get(keys.session(room.code));
-    return { code: sess && sess.courseId === who.launch.course && ['lobby', 'briefing', 'openings', 'negotiation'].includes(sess.phase) ? sess.code : null };
-  }
   if (a === 'join') {
     const who = entrant(req, b);
-    if (!who) throw reject('access_code_required', 401);
+    if (!who) throw reject('sign_in_required', 401);
     const sess = await store.get(keys.session(code));
     if (!sess) throw reject('no_such_session', 404);
+    if (sess.state === 'closed') throw reject('session_closed', 410);
+    if (!sess.practice && require('../lib/kit-api').isPracticeSub(who.launch.sub)) throw reject('practice_only', 403);
     if (sess.platformAuth && (!who.launch || (sess.courseId && who.launch.course !== sess.courseId))) throw reject('wrong_course', 403);
     const name = b.name || (who.launch && who.launch.name);
     return retry(async () => {
@@ -140,11 +64,18 @@ async function studentAction(a, req, b, now) {
       const existing = who.launch && roster['platform:' + who.launch.sub];
       if (existing) {
         if ((existing.launch.course || null) !== (who.launch.course || null)) throw reject('wrong_course', 403);
+        // A student imported from the class roster opens the sim for the first time.
+        if (!existing.joinedAt || existing.launchId !== who.launch.run) {
+          const next = { ...roster, ['platform:' + who.launch.sub]: { ...existing, name: who.launch.name || existing.name, joinedAt: existing.joinedAt || now, launchId: who.launch.run || null, launch: { ...existing.launch, ...who.launch } } };
+          if (!await store.cas(keys.roster(code), roster, next)) return undefined;
+        }
         return { participantId: 'platform:' + who.launch.sub, participantKey: existing.key, rejoined: true };
       }
       const current = await store.get(keys.session(code));
-      if (current.phase !== 'lobby' || current.tableIds.length) throw reject('seating_closed', 409);
+      if (current.practice) throw reject('private_session', 403);
+      if (current.state !== 'lobby' || current.tableIds.length) throw reject('seating_closed', 409);
       const j = R.join(roster, name, who.launch, now);
+      j.roster[j.pid] = { ...j.roster[j.pid], groupId: null, teamLabel: '', launchId: who.launch.run || null };
       return (await store.cas(keys.roster(code), roster, j.roster)) ? { participantId: j.pid, participantKey: j.key } : undefined;
     });
   }
@@ -158,7 +89,20 @@ async function studentAction(a, req, b, now) {
 
   if (a === 'view') {
     const table = me.table ? await store.get(keys.table(code, me.table)) : null;
-    return R.studentView(sess, roster, pid, table, now);
+    return withReview(R.studentView(sess, roster, pid, table, now), me, table);
+  }
+  // A student's two review answers, after the deadline. Revision 2 of the same completion.
+  if (a === 'review') {
+    const table = me.table ? await store.get(keys.table(code, me.table)) : null;
+    if (!table || !table.result) throw reject('not_finished', 409);
+    const r1 = String(b.reflection1 || '').trim().slice(0, 1500), r2 = String(b.reflection2 || '').trim().slice(0, 1500);
+    if (!r1 || !r2) throw reject('answers_required', 400);
+    const next = await retry(async () => {
+      const cur = await store.get(keys.roster(code)), upd = { ...cur, [pid]: { ...cur[pid], review: { reflection1: r1, reflection2: r2, at: now } } };
+      return (await store.cas(keys.roster(code), cur, upd)) ? upd : undefined;
+    });
+    await require('../lib/kit-api').reportPeople(code, [pid], 2);
+    return withReview(R.studentView(sess, next, pid, table, now), next[pid], table);
   }
   if (a === 'walkthrough') {
     if (sess.phase !== 'lobby' || sess.walkthroughVersion !== 1) throw reject('walkthrough_closed', 409);
@@ -193,10 +137,10 @@ module.exports = async (req, res) => {
   const b = body(req), a = String(b.action || ''), now = Date.now();
   await announce();
   try {
-    if (FACULTY_ACTIONS.has(a)) {
-      const who = faculty(req, b);
-      if (!who) return res.status(401).json({ error: 'faculty_only' });
-      return res.status(200).json(await facultyAction(a, b, who, now));
+    const KA = require('../lib/kit-api');
+    if (KA.KIT_ACTIONS.has(a)) {
+      const r = await KA.kitAction(a, req, b, now, settleDeadline);
+      return res.status(r.status).json(r.body);
     }
     return res.status(200).json(await studentAction(a, req, b, now));
   } catch (e) {
@@ -207,3 +151,10 @@ module.exports = async (req, res) => {
   }
 };
 module.exports.settleDeadline = settleDeadline;
+
+// After the deadline: the four questions and, for a signed-in student, the review.
+function withReview(view, me, table) {
+  if (table && table.label) view = { ...view, tableLabel: table.label };
+  if (!table || !table.result) return view;
+  return { ...view, afterReveal: K.LESSON_QUESTIONS, review: { open: true, questions: K.REVIEW_QUESTIONS, sent: !!(me && me.review) } };
+}

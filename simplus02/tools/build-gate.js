@@ -23,9 +23,10 @@ const vercel = fs.existsSync(vj) ? JSON.parse(fs.readFileSync(vj, 'utf8')) : {};
 check('vercel.json does not disable git deployments', !(vercel.git && vercel.git.deploymentEnabled === false) && vercel.deploymentEnabled !== false);
 
 // Browser code must use prefix-relative API paths so the sim works under /simplus02.
-for (const f of ['index.html', 'console.html']) {
+for (const f of ['index.html', 'live.html', 'instructor.html', 'wire-faculty.js', 'wire-debrief.js']) {
   const src = fs.readFileSync(path.join(ROOT, 'public', f), 'utf8');
   try {
+    if (f.endsWith('.js')) new vm.Script(src, { filename: f });
     for (const [, script] of src.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)) new vm.Script(script, { filename: f });
     check(`${f} scripts parse`, true);
   } catch (e) { check(`${f} scripts parse`, false, e.message); }
