@@ -44,7 +44,7 @@
         if (q.get('course')) invite.set('course', q.get('course'));
         location.replace('/session.html?' + invite.toString());
       } else {
-        const guestPath = sim === 'rapidsimplus-02' && q.get('mode') === 'session' ? '/simplus02/console.html' : path;
+        const guestPath = path;
         location.replace(guestPath + (guestPath.includes('?') ? '&' : '?') + 'guest=1');
       }
     } else {

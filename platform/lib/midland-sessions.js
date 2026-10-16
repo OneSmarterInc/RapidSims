@@ -15,7 +15,8 @@ const KIT_SIMS = {
   'rapid-07-bought': { app: 'sim07', env: 'SIM07_SESSION_URL', practice: 1 },
   'rapid-08-later': { app: 'sim08', env: 'SIM08_SESSION_URL', practice: 1 },
   'rapid-09-money-land': { app: 'sim09', env: 'SIM09_SESSION_URL', practice: 1 },
-  'rapid-10-bubble': { app: 'sim10', env: 'SIM10_SESSION_URL', practice: 1 }
+  'rapid-10-bubble': { app: 'sim10', env: 'SIM10_SESSION_URL', practice: 1 },
+  'rapidsimplus-02': { app: 'simplus02', env: 'SIMPLUS02_SESSION_URL', practice: 4 }
 };
 let apps = {};
 try { apps = require('../../ec2/apps.json'); } catch { apps = {}; }
@@ -43,9 +44,9 @@ async function ask(me, course, sim, body) {
   } finally { clearTimeout(timer); }
 }
 
-// Practice students: three on one team (Midland) or one on their own. Each gets a signed
+// Practice students: three on one team (Midland), four at one table (Who Pays for the Wire?) or one on their own. Each gets a signed
 // student launch for the practice session only; the first enters the team's decisions.
-const PRACTICE = [['ana', 'Practice Ana'], ['ben', 'Practice Ben'], ['cal', 'Practice Cal']];
+const PRACTICE = [['ana', 'Practice Ana'], ['ben', 'Practice Ben'], ['cal', 'Practice Cal'], ['dee', 'Practice Dee']];
 async function practiceStart(me, course, sim, startOver = false) {
   const run = crypto.randomBytes(4).toString('hex');
   const count = (KIT_SIMS[sim.id] || KIT_SIMS[SIM]).practice;

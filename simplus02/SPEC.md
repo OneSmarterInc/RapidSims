@@ -4,17 +4,15 @@ Simulation `rapidsimplus-02`, number 102. This repository specification describe
 
 ## Class flow
 
-An instructor opens a room. Joined students complete four untimed lobby screens covering the proceeding, the term sheet, the deadline and the outcome. Progress belongs to the participant and survives rejoining. Tables need four seats; additional students act as co-counsel.
+The class runs on the shared RapidSims faculty pages (claude/RapidSims-Faculty-Template.md; approved Oct 16, 2026). Faculty start a session from the class page; students join from the class link and complete four untimed walkthrough screens. Faculty split the class into tables on the Teams tab (Auto split suggests tables of four). At Start, each table's members take the four seats; extra students act as co-counsel. Start waits for the walkthrough; **Start anyway** names the students still reading, records them, and sends them straight to their brief.
 
-The console shows who has finished and who is still reading. The instructor can seat the room before the walkthroughs finish. **Start briefing** becomes available when all seated students are ready. If an absent or disconnected student prevents that, **Start briefing anyway** opens a confirmation naming the unfinished students. Confirming starts the briefing clock and sends those students directly to their private brief when they return. Cancelling leaves the room and clock unchanged. Only the room's owner can override readiness; the session records the time, instructor and unfinished participants.
-
-Timed play remains ten minutes of briefing, ten minutes of opening statements and 45 minutes of negotiation, with one optional ten-minute extension. The four money terms settle together; the size threshold settles separately. At closure, the Commission imposes unlocked groups, and each imposed term adds three to four months of connection freeze. Outcomes show consequences both if forecast demand arrives and if it misses.
+The session bar moves the phases on: ten minutes of briefing, **Start opening statements** (ten minutes), **Open negotiation** (45 minutes), **Add 10 minutes** once, and **Close the sheet now**. Staff notices go to a table from Advanced settings and instructor notes. The four money terms settle together; the size threshold settles separately. At the deadline, the Commission imposes unlocked groups, and each imposed term adds three to four months of connection freeze. Outcomes show consequences both if forecast demand arrives and if it misses. Bands: Both settled, Money settled, Threshold settled, Commission set both. Each student reports at the deadline and again with the review.
 
 ## Debrief and reveal
 
 Start with two contrasting table outcomes. Ask which risks the parties accepted, which terms made another seat's agreement possible, and what the deadline changed. The fictional model illustrates risk allocation; matching the real tariff is not the objective.
 
-After those comparisons, the instructor can reveal the real proceeding. The projector displays three short paragraphs. **Details** expands the full verified account, source links and document locations; it remains open across polling.
+The class debrief (seven slides) compares two contrasting tables, plays them forward, shows what the deadline did, then the real proceeding in three short paragraphs. The full verified account, source links and document locations are in Advanced settings and instructor notes.
 
 Use the non-unanimous settlement as a debrief point. In July 2025, Ohio's Commission chose between two competing settlements and adopted the agreement backed by AEP Ohio, Commission staff, the Ohio Consumers' Counsel and other signatories, with a collateral modification. Data-centre interests supported a different agreement. Ask what changes when the regulator can approve a package without every party signing, compared with the simulation's four-seat signature rule.
 
@@ -24,6 +22,6 @@ For contract discussion, use the sourced detail: minimum billing demand determin
 
 ## Access and publication
 
-Platform rooms belong to the creating faculty account and course. Standalone rooms belong to their faculty code, so each instructor must receive a unique private code. A shared code gives shared access.
+Sessions belong to the creating faculty account and course. Rehearse opens four practice students at one table, one per seat.
 
 Keep the catalogue row unpublished until the owned deployment, rewrites and class flow are verified. The historical reveal is verified; that does not publish the simulation.

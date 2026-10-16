@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>
+(() => {
+  const base = document.createElement('base');
+  base.href = /^\/simplus02(?:\/|$)/.test(location.pathname) ? '/simplus02/' : '/';
+  document.head.appendChild(base);
+})();
+</script>
+<title>Live screen · Who Pays for the Wire?</title>
+<link rel="stylesheet" href="style.css"></head>
+<body><main id="app"><p class="dim">Connecting…</p></main>
+<script>
+// The class view for the projector, opened from the session bar. Faculty sign-in comes with the link (#lt=).
+// It shows the clock, each table's progress and, after the deadline, the terms: never a seat's brief or floor.
+const $ = s => document.querySelector(s), app = $('#app');
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const CODE = (new URLSearchParams(location.search).get('session') || '').toUpperCase();
+const hash = new URLSearchParams(location.hash.slice(1));
+if (hash.get('lt')) { sessionStorage.setItem('wire-faculty-lt', hash.get('lt')); history.replaceState(null, '', location.pathname + location.search); }
+const LT = sessionStorage.getItem('wire-faculty-lt') || '';
+const PHASE = { lobby: 'Walkthrough and seating', briefing: 'Briefing', openings: 'Opening statements', negotiation: 'Negotiation', closed: 'The deadline has passed' };
+const UNIT = { top: '%', term: ' yr', exit: ' yr', coll: ' mo', threshold: ' MW' };
+let state = null, skew = 0, last = '';
+async function poll() {
+  try {
+    const r = await fetch('api/session', { method: 'POST', cache: 'no-store', headers: { 'content-type': 'application/json', 'x-launch-token': LT }, body: JSON.stringify({ action: 'faculty_state', code: CODE }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(r.status === 401 ? 'Open the Live screen again from the session bar.' : d.message || 'Connection lost. Retrying…');
+    state = d; skew = (d.serverNow || Date.now()) - Date.now(); render();
+  } catch (e) { app.innerHTML = `<p class="err">${esc(e.message)}</p>`; last = ''; }
+}
+const left = () => { const c = state && state.session.clock; if (!c || !c.endsAt) return ''; const s = Math.max(0, Math.round((c.endsAt - Date.now() - skew) / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+function render() {
+  const s = state.session, k = state.kit || {}, runs = Object.values(state.runs || {}), dials = k.dials || {};
+  const phase = s.state === 'closed' ? 'Session closed' : PHASE[s.state === 'lobby' ? 'lobby' : k.phase] || '';
+  let body = '';
+  if (s.state === 'lobby') body = `<p class="mono">Walkthrough complete: ${(k.walkthrough || {}).finished || 0} · still reading: ${((k.walkthrough || {}).pending || []).length}</p>`;
+  else if (k.phase !== 'closed') body = `<div class="wrap"><table><tr><th>Table</th><th>Seats</th><th>Money terms</th><th>Size threshold</th><th>Changes</th></tr>${runs.map(r => `<tr><td>${esc(r.teamLabel)}</td><td class="mono">${r.seats.length}</td>
+    <td>${r.sheet && r.sheet.locked.money ? '<span class="imposed">Locked</span>' : 'Open'}</td><td>${r.sheet && r.sheet.locked.threshold ? '<span class="imposed">Locked</span>' : 'Open'}</td><td class="mono">${r.sheet ? r.sheet.moves : ''}</td></tr>`).join('')}</table></div>`;
+  else body = `<div class="wrap"><table><tr><th>Table</th>${Object.keys(dials).map(d => `<th>${esc(dials[d].short)}</th>`).join('')}<th>Freeze</th></tr>${runs.filter(r => r.result).map(r => `<tr><td>${esc(r.teamLabel)}</td>${Object.keys(dials).map(d => `<td>${r.result.imposed.includes(d) ? `<span class="imposed">${esc(r.result.terms[d] + (UNIT[d] || ''))}</span>` : `<span class="mono">${esc(r.result.terms[d] + (UNIT[d] || ''))}</span>`}</td>`).join('')}<td class="mono">${r.result.freezeMonths ? r.result.freezeMonths + ' mo' : ''}</td></tr>`).join('')}</table></div>
+    <p class="dim" style="margin-top:8px">Shaded terms were set by the Commission.</p>`;
+  const html = `<div class="bar"><div><h1>Who Pays for the Wire?</h1><span class="dim mono">${esc(phase)}</span></div><div class="clock" id="clock"></div></div>${body}`;
+  if (html !== last) { app.innerHTML = html; last = html; }
+  const c = $('#clock'); if (c) c.textContent = left();
+}
+setInterval(poll, 3000); poll();
+setInterval(() => { const c = $('#clock'); if (c && state) c.textContent = left(); }, 1000);
+</script></body></html>

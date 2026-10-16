@@ -22,6 +22,8 @@ const k = {
   table: (c, t) => `wire:${c}:t:${t}`,
   course: c => `wire:course:${c}`,
   report: (c, p) => `wire:${c}:report:${p}`,
+  courseList: c => `wire:course:${c}:sessions`,
+  practice: (c, o) => `wire:practice:${c}:${o}`,
 };
 const ser = v => (v === null || v === undefined) ? '' : JSON.stringify(v);
 
