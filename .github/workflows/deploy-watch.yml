@@ -1,0 +1,67 @@
+name: Deploy watch
+
+# Every 15 minutes, on GitHub's own machines: if a production deploy has waited more than 15 minutes for the EC2
+# runner, open one issue assigned to the owner (GitHub emails it and notifies the GitHub app). When deploys move
+# again, the issue closes itself. Runbook: docs/runner-runbook.md
+on:
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  issues: write
+
+concurrency:
+  group: deploy-watch
+  cancel-in-progress: true
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check for a deploy waiting on the runner
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          OWNER_LOGIN: OneSmarterInc
+          TITLE: 'Production deploy is waiting for the EC2 runner'
+          WAIT_MINUTES: '15'
+        shell: bash
+        run: |
+          set -euo pipefail
+          now=$(date -u +%s)
+          # Deploy runs that have not finished, oldest first.
+          waiting=$(gh api "repos/$REPO/actions/workflows/deploy-ec2.yml/runs?per_page=20" \
+            --jq '[.workflow_runs[] | select(.status=="queued" or .status=="pending" or .status=="waiting" or .status=="in_progress")] | sort_by(.created_at)')
+          oldest=""
+          for id in $(echo "$waiting" | jq -r '.[].id'); do
+            # A run is stuck when its production job is still queued (no runner picked it up).
+            queued_at=$(gh api "repos/$REPO/actions/runs/$id/jobs" --jq '[.jobs[] | select(.name=="Deploy production" and .status=="queued")][0].created_at // empty')
+            created=$(echo "$waiting" | jq -r --argjson id "$id" '.[] | select(.id==$id) | .created_at')
+            since=${queued_at:-}
+            status=$(echo "$waiting" | jq -r --argjson id "$id" '.[] | select(.id==$id) | .status')
+            if [ -z "$since" ] && [ "$status" = "pending" ]; then since=$created; fi
+            if [ -n "$since" ]; then oldest=$since; oldest_id=$id; break; fi
+          done
+          open_issue=$(gh api "repos/$REPO/issues?state=open&per_page=50" | jq -r --arg t "$TITLE" '[.[] | select(.title==$t and (.pull_request|not))][0].number // empty')
+          if [ -n "$oldest" ]; then
+            age=$(( (now - $(date -u -d "$oldest" +%s)) / 60 ))
+            echo "Oldest waiting deploy: run $oldest_id, $age minutes."
+            if [ "$age" -ge "$WAIT_MINUTES" ] && [ -z "$open_issue" ]; then
+              body="A production deploy has waited **$age minutes** for the EC2 runner, so merged changes are not on the site yet.
+
+          Waiting run: https://github.com/$REPO/actions/runs/$oldest_id
+          Runner status: https://github.com/$REPO/settings/actions/runners
+
+          **What to do:** follow [the runbook](https://github.com/$REPO/blob/master/docs/runner-runbook.md). Step 1 is a reboot of the EC2 instance from the AWS console. When the runner is back, the waiting deploys run by themselves and this issue closes itself."
+              gh api "repos/$REPO/issues" -f title="$TITLE" -f body="$body" -f "assignees[]=$OWNER_LOGIN" --jq '.html_url'
+            fi
+          elif [ -n "$open_issue" ]; then
+            gh api "repos/$REPO/issues/$open_issue/comments" -f body="Deploys are moving again. Closing." >/dev/null
+            gh api -X PATCH "repos/$REPO/issues/$open_issue" -f state=closed >/dev/null
+            echo "Closed issue #$open_issue."
+          else
+            echo "No deploy is waiting."
+          fi
