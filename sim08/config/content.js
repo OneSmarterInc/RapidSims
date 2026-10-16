@@ -101,7 +101,7 @@ const BRIEFING = {
   paragraphs: [
     "Brookfield Veterinary has four clinics and a scheduling system that's about to lose support. Each clinic keeps its own calendar, so when Main Street is full the front desk phones around to find an opening somewhere else. Clients want to book online. The vets want fewer no-shows. The board wants one system across all four sites, and it's approved up to $240,000 over three years.",
     "You're the committee choosing that system. Three vendors made the shortlist, and each has sent a proposal and a representative. You'll see each vendor's prepared demonstration first. Then you can put six questions to the vendors from the menu, and each question goes to all three. You can't ask everything, and the clock won't wait.",
-    "When the questions close, you commit to one vendor, then to one go-live plan. Then the practice goes live, and you find out what happened. Nothing is scored."
+    "When the questions close, you commit to one vendor, then to one go-live plan. Then the practice goes live, and you find out what happened. Your choices go to the class discussion."
   ],
   teamExtra:
     "Your team shares one budget of six questions. Anyone on the team can spend one, so talk before you do. The vendor and the go-live plan are private votes, and the majority decides. If the team can't settle on a vendor, the board chooses on price.",

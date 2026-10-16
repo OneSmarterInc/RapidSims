@@ -12,7 +12,8 @@ const KIT_SIMS = {
   'rapid-04-whose-number': { app: 'sim04', env: 'SIM04_SESSION_URL', practice: 3 },
   'rapid-05-approve': { app: 'sim05', env: 'SIM05_SESSION_URL', practice: 1 },
   'rapid-06-switch': { app: 'sim06', env: 'SIM06_SESSION_URL', practice: 1 },
-  'rapid-07-bought': { app: 'sim07', env: 'SIM07_SESSION_URL', practice: 1 }
+  'rapid-07-bought': { app: 'sim07', env: 'SIM07_SESSION_URL', practice: 1 },
+  'rapid-08-later': { app: 'sim08', env: 'SIM08_SESSION_URL', practice: 1 }
 };
 let apps = {};
 try { apps = require('../../ec2/apps.json'); } catch { apps = {}; }

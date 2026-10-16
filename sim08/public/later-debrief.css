@@ -1,0 +1,25 @@
+/* Eighteen Months Later debrief bodies. Sizes in em off the shared slide base (kit/debrief.css). */
+.lt-names{display:flex;flex-wrap:wrap;gap:.4em;margin-top:.5em}
+.lt-names span{font:1em var(--mono);padding:.2em .55em;border:1px solid var(--line2);border-radius:.3em;color:var(--soft)}
+.lt-pair{display:flex;gap:1.4em}
+.lt-card{flex:1;display:flex;flex-direction:column;gap:.4em;padding:1.1em 1.3em;border:1px solid var(--line2);border-radius:.4em;background:var(--panel)}
+.lt-card b{font:500 1.6em var(--serif);color:var(--ink)}
+.lt-card small{font:600 .95em var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-top:.5em}
+.md-slide .lt-card ol{margin:0;padding-left:1.3em;color:var(--ink);font-size:1.1em;line-height:1.45}
+.md-slide .lt-card p{color:var(--ink);font-size:1.1em}
+.lt-w{font:normal .85em var(--mono);color:var(--amber)}
+.lt-qs{display:grid;grid-template-columns:1fr 1fr;gap:.35em 1.4em}
+.lt-q{display:grid;grid-template-columns:2.2em 1fr auto;gap:.6em;align-items:center;padding:.3em .5em;border-bottom:1px solid var(--line2);font-size:1.05em;color:var(--soft)}
+.lt-qw{color:var(--ink)}
+.lt-n{font:600 1.2em var(--mono);color:var(--amber);text-align:right}
+.lt-qv{display:flex;gap:.3em}
+.lt-qv i{font:normal .8em var(--mono);padding:.1em .45em;border-radius:.3em;white-space:nowrap}
+.lt-d{background:var(--o);color:#141413}.lt-p{border:1px solid var(--o);color:var(--o-t)}
+.lt-grid{border-collapse:collapse;font:1.4em var(--mono);min-width:60%}
+.md-slide .lt-grid th,.md-slide .lt-grid td{padding:.45em 1.1em;border-bottom:1px solid var(--line2);text-align:center;color:var(--ink)}
+.md-slide .lt-grid th{color:var(--soft);font-weight:400;font-size:.75em;text-transform:uppercase;letter-spacing:.06em}
+.md-slide .lt-grid td:first-child,.md-slide .lt-grid th:first-child{text-align:left}
+.md-slide .lt-grid td.lt-fit{outline:2px solid var(--g);outline-offset:-4px;font-weight:600}
+.md-slide .lt-plans{margin:.8em 0 0;padding-left:1.4em;color:var(--soft);font-size:1.05em;line-height:1.5}
+.lt-rq{display:block;color:var(--dim);font-size:1em;margin-top:.5em}
+@media(max-width:800px){.lt-pair{flex-direction:column}.lt-qs{grid-template-columns:1fr}}
