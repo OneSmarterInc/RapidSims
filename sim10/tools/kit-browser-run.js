@@ -60,6 +60,7 @@ const MIND = 'I would need to see like-for-like revenue growing faster than capi
     await fac.locator('.fw-cases', { hasText: 'One company' }).click();
     await fac.waitForFunction(() => document.querySelector('.fw-cases[aria-pressed="true"]')?.textContent === 'One company');
     ok(true, 'Faculty choose one company');
+    ok(await fac.locator('.fw-cases[aria-pressed="true"]', { hasText: 'Longer' }).count() === 1, 'Reading time: Longer by default');
     await fac.screenshot({ path: path.join(artifacts, '02-lobby.png') });
 
     const st = {};
@@ -81,6 +82,8 @@ const MIND = 'I would need to see like-for-like revenue growing faster than capi
       await fac.waitForFunction(() => !document.querySelector('[data-session-control]:not(.fw-close)')?.disabled);
       await fac.evaluate(() => FacultySession.page.refresh());
     };
+    await press('Add 2 minutes');
+    ok(true, 'Add 2 minutes while reading');
     await press('Open the calls now');
     await st.ana.waitForFunction(() => document.querySelector('#dock') && !document.querySelector('#dock').hidden);
     ok(true, 'Students see the call form');

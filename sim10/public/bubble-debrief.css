@@ -26,6 +26,8 @@
 .md-slide .bb-asset{margin:0;font-size:1.15em;line-height:1.45;color:var(--soft);max-width:70em}
 .md-slide .bb-out{margin:.3em 0 0;padding-left:1.2em;font-size:1.1em;line-height:1.45;color:var(--ink)}
 .bb-qn{display:block;color:var(--dim);font-size:1em;margin-top:.5em}
-/* Before Start: the chosen number of companies. */
+/* Before Start: the number of companies and the reading time. */
+.fw-cases-group{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;margin-right:10px}
+.fw-cases-label{font-size:12px;opacity:.75}
 .fw-cases[aria-pressed=true]{border-color:currentColor;font-weight:700;box-shadow:inset 0 0 0 1px currentColor}
 @media(max-width:800px){.bb-row{grid-template-columns:1fr 3em}.bb-row .bb-bar{display:none}}

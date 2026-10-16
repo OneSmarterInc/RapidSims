@@ -44,12 +44,14 @@ const BubbleSettings={
   row:t=>[...caseCsv(t,'A'),...caseCsv(t,'B'),(K.bands[t.band]||{}).label||'']},
  prompts:(state,questions)=>{if(!state.kit)return;K=state.kit;(K.reviewQuestions||[]).forEach((q,i)=>{if(questions[i])questions[i].prompt=q;});},
  // Before Start: one company or two. Each sets that company's clock.
- lobbyControls:(s,busy)=>{const n=(s.cases||[]).length;
-  return [['cases_one','One company',1],['cases_two','Two companies',2]].map(([set,label,k])=>`<button class="btn fw-cases" data-session-control="${set}" aria-pressed="${n===k}" ${busy?'disabled':''}>${label}</button>`).join('');},
+ // Before Start: one company or two, and the reading time per company (#51).
+ lobbyControls:(s,busy)=>{const n=(s.cases||[]).length,b=(set,label,on)=>`<button class="btn fw-cases" data-session-control="${set}" aria-pressed="${on}" ${busy?'disabled':''}>${label}</button>`;
+  return `<span class="fw-cases-group" role="group" aria-label="Companies">${b('cases_one','One company',n===1)}${b('cases_two','Two companies',n===2)}</span>`
+   +`<span class="fw-cases-group" role="group" aria-label="Reading time per company"><span class="fw-cases-label">Reading per company</span>${(s.readOptions||[]).map(o=>b(o.set,`${o.label} · ${o.minutes} min`,o.on)).join('')}</span>`;},
  // The Live screen for the projector, and the next step for the company in play.
  controls:(s,busy)=>{const n=K.next;
-  return `<a class="btn" href="${liveLink(s)}" target="_blank" rel="noopener">Live screen</a>${n?`<button class="btn" data-session-control="${n.set}" ${busy?'disabled':''}>${n.label}</button>`:''}`;},
- controlDone:{cases_one:'One company, with a longer clock.',cases_two:'Two companies, one after the other.',advance:'The clock moved on.',reveal:'Shown to every student.',start_b:'Company 2 has started.'},
+  return `<a class="btn" href="${liveLink(s)}" target="_blank" rel="noopener">Live screen</a>${n&&n.addTime?`<button class="btn" data-session-control="add_time" ${busy?'disabled':''}>Add 2 minutes</button>`:''}${n?`<button class="btn" data-session-control="${n.set}" ${busy?'disabled':''}>${n.label}</button>`:''}`;},
+ controlDone:{read_standard:'Reading time set.',read_longer:'Reading time set.',read_longest:'Reading time set.',add_time:'Two more minutes of reading for every student.',cases_one:'One company.',cases_two:'Two companies, one after the other.',advance:'The clock moved on.',reveal:'Shown to every student.',start_b:'Company 2 has started.'},
  debrief:{
   mount:(root,getInput,opts)=>global.BubbleDebrief.mount(root,getInput,opts),
   input:(teams,cfg)=>({kit:cfg.state.kit||K,team:cfg.state.session.mode==='team',
