@@ -125,6 +125,9 @@ const bar = async (code) => { const d = await fstate(code); return F.controls(d.
   eq([reports.at(-1).metrics.revision, reports.at(-1).summary.reflection1], [2, 'It did, the cash fell.'], 'Revision 2 carries the review');
   const fs2 = await fstate(code);
   eq(F.questions[0].prompt, K.REVIEW_QUESTIONS[0], 'Review questions from the server');
+  const notes = F.advanced(fs2.session, fs2, { esc: x => String(x) });
+  ok(notes.includes('Company 1: instructor notes') && notes.includes('Company 2: instructor notes') && notes.includes(fs2.kit.byCase.A.turn), 'Instructor notes for each company (#52)');
+  ok(F.practiceRunsItself === true, 'A practice run moves itself along (#53)');
   ok(F.controls(fs2.session, false).includes('Live screen') && !F.controls(fs2.session, false).includes('data-session-control'), 'At the end: the Live screen only');
 
   // The class debrief.
