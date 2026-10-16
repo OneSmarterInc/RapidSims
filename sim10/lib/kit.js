@@ -97,7 +97,7 @@ function callView(s, cs, rec, now) {
 function nextStep(s, now) {
   if (s.state !== 'running') return null;
   const cs = E.activeCase(s), ph = E.phaseOf(s, cs, now).name, team = s.mode === 'team';
-  if (ph === 'read') return { set: 'advance', label: team ? 'Open the private calls now' : 'Open the calls now' };
+  if (ph === 'read') return { set: 'advance', label: team ? 'Open the private calls now' : 'Open the calls now', addTime: true };
   if (ph === 'verdict') return { set: 'advance', label: 'Close the calls now' };
   if (ph === 'private') return { set: 'advance', label: 'Open the team call now' };
   if (ph === 'team') return { set: 'advance', label: 'Close the team calls now' };

@@ -41,10 +41,19 @@ async function addToCourse(store, s) {
 }
 async function clearPointer(store, courseId, code) { if ((await store.get(KEY.pointer(courseId))) === code) await store.del(KEY.pointer(courseId)); }
 
+// Reading time per company, chosen before Start (#51). Standard keeps the original clock.
+const READ = { standard: null, longer: { 1: 15, 2: 10 }, longest: { 1: 20, 2: 15 } };
+const READ_LABEL = { standard: 'Standard', longer: 'Longer', longest: 'Longest' };
+function clockFor(cases, mode, choice) {
+  const base = { ...config.clock[`${cases.length}-${mode}`] }, r = READ[choice || 'longer'];
+  return r ? { ...base, read: r[cases.length] } : base;
+}
+const readOptions = s => Object.keys(READ).map(k => ({ set: 'read_' + k, label: READ_LABEL[k], minutes: clockFor(s.cases, s.mode, k).read, on: (s.readChoice || 'longer') === k }));
+
 function newSession(fields) {
   const cases = fields.cases || ['A', 'B'];
   return { code: fields.code, simId: config.simId, kit: true, mode: fields.mode, cases, teams: null, teamIds: null,
-    clock: { ...config.clock[`${cases.length}-${fields.mode}`] }, createdAt: fields.now, hostKey: newId(),
+    readChoice: 'longer', clock: clockFor(cases, fields.mode, 'longer'), createdAt: fields.now, hostKey: newId(),
     platformAuth: true, courseId: fields.courseId || null, owner: fields.owner || null, ownerId: fields.ownerId || null,
     name: String(fields.name || config.title).slice(0, 80), state: 'lobby',
     runs: Object.fromEntries(cases.map(c => [c, { startedAt: null, reveal: 0 }])),
@@ -199,9 +208,19 @@ async function kitAction(req, b, launch, store, now) {
       if (set === 'cases_one' || set === 'cases_two') {
         if (s.state !== 'lobby') return out(409, { error: 'session_already_started' });
         const cases = set === 'cases_one' ? ['A'] : ['A', 'B'];
-        next = { ...s, cases, clock: { ...config.clock[`${cases.length}-${s.mode}`] },
+        next = { ...s, cases, clock: clockFor(cases, s.mode, s.readChoice),
           runs: Object.fromEntries(cases.map(c => [c, { startedAt: null, reveal: 0 }])),
           projected: Object.fromEntries(cases.map(c => [c, { pair: null, opposing: null }])) };
+      } else if (/^read_(standard|longer|longest)$/.test(set)) {
+        if (s.state !== 'lobby') return out(409, { error: 'session_already_started' });
+        const choice = set.slice(5);
+        next = { ...s, readChoice: choice, clock: clockFor(s.cases, s.mode, choice) };
+      } else if (set === 'add_time') {
+        // Two more minutes of reading for every student; the later parts move with it.
+        if (s.state !== 'running') return out(409, { error: 'session_not_running' });
+        const cs = E.activeCase(s);
+        if (E.phaseOf(s, cs, now).name !== 'read') return out(409, { error: 'not_reading', message: 'Reading time has ended.' });
+        next = { ...s, runs: { ...s.runs, [cs]: { ...s.runs[cs], startedAt: s.runs[cs].startedAt + 2 * 60000 } } };
       } else if (set === 'start') {
         if (s.state !== 'lobby') return out(409, { error: 'session_already_started' });
         next = { ...s, state: 'running', startedAt: now, runs: { ...s.runs, A: { ...s.runs.A, startedAt: now } } };
@@ -361,6 +380,6 @@ async function kitAction(req, b, launch, store, now) {
 }
 
 // What faculty pages see of a session: never the old host key.
-function publicFaculty(s) { const { hostKey, ...rest } = s; return { ...rest, paused: false }; }
+function publicFaculty(s) { const { hostKey, ...rest } = s; return { ...rest, paused: false, readOptions: readOptions(s) }; }
 
 module.exports = { kitAction, reportPeople, KEY, isPracticeSub };

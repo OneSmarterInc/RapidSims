@@ -69,11 +69,19 @@ const bar = async (code) => { const d = await fstate(code); return F.controls(d.
   let fs1 = await fstate(code);
   ok(/aria-pressed="true"\s*>Two companies/.test(F.lobbyControls(fs1.session, false)), 'Before Start: two companies chosen');
   eq((await api({ action: 'control', code, set: 'cases_one' })).body.session.cases, ['A'], 'One company');
-  eq((await api({ action: 'control', code, set: 'cases_two' })).body.session.clock, config.clock['2-individual'], 'Two companies, with their clock');
+  eq((await api({ action: 'control', code, set: 'cases_two' })).body.session.clock, { ...config.clock['2-individual'], read: 10 }, 'Two companies; reading is Longer by default (#51)');
+  ok(/aria-pressed="true"\s*>Longer · 10 min/.test(F.lobbyControls((await fstate(code)).session, false)), 'Before Start: the reading time, Longer chosen');
+  eq((await api({ action: 'control', code, set: 'read_longest' })).body.session.clock.read, 15, 'Longest: 15 minutes per company');
+  eq((await api({ action: 'control', code, set: 'read_standard' })).body.session.clock, config.clock['2-individual'], 'Standard keeps the original clock');
+  await api({ action: 'control', code, set: 'read_longer' });
   eq((await api({ action: 'control', code, set: 'start' })).body.session.state, 'running', 'Start session');
   eq((await api({ action: 'control', code, set: 'cases_one' })).status, 409, 'The number of companies is fixed once started');
   ok(F.noPause === true, 'No Pause: one clock for every student');
   ok((await bar(code)).includes('Open the calls now'), 'Session bar: Open the calls now');
+  const end0 = (await call('GET', `/api/state?code=${code}`, null, as('ana'))).body.endsAt;
+  ok((await bar(code)).includes('Add 2 minutes'), 'Session bar: Add 2 minutes while reading');
+  await api({ action: 'control', code, set: 'add_time' });
+  eq((await call('GET', `/api/state?code=${code}`, null, as('ana'))).body.endsAt - end0, 2 * MIN, 'Every student gets two more minutes');
   await api({ action: 'control', code, set: 'advance' });
   eq((await call('GET', `/api/state?code=${code}`, null, as('ana'))).body.phase, 'verdict', 'The calls are open');
   await call('POST', '/api/verdict', { code, caseId: 'A', fields: answer('bubble', 'hl.adj_ebitda', 'The company measure is cash in advance.', MIND) }, as('ana'));
@@ -82,6 +90,8 @@ const bar = async (code) => { const d = await fstate(code); return F.controls(d.
   eq(fs1.runs['individual:platform:ana'].calls.A.closed, false, 'Saved calls show as work in progress');
   eq(fs1.runs['individual:platform:ana'].band, null, 'No band before the clock runs out');
   ok((await bar(code)).includes('Close the calls now'), 'Session bar: Close the calls now');
+  ok(!(await bar(code)).includes('Add 2 minutes'), 'Add 2 minutes is for reading only');
+  eq((await api({ action: 'control', code, set: 'add_time' })).status, 409, 'Reading has ended');
   await api({ action: 'control', code, set: 'advance' });
   fs1 = await fstate(code);
   eq(['ana', 'ben', 'cal'].map(x => fs1.runs['individual:platform:' + x].band), ['bubble', 'infra', 'none'], 'Bands after company 1: Bubble, Infrastructure, No call');
@@ -194,7 +204,7 @@ const bar = async (code) => { const d = await fstate(code); return F.controls(d.
   eq((await call('POST', '/api/solo/advance', { code: pc, caseId: 'A', phase: 'verdict' }, me)).status, 409, 'A repeated press does nothing');
   for (let stage = 0; stage < 4; stage++) await call('POST', '/api/solo/advance', { code: pc, caseId: 'A', stage }, me);
   for (const cs of ['B']) {
-    clockMs += 6 * MIN;
+    clockMs += 10 * MIN;
     await call('POST', '/api/verdict', { code: pc, caseId: cs, fields: answer('infra', 'bs.cash', 'Cash covers the build.', MIND) }, me);
     clockMs += 4 * MIN;
     for (let stage = 0; stage < 3; stage++) eq((await call('POST', '/api/solo/advance', { code: pc, caseId: cs, stage }, me)).status, 200, `Practice: next part (${cs} ${stage})`);

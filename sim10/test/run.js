@@ -401,7 +401,7 @@ test('platform: completion reported once, after the last outcome, with calls and
       const fac = { 'X-Launch-Token': tok({ sub: 'f1', role: 'faculty', course: 'c1', mode: 'session' }) };
       const code = (await call('POST', '/api/session', { action: 'create', mode: 'individual' }, fac)).body.session.code;
       const ctl = (set) => call('POST', '/api/session', { action: 'control', code, set }, fac);
-      await ctl('cases_one');
+      await ctl('cases_one'); await ctl('read_standard');
       const a = { 'X-Launch-Token': tok({ sub: 'sA', role: 'student', course: 'c1' }), 'X-Pid': 'platform:sA' };
       await call('POST', '/api/join', { code }, a);
       await ctl('start');
