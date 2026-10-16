@@ -134,6 +134,10 @@ const phaseOf = async (code, lt = fac) => (await api({ action: 'faculty_state', 
   const m = D.model(F.debrief.input(TEAMS, { state: fs2 }));
   eq([m.ready, m.slides.map(s => s.key)], [true, ['money', 'pair', 'history', 'statements', 'said', 'lessons']], 'Six slides');
   ok(m.slides[0].headline.startsWith('$2M placed'), 'D0: the money placed');
+  const tie = D.model({ kit: fs2.kit, teams: [{ name: 'Tia', band: 'cash', allocation: { RA: 0, IC: 0, LS: 250000, MS: 250000, PS: 0, cash: 500000 }, statements: { pick: 'nobody', direction: 'd', reason: 'r' } },
+    { name: 'Max', band: 'followed', allocation: { RA: 500000, IC: 0, LS: 250000, MS: 250000, PS: 0, cash: 0 }, statements: { pick: 'marketplaces', direction: 'd', reason: 'r' } }] });
+  ok(/The most went to the lab-supplies marketplace, the marketplace-software vendor and cash\./.test(tie.slides[0].headline) || /and/.test(tie.slides[0].headline), 'D0: a tie names every company that tied');
+  eq(tie.slides[5].body.items[3].evidence, '1 of 2 students put the whole fund on the firms in the middle.', 'D5: cash keeps a fund out of the middle-only count');
   eq(m.slides[1].body.cards.length, 2, 'D1: concentrated beside spread');
   ok(D.bodyHTML(m.slides[2], { pick: {}, hidden: {} }).includes('<small>'), 'D2: the names once every stage is out');
   ok(m.slides[3].headline.startsWith('One student put the money against'), 'D3: against its own destination');
