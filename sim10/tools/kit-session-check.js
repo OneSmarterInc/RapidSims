@@ -134,7 +134,10 @@ const bar = async (code) => { const d = await fstate(code); return F.controls(d.
   const TEAMS = global.FacultyWorkspace.recordsFrom(fs2, F);
   const m = D.model(F.debrief.input(TEAMS, { state: fs2 }));
   eq([m.ready, m.slides.map(s => s.key)], [true, ['calls', 'pairs', 'lines', 'reveal-A', 'reveal-B', 'said', 'lessons']], 'Seven slides with two companies');
-  eq(m.slides[0].headline, 'Company 1: 1 infrastructure, 1 bubble. Company 2: 0 infrastructure, 2 bubble.', 'D0: the calls for each company');
+  eq(m.slides[0].headline, 'Company 1: one infrastructure, one bubble. Company 2: two bubble calls.', 'D0: only the calls made (#58)');
+  eq(m.slides[0].evidence, '1 of 3 students called the two companies differently.', 'D0: counted as calls that differ (#60)');
+  const solo = D.model({ kit: fs2.kit, teams: [{ name: 'Pat', band: 'mixed', calls: { A: { status: 'recorded', closed: true, call: 'infra', line: 'hl.cash_revenue', lineLabel: 'Cash revenue', lineWhy: 'w', mind: 'm' }, B: { status: 'recorded', closed: true, call: 'bubble', line: 'bs.cash', lineLabel: 'Cash', lineWhy: 'w', mind: 'm' } } }] });
+  eq([solo.slides[1].headline, solo.slides[1].body.pairs.map(p => p.cards.length)], ['No pair this time. One answer for each call.', [1, 1]], 'D1: with no pair, one answer for each call (#59)');
   eq(m.slides[1].body.pairs[0].cards.map(c => c.name), ['Ben', 'Ana'], 'D1: the same line with opposite calls');
   ok(m.slides[2].headline.startsWith('Everyone called company 2 a bubble'), 'D2: the case for the other call when the class agreed');
   ok(m.slides[2].body.views[1].minority.length > 40, 'D2: the written case from the notes');

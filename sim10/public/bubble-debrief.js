@@ -26,13 +26,19 @@ function model(input) {
 
   // D0 · the class's calls for each company
   const splits = cases.map(c => ({ label: c.label, ...split(c) }));
-  const line = s => `${s.infra} infrastructure, ${s.bubble} bubble`;
-  const sameBoth = two ? rows.filter(r => callOf(r, cases[0]).call && callOf(r, cases[0]).call === callOf(r, cases[1]).call).length : 0;
+  // Name only the calls made (#58): "one infrastructure call", or "seven infrastructure, four bubble".
+  const line = s => {
+    const made = [['infrastructure', s.infra], ['bubble', s.bubble]].filter(x => x[1] > 0);
+    if (!made.length) return 'no calls';
+    if (made.length === 1) return `${word(made[0][1])} ${made[0][0]} call${made[0][1] > 1 ? 's' : ''}`;
+    return `${word(s.infra)} infrastructure, ${word(s.bubble)} bubble`;
+  };
+  const differ = two ? rows.filter(r => { const a = callOf(r, cases[0]).call, b = callOf(r, cases[1]).call; return a && b && a !== b; }).length : 0;
   const wrote = recorded(cases[0]).filter(o => (o.x.mind || '').trim().length >= 80).length;
   base.slides.push({ key: 'calls', kicker: 'The calls', lesson: 3,
     headline: esc(two ? splits.map(s => `${s.label}: ${line(s)}.`).join(' ') : `${cap1(line(splits[0]))}.`),
     sub: `Every ${unit} read the same two quarters and made one call${two ? ' on each company' : ''}.`,
-    evidence: two ? `${ofN(sameBoth)} made the same call on both companies.` : `${ofN(wrote)} wrote what would have changed their mind.`,
+    evidence: two ? `${ofN(differ)} called the two companies differently.` : `${ofN(wrote)} wrote what would have changed their mind.`,
     ask: 'Before anyone names the company: what did each side see?',
     body: { kind: 'calls', splits, names, total: n, tiles: order.map(b => ({ band: b, rows: rows.filter(r => r.band === b) })).filter(x => x.rows.length && B[x.band])
       .map(x => ({ label: B[x.band].label, cls: B[x.band].cls, phrase: B[x.band].phrase, names: x.rows.map(r => r.name) })) } });
@@ -42,12 +48,15 @@ function model(input) {
     const rec = recorded(c).filter(o => o.x.line), byLine = {};
     rec.forEach(o => { (byLine[o.x.line] ||= { infra: [], bubble: [] })[o.x.call].push(o); });
     const hit = Object.values(byLine).find(g => g.infra.length && g.bubble.length);
-    return { label: c.label, cards: hit ? [hit.infra[0], hit.bubble[0]].map(o => ({ name: o.r.name, call: names[o.x.call], tone: TONE[o.x.call], line: o.x.lineLabel, why: o.x.lineWhy, mind: o.x.mind, held: !!o.x.held })) : [] };
+    const card = o => ({ name: o.r.name, call: names[o.x.call], tone: TONE[o.x.call], line: o.x.lineLabel || 'None cited', why: o.x.lineWhy, mind: o.x.mind, held: !!o.x.held });
+    // No pair (#59): one answer for each call instead.
+    const all = recorded(c), one = CALLS.map(k => all.find(o => o.x.call === k)).filter(Boolean);
+    return { label: c.label, pair: !!hit, cards: hit ? [hit.infra[0], hit.bubble[0]].map(card) : one.map(card) };
   });
-  const anyPair = pairs.some(p => p.cards.length);
+  const anyPair = pairs.some(p => p.pair);
   base.slides.push({ key: 'pairs', kicker: 'Same line, opposite calls', lesson: 0,
-    headline: anyPair ? 'The same line, read two ways.' : 'No two answers cited the same line with opposite calls.',
-    sub: anyPair ? 'Each pair pointed at the same figure and reached opposite calls.' : 'Ask which line each side trusted most, and why.',
+    headline: anyPair ? 'The same line, read two ways.' : 'No pair this time. One answer for each call.',
+    sub: anyPair ? 'Each pair pointed at the same figure and reached opposite calls.' : 'Compare what each call rested on.',
     evidence: `${ofN(rows.filter(r => cases.some(c => /^hl\./.test(callOf(r, c).line || ''))).length)} cited one of the company's own measures.`,
     ask: anyPair ? 'What does this line tell you that it does not tell your partner?' : 'Which line would have changed your call?',
     body: { kind: 'pairs', pairs } });

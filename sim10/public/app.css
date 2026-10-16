@@ -174,3 +174,7 @@ dialog::backdrop { background: #050910bb; }
 .entry-grid:has(#solo[hidden]) { grid-template-columns: 1fr; }
 .intro { max-width: 600px; font-size: 17px; }
 @media (max-width: 720px) { .entry-grid { grid-template-columns: 1fr; } }
+
+/* The run's own sections line up with the reading column (#56); while a call is made, the page is full width. */
+.play-wrap > section, .play-wrap > p.solo-bar { max-width: 1000px; margin-left: auto; margin-right: auto; }
+body.citing .play-wrap > section, body.citing .play-wrap > p.solo-bar { max-width: none; }
