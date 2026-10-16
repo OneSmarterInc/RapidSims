@@ -22,6 +22,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      # The checks load shared code (ec2/redis-command.js) that needs the root packages.
+      - name: Install root packages
+        working-directory: .
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npm test
       - run: npm run build
   browser:
@@ -32,6 +36,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install root packages
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Install disposable browser dependencies
         run: |
           npm install --prefix "$RUNNER_TEMP/simplus02-browser" --no-audit --no-fund playwright@1
