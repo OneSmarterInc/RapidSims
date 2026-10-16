@@ -60,6 +60,8 @@ const MIND = 'I would need to see like-for-like revenue growing faster than capi
     await fac.locator('.fw-cases', { hasText: 'One company' }).click();
     await fac.waitForFunction(() => document.querySelector('.fw-cases[aria-pressed="true"]')?.textContent === 'One company');
     ok(true, 'Faculty choose one company');
+    await fac.locator('#fw-advanced summary').click();
+    ok((await fac.locator('#fw-advanced-content').innerText()).includes('instructor notes'), 'Advanced settings and instructor notes shows the notes');
     ok(await fac.locator('.fw-cases[aria-pressed="true"]', { hasText: 'Longer' }).count() === 1, 'Reading time: Longer by default');
     await fac.screenshot({ path: path.join(artifacts, '02-lobby.png') });
 

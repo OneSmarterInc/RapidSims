@@ -27,6 +27,18 @@ const BubbleSettings={
  storage:{token:'s10-faculty-lt',session:'s10-kit-session',course:'s10-faculty-course'},
  // Each company has one clock for every student; the session bar moves it on.
  noPause:true,
+ // A practice run is moved along by its practice student.
+ practiceRunsItself:true,
+ // The instructor notes for each company, from the old console (#52). Faculty only, from the server.
+ advancedRefresh:true,
+ advanced:(s,state,{esc})=>{const k=state.kit||K;
+  return (k.cases||[]).map(c=>{const n=(k.byCase||{})[c.id]||{};
+   return `<section class="fw-card"><h3>${esc(c.label)}: instructor notes</h3>
+    <h4>Before the company is shown</h4><ul>${(n.disagreement||[]).map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+    <h4>Terms to name, and the line that shows each</h4><ul>${(n.naming||[]).map(x=>`<li><b>${esc(x.term)}</b>: ${esc(x.line)}</li>`).join('')}</ul>
+    <h4>The closing question</h4><p>${esc(n.turn||'')}</p>
+    ${n.minorityCase?`<h4>If the class agrees: the case for each call</h4><p><b>${esc(callName('infra'))}:</b> ${esc(n.minorityCase.infra)}</p><p><b>${esc(callName('bubble'))}:</b> ${esc(n.minorityCase.bubble)}</p>`:''}
+    ${n.afterNotes?`<h4>After the reveal</h4><ul>${n.afterNotes.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<p class="table-note">The after-reveal notes appear here once the company is shown.</p>'}</section>`;}).join('');},
  noLead:true, teamRule:'Each member makes a private call. Then the team writes one answer, and any member commits it.',
  questions:[
   // The prompts arrive with the faculty session (state.kit.reviewQuestions).
