@@ -12,13 +12,29 @@ function elapsedSeconds(sess, now) {
   if (!sess || !sess.startedAt) return 0;
   const at = sess.state === 'closed' && sess.closedAt ? Math.min(now, sess.closedAt) : now;
   const pausedMs = (sess.pausedTotalMs || 0) + (sess.paused && sess.pausedAt ? at - sess.pausedAt : 0);
-  return Math.max(0, (at - sess.startedAt - pausedMs) / 1000);
+  // skipMs: time the instructor (or a private run's own student) skipped with "next part now".
+  return Math.max(0, (at - sess.startedAt - pausedMs + (sess.skipMs || 0)) / 1000);
 }
 
 function clock(sess, now) {
   if (!sess || sess.state === 'lobby' || !sess.startedAt) return { phase: 'lobby', remaining: 0, paused: false, closed: false };
   const p = E.phaseAt(elapsedSeconds(sess, now));
   return { ...p, remaining: Math.ceil(p.remaining), paused: !!sess.paused, closed: sess.state === 'closed' };
+}
+
+// Move the clock to the start of the next part. Every part before the report can be skipped.
+function skipSegment(sess, now) {
+  const clk = clock(sess, now);
+  if (sess.state !== 'running' || sess.paused) return { error: 'cannot_skip', status: 409 };
+  if (clk.phase === 'lobby' || clk.phase === 'report') return { error: 'cannot_skip', status: 409 };
+  return { next: { ...sess, skipMs: (sess.skipMs || 0) + clk.remaining * 1000 }, from: clk.phase };
+}
+// A private run's own student may skip a part once they have done what it asks.
+function canSkip(sess, me, clk) {
+  if (!sess.solo || sess.state !== 'running' || sess.paused || !me) return false;
+  if (clk.phase === 'commit') return !!me.vendorVote;
+  if (clk.phase === 'plan') return !!me.planVote;
+  return ['briefing', 'demos', 'questions'].includes(clk.phase);
 }
 
 // Individual students who join after questions open still play, but stay out
@@ -64,6 +80,7 @@ function studentView(sess, participants, runs, pid, now) {
   };
   if (clk.phase === 'lobby') return view;
   const phase = clk.phase;
+  view.canSkip = canSkip(sess, me, clk);
   view.vendors = C.VENDORS.map(vendorPublic);
   if (E.reached(phase, 'demos')) view.demos = C.VENDORS.map(v => ({ vendor: v.key, text: v.demo }));
   if (!member) return view;
@@ -224,6 +241,6 @@ function completionSummary(sess, participants, runs, pid, now) {
 }
 
 module.exports = {
-  MODES, elapsedSeconds, clock, isLate, isMember, members, runFacts, freezeTeams,
+  MODES, elapsedSeconds, clock, skipSegment, canSkip, isLate, isMember, members, runFacts, freezeTeams, vendorName,
   studentView, projectorView, applyAsk, applyVote, applyControl, completionSummary
 };

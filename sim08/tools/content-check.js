@@ -91,7 +91,7 @@ if (C.VENDORS.find(v => v.key === 'kestrel').threeYear + cover.cost > C.BUDGET_C
 
 // Briefing must state the rules that make the sim fair.
 const brief = C.BRIEFING.paragraphs.join(' ');
-for (const must of ['six questions', 'all three', "won't wait", 'go-live plan', 'Nothing is scored', '$240,000']) {
+for (const must of ['six questions', 'all three', "won't wait", 'go-live plan', 'Your choices go to the class discussion', '$240,000']) {
   if (!brief.includes(must)) refuse(`briefing no longer states: ${must}`);
 }
 if (!/majority/.test(C.BRIEFING.teamExtra) || !/on price/.test(C.BRIEFING.teamExtra)) refuse('team briefing must state majority and the price fallback');

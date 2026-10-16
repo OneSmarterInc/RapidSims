@@ -105,6 +105,8 @@ table.short .rep{display:block;font:12px var(--mono);color:var(--dimmer)}
 .report p{font-size:19px;line-height:1.65;max-width:64ch;margin-bottom:16px}
 .recap{margin-top:30px;border-top:1px solid var(--line);max-width:64ch}
 .recap h3{font:500 13px var(--mono);color:var(--amber);margin:18px 0 8px}
+.recap textarea{width:100%;min-height:90px;background:var(--panel,#161E2E);color:var(--bone);border:1px solid var(--line2);padding:10px;font:inherit;margin:6px 0 14px}
+.rvq{display:block;margin-top:10px}.skip{margin-top:22px}
 .recap li{color:var(--soft);margin:0 0 6px 20px}
 .join{max-width:460px}
 .field{margin-top:18px}
@@ -197,6 +199,10 @@ async function init(){
     }
     try{await poll()}catch{S.pid='';localStorage.removeItem('m08-pid:'+S.code);return renderJoin()}
   }else{
+    // A student from the class link lands in the class's open session, when there is one.
+    if(LAUNCH?.sub&&LAUNCH.role==='student'&&LAUNCH.course){
+      try{const c=await sessionApi({action:'course_session'});if(c.code){location.replace(location.pathname+'?session='+encodeURIComponent(c.code)+'#lt='+encodeURIComponent(LAUNCH_TOKEN));return}}catch{}
+    }
     // Direct launch: one private run with its own clock, resumed on refresh.
     const soloKey='m08-solo'+(LAUNCH?.sub?':'+LAUNCH.sub+':'+(LAUNCH.course||''):'');
     let saved=null;try{saved=JSON.parse(sessionStorage.getItem(soloKey)||'null')}catch{}
@@ -233,7 +239,7 @@ async function join(){
 async function poll(){
   const d=await sessionApi({action:'state',code:S.code,participantId:S.pid});
   S.session=d.session;S.view=d.view;S.syncedAt=performance.now();S.remaining=d.view.clock.remaining;
-  const v=d.view,key=JSON.stringify([d.session.state,d.session.paused,v.clock.phase,v.clock.closed,v.asked,v.canAsk,v.myVendorVote,v.canVoteVendor,v.vendor,v.myPlanVote,v.canVotePlan,v.report,v.team]);
+  const v=d.view,key=JSON.stringify([d.session.state,d.session.paused,v.clock.phase,v.clock.closed,v.asked,v.canAsk,v.myVendorVote,v.canVoteVendor,v.vendor,v.myPlanVote,v.canVotePlan,v.report,v.team,v.canSkip,v.review]);
   if(key!==S.shown){S.shown=key;if(!(v.canAsk||v.canVoteVendor||v.canVotePlan))S.confirming=null;render()}
   if(v.report&&LAUNCH_TOKEN&&!S.reported&&!S.reporting){
     S.reporting=true;
@@ -269,7 +275,18 @@ function answersBlock(){
   return a.slice().reverse().map(q=>`<section class="qa"><h3>${esc(q.text)}${q.by?`<small>${esc(fill(CFG.copy.askedBy,{name:q.by}))}</small>`:''}</h3>${q.answers.map(x=>`<div><b>${esc(vname(x.vendor))}</b>${esc(x.text)}</div>`).join('')}</section>`).join('');
 }
 
+// A private run's student moves on once they have done what this part asks.
+const NEXT={briefing:'demonstrations',demos:'questions',questions:'vendor choice',commit:'go-live plan',plan:'eighteen-month report'};
 function render(){
+  renderMain();
+  const v=S.view;if(!v||!v.canSkip||!NEXT[v.clock.phase])return;
+  const box=document.createElement('div');box.className='skip';box.innerHTML=`<button class="btn pri" id="skip">Go to the ${esc(NEXT[v.clock.phase])} now</button>`;
+  app.appendChild(box);
+  document.getElementById('skip').onclick=async e=>{e.target.disabled=true;
+    try{const d=await sessionApi({action:'skip',code:S.code,participantId:S.pid});S.view=d.view;S.remaining=d.view.clock.remaining;S.syncedAt=performance.now();S.shown='';S.confirming=null;render()}
+    catch(err){S.error=err.message;e.target.disabled=false;render()}};
+}
+function renderMain(){
   const v=S.view,c=v.clock;track();tickClock();
   const paused=c.paused?`<div class="note warn">${esc(CFG.copy.paused)}</div>`:'';
   const err=S.error?`<div class="note bad">${esc(S.error)}</div>`:'';
@@ -344,7 +361,29 @@ function renderReport(paused){
   if(!r){app.innerHTML=`<div class="note">${esc(CFG.copy.waitingForTeam)}</div>`;return}
   const qs=(v.asked||[]).length?`<ol>${v.asked.map(q=>`<li>${esc(q.text)}</li>`).join('')}</ol>`:`<p class="body">${esc(CFG.copy.noneSpent)}</p>`;
   app.innerHTML=`${paused}<div class="report"><div class="kicker">${esc(CFG.copy.reportKicker)}</div><h2>${esc(fill(CFG.copy.reportChose,{vendor:r.vendor}))}</h2><p>${esc(r.text)}</p></div>
-  <div class="recap"><h3>${esc(CFG.copy.youAsked)}</h3>${qs}<h3>${esc(CFG.copy.yourPlan)}</h3><p class="body">${esc(r.plan||CFG.copy.noPlanChosen)}</p></div>`;
+  <div class="recap"><h3>${esc(CFG.copy.youAsked)}</h3>${qs}<h3>${esc(CFG.copy.yourPlan)}</h3><p class="body">${esc(r.plan||CFG.copy.noPlanChosen)}</p></div>
+  ${(v.afterReport||[]).length?`<div class="recap"><h3>Think about it</h3><ol>${v.afterReport.map(q=>`<li>${esc(q)}</li>`).join('')}</ol></div>`:''}
+  ${reviewBlock(v.review)}`;
+  wireReview();
+}
+// Two questions for the instructor's debrief. Signed-in class students only.
+function reviewBlock(rv){
+  if(!rv||!rv.open)return '';
+  if(rv.sent)return `<div class="recap" id="review"><h3>Your review</h3><p class="body">Sent to your instructor. Thank you.</p></div>`;
+  return `<div class="recap" id="review"><h3>Your review</h3><p class="body">Your instructor reads these in the class debrief.</p>
+  ${rv.questions.map((q,i)=>`<label class="body rvq" for="rv${i+1}">${esc(q)}</label><textarea id="rv${i+1}" rows="3" maxlength="1500">${esc(S['rv'+(i+1)]||'')}</textarea>`).join('')}
+  <div class="decide"><button class="btn pri" id="rvgo">Submit review</button></div><div class="note bad" id="rverr" ${S.rvErr?'':'hidden'}>${esc(S.rvErr||'')}</div></div>`;
+}
+function wireReview(){
+  for(const id of ['rv1','rv2']){const t=document.getElementById(id);if(t)t.oninput=()=>{S[id]=t.value}}
+  const go=document.getElementById('rvgo');if(!go)return;
+  go.onclick=async()=>{
+    const a=(S.rv1||'').trim(),b=(S.rv2||'').trim();
+    if(!a||!b){S.rvErr='Answer both questions, then submit.';S.shown='';return render()}
+    go.disabled=true;S.rvErr='';
+    try{const d=await sessionApi({action:'review',code:S.code,participantId:S.pid,reflection1:a,reflection2:b});S.view=d.view}catch(e){S.rvErr=e.message}
+    S.shown='';render();
+  };
 }
 
 init();

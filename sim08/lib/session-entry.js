@@ -42,7 +42,8 @@ async function checkConfigAccess(req, res) {
   if (!store.configured()) { res.status(503).json({ error: 'no_store' }); return false; }
   const sess = await store.getSession(code);
   if (!sess) { res.status(404).json({ error: 'no_such_session' }); return false; }
-  if (sess.solo) { res.status(403).json({ error: 'private_session' }); return false; }
+  // A Rehearse practice run is opened by its practice student's link; other private runs are not.
+  if (sess.solo && !sess.practice) { res.status(403).json({ error: 'private_session' }); return false; }
   if (sess.state === 'closed') { res.status(410).json({ error: 'session_closed' }); return false; }
   if (req.headers['x-launch-token'] && !participantLaunch(req)) {
     res.status(401).json({ error: 'launch_token_invalid' }); return false;
