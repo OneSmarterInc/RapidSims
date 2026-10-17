@@ -54,6 +54,9 @@ async function api(lt, action, extra = {}) {
       res.status = n => { res.statusCode = n; return res; };
       res.json = v => { res.setHeader('content-type', 'application/json'); res.end(JSON.stringify(v)); return res; };
       if (url.pathname === '/api/session-enrolments') return res.json({ students: [{ participantId: 'platform:stu1', name: 'Ana Student', accessReleased: true }] });
+      // The platform's faculty helper, stubbed: available, and an answer naming "Student 1".
+      if (url.pathname === '/api/faculty') return res.json(req.body.action === 'assist_status' ? { available: true, allowance: { left: 30, limit: 30 } }
+        : { answer: 'Student 1 kept the review desk.', names: { 'Student 1': 'Ana Student' }, allowance: { left: 29, limit: 30 } });
       if (url.pathname === '/api/one-pager') { req.query = Object.fromEntries(url.searchParams); res.setHeader = res.setHeader.bind(res); return require('../../platform/api/one-pager')(req, res); }
       if (!url.pathname.startsWith('/sim-plus-01')) return res.status(404).json({ error: 'Not found' });
       const mounted = url.pathname.slice('/sim-plus-01'.length) || '/';
@@ -137,6 +140,13 @@ async function api(lt, action, extra = {}) {
     }
     await fac.locator('[data-md-go="5"]').click();
     ok((await fac.locator('.md-slide').innerText()).includes('opened Terry up'), 'What students said shows the review');
+    await fac.locator('.fs-helper-open').click();
+    await fac.fill('#fsHelperQ', 'Who kept the desk?');
+    await fac.locator('.fs-helper-form button').click();
+    await fac.locator('.fs-helper-a').waitFor();
+    ok((await fac.locator('.fs-helper-a').innerText()).includes('Ana Student kept the review desk.'), 'Ask about this sim: the answer shows the real name');
+    ok((await fac.locator('.fs-helper-panel').innerText()).includes('29 of 30 questions left'), 'Ask about this sim: questions left this month');
+    await fac.screenshot({ path: path.join(artifacts, '10-helper.png') });
     ok(errors.length === 0, 'No browser errors ' + errors.join(' | '));
     console.log(`SIMPLUS01_KIT_BROWSER_PASSED (${checks} checks). Screenshots: ${artifacts}`);
   } finally { await browser.close(); server.close(); }

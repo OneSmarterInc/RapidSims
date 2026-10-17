@@ -86,6 +86,30 @@ module.exports = async (req, res) => {
         return res.status(r.status).json(r.data);
       }
 
+      // The faculty helper ("Ask about this sim"): limits, the open session (students anonymised), one answer.
+      case 'assist_status':
+      case 'assist': {
+        if (me.role !== 'faculty' && me.role !== 'admin') return res.status(403).json({ error:'wrong_role' });
+        const H = require('../lib/assist.js'), M = require('../lib/midland-sessions.js');
+        const simId = String(b.simId || '');
+        const course = me.role === 'admin' && !b.courseId ? null : await ownCourse(s, me.id, String(b.courseId || ''));
+        if (b.courseId && !course) return res.status(404).json({ error:'no_such_course' });
+        const sim = course ? (await s`SELECT si.* FROM course_sims cs JOIN sims si ON si.id=cs.sim_id WHERE cs.course_id=${course.id} AND cs.sim_id=${simId}`)[0]
+          : (await s`SELECT * FROM sims WHERE id=${simId}`)[0];
+        if (!sim) return res.status(404).json({ error:'no_such_simulation' });
+        if (b.action === 'assist_status') return res.status(200).json({ available: H.enabled(sim.id), allowance: H.enabled(sim.id) ? await H.allowance(s, me, sim.id) : null });
+        let sessionState = null;
+        const code = String(b.sessionCode || '').toUpperCase();
+        if (course && /^[A-Z2-9]{5}$/.test(code) && M.KIT_SIMS[sim.id]) {
+          const r = await M.ask(me, course, sim, { action:'faculty_state', code });
+          if (r.ok) sessionState = r.data;
+        }
+        try {
+          const r = await H.ask({ s, me, course, sim, question: b.question, history: b.history, sessionState });
+          return res.status(r.status).json(r.body);
+        } catch (e) { return res.status(e.status || 502).json({ error:'helper_unavailable', message: 'The helper could not answer just now. Try again in a minute.' }); }
+      }
+
       case 'sim_results':
       case 'sim_result_history': {
         if (me.role !== 'faculty') return res.status(403).json({ error:'wrong_role' });

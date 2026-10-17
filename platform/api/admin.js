@@ -57,7 +57,14 @@ module.exports = async (req, res) => {
             (SELECT count(*) FROM courses WHERE archived = false) AS courses,
             (SELECT count(*) FROM enrolments WHERE paid = true AND dropped = false) AS paid_seats,
             (SELECT count(*) FROM launches) AS launches`)[0];
-        return res.status(200).json({ faculty, sims, totals, baseUrl: baseUrl(req) });
+        // The faculty helper this month: spend by faculty member and sim, against the platform ceiling.
+        const H = require('../lib/assist.js');
+        const assistRows = await s`SELECT u.name AS faculty, a.sim_id, count(*)::int AS questions, coalesce(sum(a.cost_usd),0)::float AS cost
+          FROM assist_usage a JOIN users u ON u.id = a.user_id WHERE a.created_at >= date_trunc('month', now())
+          GROUP BY u.name, a.sim_id ORDER BY cost DESC`;
+        const assist = { ceiling: H.CEILING_USD, limits: H.LIMITS, model: H.MODEL, pilotSims: H.PILOT_SIMS, keySet: !!process.env.ANTHROPIC_API_KEY,
+          spent: assistRows.reduce((t, r) => t + r.cost, 0), questions: assistRows.reduce((t, r) => t + r.questions, 0), rows: assistRows };
+        return res.status(200).json({ faculty, sims, totals, assist, baseUrl: baseUrl(req) });
       }
 
       // One faculty member, their courses, and who's in them.
