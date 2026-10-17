@@ -55,8 +55,8 @@ async function api(lt, action, extra = {}) {
       res.json = v => { res.setHeader('content-type', 'application/json'); res.end(JSON.stringify(v)); return res; };
       if (url.pathname === '/api/session-enrolments') return res.json({ students: [{ participantId: 'platform:stu1', name: 'Ana Student', accessReleased: true }] });
       // The platform's faculty helper, stubbed: available, and an answer naming "Student 1".
-      if (url.pathname === '/api/faculty') return res.json(req.body.action === 'assist_status' ? { available: true, allowance: { left: 30, limit: 30 } }
-        : { answer: 'Student 1 kept the review desk. Plan for **70 minutes**.\n\n- Observation\n- Interviews', names: { 'Student 1': 'Ana Student' }, allowance: { left: 29, limit: 30 } });
+      if (url.pathname === '/api/faculty') { if (req.body.action === 'assist') await new Promise(r => setTimeout(r, 600)); return res.json(req.body.action === 'assist_status' ? { available: true, allowance: { left: 30, limit: 30 } }
+        : { answer: 'Student 1 kept the review desk. Plan for **70 minutes**.\n\n- Observation\n- Interviews', names: { 'Student 1': 'Ana Student' }, allowance: { left: 29, limit: 30 } }); }
       if (url.pathname === '/api/one-pager') { req.query = Object.fromEntries(url.searchParams); res.setHeader = res.setHeader.bind(res); return require('../../platform/api/one-pager')(req, res); }
       if (!url.pathname.startsWith('/sim-plus-01')) return res.status(404).json({ error: 'Not found' });
       const mounted = url.pathname.slice('/sim-plus-01'.length) || '/';
@@ -143,14 +143,18 @@ async function api(lt, action, extra = {}) {
     await fac.locator('.fs-helper-open').click();
     await fac.fill('#fsHelperQ', 'Who kept the desk?');
     await fac.locator('.fs-helper-form button').click();
-    await fac.locator('.fs-helper-a').waitFor();
+    await fac.locator('.fs-helper-typing span').first().waitFor();
+    await fac.locator('.fs-helper-panel').screenshot({ path: path.join(artifacts, '09-helper-waiting.png') });
+    ok(true, 'Ask Claude: three dots show while the answer is on its way');
+    await fac.locator('.fs-helper-a:not(.fs-helper-typing)').waitFor();
+    ok(/Ask Claude about this sim/.test(await fac.locator('.fs-helper-head').innerText()) && /Anthropic/.test(await fac.locator('.fs-helper-by').innerText()), 'Ask Claude: the panel says the answers come from Claude');
     ok((await fac.locator('.fs-helper-a').innerText()).includes('Ana Student kept the review desk.'), 'Ask about this sim: the answer shows the real name');
     ok((await fac.locator('.fs-helper-panel').innerText()).includes('29 of 30 questions left'), 'Ask about this sim: questions left this month');
     ok(await fac.locator('.fs-helper-a b').innerText() === '70 minutes' && await fac.locator('.fs-helper-a li').count() === 2, 'Ask about this sim: bold and lists show as formatting');
     ok((await fac.locator('.fs-helper-panel').boundingBox()).height >= 700, 'Ask about this sim: the panel opens tall');
     await fac.locator('#fsHelperQ').evaluate(el => { el.style.height = '220px'; });
     await fac.fill('#fsHelperQ', 'And the debrief?'); await fac.locator('.fs-helper-form button').click();
-    await fac.waitForFunction(() => document.querySelectorAll('.fs-helper-a').length === 2);
+    await fac.waitForFunction(() => document.querySelectorAll('.fs-helper-a:not(.fs-helper-typing)').length === 2);
     ok(Math.round((await fac.locator('#fsHelperQ').boundingBox()).height) === 220, 'Ask about this sim: the question box keeps the size it was dragged to');
     await fac.screenshot({ path: path.join(artifacts, '10-helper.png') });
     ok(errors.length === 0, 'No browser errors ' + errors.join(' | '));
