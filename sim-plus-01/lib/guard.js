@@ -6,7 +6,7 @@ const crypto = require('node:crypto');
 
 function canonicalUrl(req) {
   if (process.env.SIM_URL) return String(process.env.SIM_URL).replace(/\/+$/, '');
-  if (process.env.PLATFORM_URL) return String(process.env.PLATFORM_URL).replace(/\/+$/, '') + '/simplus01';
+  if (process.env.PLATFORM_URL) return String(process.env.PLATFORM_URL).replace(/\/+$/, '') + '/sim-plus-01';
   const host = req.headers['x-forwarded-host'] || req.headers.host;
   const proto = req.headers['x-forwarded-proto'] || 'https';
   return host ? `${proto}://${host}` : '';
