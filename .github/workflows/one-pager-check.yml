@@ -1,0 +1,29 @@
+name: One-pager check
+
+# Every change to what faculty or students see in a sim deals with that sim's ONE-PAGER.md (updated, or a stated
+# reason in the PR description). Script: tools/one-pager-pr-check.js
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  one-pager:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: One-pagers in step with this pull request
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: node tools/one-pager-pr-check.js
+      - name: Every one-pager reviewed for its sim's current version
+        run: node platform/tools/one-pager-check.js

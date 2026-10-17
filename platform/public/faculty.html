@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Your classes — Flexee RapidSims</title>
 <link rel="stylesheet" href="/sim-detail.css">
-<link rel="stylesheet" href="/app.css?v=20261015e">
+<link rel="stylesheet" href="/app.css?v=20261017g">
 <script src="/sim-identity.js"></script>
 <script src="/sim-detail.js"></script>
 <script src="/render-transcript.js?v=2"></script>
@@ -125,8 +125,22 @@ function renderRehearse() {
         : team ? 'Play as three practice students to see what your class will see. One practice student enters the decisions. The other two follow each step and write their own reviews.'
         : 'Play as three practice students, each on their own run, to see what your class will see, from the brief to the review.'}</p></div></div>
     ${has ? '<div class="panel faculty-practice faculty-practice-page" data-midland-practice><div class="empty">Checking for a practice session…</div></div>'
-      : `<div class="panel"><div class="empty">Add ${esc(title)} to this class to rehearse it.</div></div>`}`;
+      : `<div class="panel"><div class="empty">Add ${esc(title)} to this class to rehearse it.</div></div>`}
+    ${sim ? '<details class="panel about-sim" data-about-sim><summary>About this sim</summary><div data-about-body><p class="hint">Loading…</p></div></details>' : ''}`;
   app.querySelector('[data-crumb-class]').onclick = () => openCourse(course.id);
+  // About this sim: the faculty one-pager from the sim's own ONE-PAGER.md.
+  const about = app.querySelector('[data-about-sim]');
+  if (about) about.ontoggle = async () => {
+    if (!about.open || about.dataset.loaded) return;
+    about.dataset.loaded = '1';
+    const body = about.querySelector('[data-about-body]');
+    try {
+      const r = await fetch('/api/one-pager?sim=' + encodeURIComponent(sim.sim_id), { credentials: 'same-origin' });
+      const d = r.ok ? await r.json() : null;
+      body.innerHTML = d ? d.text.split(/\n{2,}/).map(b => b.startsWith('# ') ? `<h2>${esc(b.slice(2))}</h2>` : b.startsWith('## ') ? `<h3>${esc(b.slice(3))}</h3>` : `<p>${esc(b).replace(/\n/g, ' ')}</p>`).join('')
+        : '<p class="hint">The one-pager for this sim is not available right now.</p>';
+    } catch { body.innerHTML = '<p class="hint">The one-pager for this sim is not available right now.</p>'; }
+  };
   if (!has) return;
   const courseId = course.id;
   api('/api/faculty', { action:'practice_status', courseId, simId:rehearseSim() })

@@ -54,6 +54,7 @@ async function api(lt, action, extra = {}) {
       res.status = n => { res.statusCode = n; return res; };
       res.json = v => { res.setHeader('content-type', 'application/json'); res.end(JSON.stringify(v)); return res; };
       if (url.pathname === '/api/session-enrolments') return res.json({ students: [{ participantId: 'platform:stu1', name: 'Ana Student', accessReleased: true }] });
+      if (url.pathname === '/api/one-pager') { req.query = Object.fromEntries(url.searchParams); res.setHeader = res.setHeader.bind(res); return require('../../platform/api/one-pager')(req, res); }
       if (!url.pathname.startsWith('/sim-plus-01')) return res.status(404).json({ error: 'Not found' });
       const mounted = url.pathname.slice('/sim-plus-01'.length) || '/';
       if (handlers[mounted]) return await handlers[mounted](req, res);
@@ -76,6 +77,10 @@ async function api(lt, action, extra = {}) {
     await fac.goto(`${origin}/sim-plus-01/#lt=${encodeURIComponent(facLT)}`);
     await fac.waitForURL(/instructor\.html/);
     ok(true, 'A faculty session launch lands on the shared Sessions pages');
+    await fac.locator('#aboutSim summary').click();
+    await fac.locator('#aboutSimBody h2').waitFor();
+    ok((await fac.locator('#aboutSimBody').innerText()).includes('Why Don\'t They Have Any Patience?'), 'Sessions page: About this sim shows the one-pager');
+    await fac.screenshot({ path: path.join(artifacts, '00-about-this-sim.png'), fullPage: true });
     await fac.locator('#create').click();
     await fac.locator('#faculty-workspace').waitFor();
     const code = await fac.evaluate(() => FacultySession.page.code);

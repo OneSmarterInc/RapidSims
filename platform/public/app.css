@@ -590,3 +590,6 @@ body.rs-has-menu .top .right{flex-wrap:wrap;justify-content:flex-end}
    resolved against itself and squeezed "Start a session" to 80px. */
 .sim.faculty-sim-card .faculty-sim-side{max-width:none;min-width:max-content}
 @media(max-width:1100px){.sim.faculty-sim-card .faculty-sim-side{min-width:0}}
+
+/* About this sim on Rehearse: the faculty one-pager. */
+.about-sim{margin-top:16px;padding:14px 18px}.about-sim summary{cursor:pointer;font-weight:600}.about-sim h2{font-size:22px;margin:12px 0 6px}.about-sim h3{font-size:16px;font-weight:700;margin:16px 0 4px}.about-sim p{line-height:1.6;max-width:72ch}
