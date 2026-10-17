@@ -16,9 +16,9 @@ function renderInterviews(t,{esc,emptyPanel}){
  const turns=(t.transcript||[]).map(x=>`<div class="event-row${x.closed?' pc-closed':''}"><div><strong>${esc(x.source)} · ${esc(x.kind)} · ${Math.round(x.spent/6)/10} min${x.closed?' · Ruth stopped volunteering here':x.opened?' · Ruth opened up here':''}</strong><p>Q: ${esc(x.question)}</p><p class="table-note">A: ${esc(x.answer)}</p></div></div>`).join('');
  return `<div class="section-heading"><h3>Interview order and time</h3></div>
   <div class="table-wrap"><table class="decision-table"><thead><tr><th scope="col">Appointment</th><th scope="col">With</th><th scope="col">Questions</th><th scope="col">Time used</th></tr></thead><tbody>${rows}</tbody></table></div>
-  <p class="table-note">Ruth: ${esc(RUTH[t.ruth]||'')}${t.ruthClosedBy?` after “${esc(t.ruthClosedBy)}”`:''}.</p>
+  <p class="table-note">Ruth: ${t.ruthOpenedBy&&t.ruthClosedBy?`opened up after “${esc(t.ruthOpenedBy)}”, then stopped volunteering after “${esc(t.ruthClosedBy)}”`:t.ruthOpenedBy?`opened up after “${esc(t.ruthOpenedBy)}”`:`${esc(RUTH[t.ruth]||'')}${t.ruthClosedBy?` after “${esc(t.ruthClosedBy)}”`:''}`}.</p>
   <div class="section-heading"><h3>Transcript</h3></div><div class="event-list">${turns}</div>
-  <p class="table-note">The kind of each question is shown here only. Students never see it.</p>`;
+  <p class="table-note">Only faculty see the kind of each question.</p>`;
 }
 function renderReport(t,{esc,emptyPanel}){
  const chart=t.chart?Object.entries(CHART).map(([k,[title,fields]])=>`<div class="event-row"><div><strong>${esc(title)}</strong>${Object.entries(fields).map(([f,l])=>`<p>${esc(l)}: ${esc(val(t.chart[k]?.[f]))}</p>`).join('')}</div></div>`).join(''):'';
@@ -33,7 +33,7 @@ function renderReport(t,{esc,emptyPanel}){
   <div class="section-heading"><h3>Key answers heard</h3></div>
   <div class="event-list"><div class="event-row"><div><strong>Heard</strong><p>${t.evidence.held.length?t.evidence.held.map(esc).join('<br>'):'None of the key answers'}</p></div></div>
   <div class="event-row"><div><strong>Not heard</strong><p>${t.evidence.missed.map(esc).join('<br>')||'—'}</p></div></div>
-  <div class="event-row"><div><strong>The repeat-copy loop</strong><p>${t.evidence.loop?'Held both halves: senders hear nothing back, and repeat copies follow days later.':'Held at most one half.'}</p></div></div></div>
+  <div class="event-row"><div><strong>The repeat-copy loop</strong><p>${t.evidence.loop?`Held both halves: ${(t.evidence.loopPair||[]).map(esc).join(' + ')}.`:'Held at most one half.'}</p></div></div></div>
   <div class="section-heading"><h3>Completed chart</h3></div><div class="event-list">${obs}${chart}</div>
   <p class="table-note">This is the filed report, not a score or a ranking.</p>`;
 }
@@ -53,7 +53,7 @@ const PatienceSettings={
  bandLabel:value=>(K.bands[value]||{}).label||'Not filed',
  done:r=>!!r.done,
  started:r=>Number(r.phase||0)>0,
- record:r=>({band:r.band||null,order:r.order||[],windows:r.windows||[],ruth:r.ruth,ruthClosedBy:r.ruthClosedBy,transcript:r.transcript||[],chart:r.chart||null,
+ record:r=>({band:r.band||null,order:r.order||[],windows:r.windows||[],ruth:r.ruth,ruthClosedBy:r.ruthClosedBy,ruthOpenedBy:r.ruthOpenedBy,transcript:r.transcript||[],chart:r.chart||null,
   observationSeconds:r.observationSeconds??null,observationNote:r.observationNote||'',report:r.report||null,evidence:r.evidence||null,stage:r.stage||''}),
  tabs:[{id:'interviews',label:'Interviews',icon:'users',render:renderInterviews},{id:'report',label:'Report',icon:'file',render:renderReport}],
  csv:{columns:['Order','Questions asked','Ruth','Observed seconds per claim','Intake','Receipt log','Fax vendor','First-pass review','Key answers heard','Review desk'],

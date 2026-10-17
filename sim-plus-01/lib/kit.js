@@ -5,7 +5,7 @@
 const { META } = require('./meta');
 const { SOURCES } = require('../src/engine');
 const { WINDOWS } = require('../data/calendar');
-const { ROWS, DISPOSITIONS } = require('../data/report');
+const { ROWS, DISPOSITIONS, EVIDENCE } = require('../data/report');
 const { review } = require('../src/report');
 const { CLASSIFICATION_LABELS, OBSERVATION, readEstimate } = require('../data/simmeta');
 
@@ -90,7 +90,9 @@ function runRecord(p, s) {
     chart: s ? s.completedChart : null,
     report: result ? { rootCause: result.rootCause, rows: result.consequences.map(c => ({ rowId: c.rowId, label: c.label, disposition: c.disposition,
       justification: ((s.submission.rows || {})[c.rowId] || {}).justification || '', severity: c.severity, configured: c.configured, supported: result.support[c.rowId] !== false })) } : null,
-    evidence: result ? { held: result.evidence.held.map(e => e.label), missed: result.evidence.missed.map(e => e.label), loop: result.evidence.loopAvailable } : null,
+    // The loop names the pair of answers the student actually heard (#97).
+    evidence: result ? { held: result.evidence.held.map(e => e.label), missed: result.evidence.missed.map(e => e.label), loop: result.evidence.loopAvailable,
+      loopPair: (result.evidence.loopPairsHeld[0] || []).map(id => (EVIDENCE.find(e => e.id === id) || {}).label || id) } : null,
     transcript: s ? s.transcript.map(t => ({ window: t.window, source: t.sourceName, question: t.question, answer: t.answer || '', kind: CLASSIFICATION_LABELS[t.bucket] || '',
       spent: t.spent, closed: t.postureAfter === 'CLOSED' && t.postureBefore !== 'CLOSED', opened: t.postureAfter === 'OPEN' && t.postureBefore !== 'OPEN' })) : [],
     reflections, reflection1: p.review ? p.review.reflection1 : '', reflection2: p.review ? p.review.reflection2 : ''
