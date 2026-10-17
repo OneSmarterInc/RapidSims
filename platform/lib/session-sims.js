@@ -11,7 +11,8 @@ const SESSION_SIMS = new Set([
   'rapid-08-later',
   'rapid-09-money-land',
   'rapid-10-bubble',
-  'rapidsimplus-02'
+  'rapidsimplus-02',
+  'rapidsimplus-01'
 ]);
 
 function sessionSupported(sim) {

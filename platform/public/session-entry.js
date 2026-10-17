@@ -16,7 +16,9 @@
     'rapid-07-bought': 'Would You Have Bought It?',
     'rapid-08-later': 'Eighteen Months Later',
     'rapid-09-money-land': 'Where Does the Money Land?',
-    'rapid-10-bubble': 'Infrastructure or Bubble?'
+    'rapid-10-bubble': 'Infrastructure or Bubble?',
+    'rapidsimplus-01': 'Why Don\u2019t They Have Any Patience?',
+    'rapidsimplus-02': 'Who Pays for the Wire?'
   };
   const session = (q.get('session') || '').trim().toUpperCase();
   const courseId = q.get('course') || '';
