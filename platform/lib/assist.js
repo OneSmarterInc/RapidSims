@@ -13,7 +13,9 @@ const CEILING_USD = Number(process.env.ASSIST_MONTHLY_CEILING_USD || 25);
 // The pilot runs on one sim; more join as their material is checked.
 const PILOT_SIMS = String(process.env.ASSIST_SIMS || 'rapidsimplus-01').split(',').map(x => x.trim()).filter(Boolean);
 const MAX_CONTEXT_CHARS = 240000; // about 60,000 tokens, well under the 100,000-token price step
-const MAX_ANSWER_TOKENS = 600;
+// Haiku 5.5 thinks by default and thinking counts toward max_tokens, which cut answers short (Oct 17). The helper
+// explains material it is given, so thinking is turned off; the limit leaves room for a full ~250-word answer.
+const MAX_ANSWER_TOKENS = 1200;
 
 const enabled = simId => PILOT_SIMS.includes(simId) && !!process.env.ANTHROPIC_API_KEY;
 
@@ -71,17 +73,24 @@ async function allowance(s, me, simId) {
   return { adopted, limit, used, left: Math.max(0, limit - used), spent, paused: spent >= CEILING_USD };
 }
 
-async function callModel(system, messages, fetchImpl = fetch) {
+async function callModel(system, messages, fetchImpl = fetch, thinkingOff = true) {
   const r = await fetchImpl('https://api.anthropic.com/v1/messages', {
     method: 'POST', signal: AbortSignal.timeout(30000),
     headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: MODEL, max_tokens: MAX_ANSWER_TOKENS,
+    body: JSON.stringify({ model: MODEL, max_tokens: thinkingOff ? MAX_ANSWER_TOKENS : MAX_ANSWER_TOKENS * 3,
+      ...(thinkingOff ? { thinking: { type: 'disabled' } } : {}),
       system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }], messages })
   });
   const d = await r.json().catch(() => ({}));
+  // If the API refuses the thinking setting, ask again with thinking on and more room for it.
+  if (!r.ok && thinkingOff && r.status === 400 && /thinking/i.test(JSON.stringify(d))) {
+    console.warn('assist: thinking off refused, asking with thinking on', d.error && d.error.message);
+    return callModel(system, messages, fetchImpl, false);
+  }
   if (!r.ok) throw Object.assign(new Error((d.error && d.error.message) || 'The helper is unavailable.'), { status: 502 });
-  const text = (d.content || []).filter(c => c.type === 'text').map(c => c.text).join('\n').trim();
-  if (!text) console.warn('assist: no answer text', JSON.stringify({ stop: d.stop_reason, blocks: (d.content || []).map(c => c.type), usage: d.usage }));
+  let text = (d.content || []).filter(c => c.type === 'text').map(c => c.text).join('\n').trim();
+  if (!text || d.stop_reason !== 'end_turn') console.warn('assist: answer', JSON.stringify({ stop: d.stop_reason, blocks: (d.content || []).map(c => c.type), usage: d.usage }));
+  if (text && d.stop_reason === 'max_tokens') text += ' …';
   return { text, usage: d.usage || {} };
 }
 

@@ -148,6 +148,10 @@ async function api(lt, action, extra = {}) {
     ok((await fac.locator('.fs-helper-panel').innerText()).includes('29 of 30 questions left'), 'Ask about this sim: questions left this month');
     ok(await fac.locator('.fs-helper-a b').innerText() === '70 minutes' && await fac.locator('.fs-helper-a li').count() === 2, 'Ask about this sim: bold and lists show as formatting');
     ok((await fac.locator('.fs-helper-panel').boundingBox()).height >= 700, 'Ask about this sim: the panel opens tall');
+    await fac.locator('#fsHelperQ').evaluate(el => { el.style.height = '220px'; });
+    await fac.fill('#fsHelperQ', 'And the debrief?'); await fac.locator('.fs-helper-form button').click();
+    await fac.waitForFunction(() => document.querySelectorAll('.fs-helper-a').length === 2);
+    ok(Math.round((await fac.locator('#fsHelperQ').boundingBox()).height) === 220, 'Ask about this sim: the question box keeps the size it was dragged to');
     await fac.screenshot({ path: path.join(artifacts, '10-helper.png') });
     ok(errors.length === 0, 'No browser errors ' + errors.join(' | '));
     console.log(`SIMPLUS01_KIT_BROWSER_PASSED (${checks} checks). Screenshots: ${artifacts}`);
