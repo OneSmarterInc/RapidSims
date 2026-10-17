@@ -1,0 +1,559 @@
+{
+ "simId": "rapid-10-bubble",
+ "state": {
+  "session": {
+   "code": "9MMU2",
+   "simId": "rapid-10-bubble",
+   "kit": true,
+   "mode": "individual",
+   "cases": [
+    "A"
+   ],
+   "teams": null,
+   "teamIds": null,
+   "readChoice": "longer",
+   "clock": {
+    "phase": "closed",
+    "endsAt": 1792238139387,
+    "caseId": "A"
+   },
+   "createdAt": 1792238135917,
+   "platformAuth": true,
+   "courseId": "crs_A",
+   "owner": "Vikram",
+   "ownerId": "fac",
+   "name": "Sat, Oct 17, 7:55 AM",
+   "state": "closed",
+   "runs": {
+    "A": {
+     "startedAt": 1792236879387,
+     "reveal": 3
+    }
+   },
+   "projected": {
+    "A": {
+     "pair": null,
+     "opposing": null
+    }
+   },
+   "showHeld": false,
+   "startedAt": 1792238137163,
+   "closedAt": 1792238143502,
+   "paused": false,
+   "readOptions": [
+    {
+     "set": "read_standard",
+     "label": "Standard",
+     "minutes": 12,
+     "on": false
+    },
+    {
+     "set": "read_longer",
+     "label": "Longer",
+     "minutes": 15,
+     "on": true
+    },
+    {
+     "set": "read_longest",
+     "label": "Longest",
+     "minutes": 20,
+     "on": false
+    }
+   ],
+   "ended": true
+  },
+  "roster": [
+   {
+    "id": "platform:ana",
+    "name": "Ana Lopez",
+    "groupId": null,
+    "teamLabel": ""
+   },
+   {
+    "id": "platform:ben",
+    "name": "Ben Ode",
+    "groupId": null,
+    "teamLabel": ""
+   }
+  ],
+  "participants": {
+   "platform:ana": {
+    "id": "platform:ana",
+    "name": "Ana Lopez",
+    "joinedAt": 1792238136625
+   },
+   "platform:ben": {
+    "id": "platform:ben",
+    "name": "Ben Ode",
+    "joinedAt": 1792238137007
+   }
+  },
+  "runs": {
+   "individual:platform:ana": {
+    "runId": "individual:platform:ana",
+    "teamLabel": "Ana Lopez",
+    "runnerId": "platform:ana",
+    "completedBy": null,
+    "done": true,
+    "completedAt": 1792238143502,
+    "phase": 1,
+    "joined": true,
+    "band": "bubble",
+    "calls": {
+     "A": {
+      "status": "recorded",
+      "closed": true,
+      "call": "bubble",
+      "line": "hl.adj_ebitda",
+      "lineLabel": "Adjusted EBITDA (company measure)",
+      "lineWhy": "Most of it is cash paid in advance.",
+      "mind": "I would need to see like-for-like revenue growing faster than capital spending for two quarters in a row, with cash steady.",
+      "blanks": [],
+      "held": false
+     }
+    },
+    "privates": {
+     "A": []
+    },
+    "reflections": {
+     "platform:ana": {
+      "reflection1": "It did: cash kept falling.",
+      "reflection2": "Capital spending first."
+     }
+    },
+    "reflection1": "It did: cash kept falling.",
+    "reflection2": "Capital spending first."
+   },
+   "individual:platform:ben": {
+    "runId": "individual:platform:ben",
+    "teamLabel": "Ben Ode",
+    "runnerId": "platform:ben",
+    "completedBy": null,
+    "done": true,
+    "completedAt": 1792238143502,
+    "phase": 1,
+    "joined": true,
+    "band": "infra",
+    "calls": {
+     "A": {
+      "status": "recorded",
+      "closed": true,
+      "call": "infra",
+      "line": "hl.adj_ebitda",
+      "lineLabel": "Adjusted EBITDA (company measure)",
+      "lineWhy": "The profit measure is positive.",
+      "mind": "I would need to see like-for-like revenue growing faster than capital spending for two quarters in a row, with cash steady.",
+      "blanks": [],
+      "held": false
+     }
+    },
+    "privates": {
+     "A": []
+    },
+    "reflections": {},
+    "reflection1": "",
+    "reflection2": ""
+   }
+  },
+  "kit": {
+   "bands": {
+    "infra": {
+     "label": "Infrastructure",
+     "cls": "b",
+     "phrase": "Called it infrastructure that will be needed"
+    },
+    "bubble": {
+     "label": "Bubble",
+     "cls": "v",
+     "phrase": "Called it inside a bubble"
+    },
+    "mixed": {
+     "label": "Mixed",
+     "cls": "y",
+     "phrase": "Called the two companies differently"
+    },
+    "none": {
+     "label": "No call",
+     "cls": "n",
+     "phrase": "No call was recorded"
+    }
+   },
+   "order": [
+    "infra",
+    "bubble",
+    "mixed",
+    "none"
+   ],
+   "ended": true,
+   "finished": true,
+   "mode": "individual",
+   "cases": [
+    {
+     "id": "A",
+     "label": "Company 1"
+    }
+   ],
+   "activeCase": "A",
+   "phase": "closed",
+   "next": null,
+   "callNames": {
+    "infra": "Infrastructure",
+    "bubble": "Bubble"
+   },
+   "byCase": {
+    "A": {
+     "id": "A",
+     "label": "Company 1",
+     "phase": "closed",
+     "started": true,
+     "stage": 3,
+     "reveal": {
+      "stage": 3,
+      "caseId": "A",
+      "identity": {
+       "name": "Global Crossing Ltd.",
+       "period": "April to September 2000",
+       "asset": "An undersea and land fibre-optic network linking North America, Europe, Asia and Latin America. It sold capacity on the network to telecom carriers and large businesses."
+      },
+      "table": {
+       "unitNote": "Real figures, US$ millions unless shown otherwise.",
+       "quarters": [
+        "three months ended 30 June 2000",
+        "three months ended 30 September 2000",
+        "three months ended 31 Dec 2000",
+        "three months ended 31 Mar 2001",
+        "three months ended 30 Jun 2001",
+        "three months ended 30 Sep 2001"
+       ],
+       "rows": [
+        {
+         "tag": "hl.cash_revenue",
+         "label": "Cash revenue (company measure)",
+         "values": [
+          "1,107",
+          "1,400",
+          "1,540",
+          "1,613",
+          "1,620",
+          "999"
+         ],
+         "yours": false
+        },
+        {
+         "tag": "hl.adj_ebitda",
+         "label": "Recurring Adjusted EBITDA (company measure)",
+         "values": [
+          "323",
+          "330",
+          "418",
+          "441",
+          "472",
+          "(17)"
+         ],
+         "yours": false
+        },
+        {
+         "tag": "recon.deferred_cash",
+         "label": "Adjusted EBITDA includes: cash received but not yet recognised as revenue",
+         "values": [
+          "308",
+          "354",
+          "—",
+          "531",
+          "551",
+          "206"
+         ],
+         "yours": false
+        },
+        {
+         "tag": "is.revenue",
+         "label": "Revenue",
+         "values": [
+          "918",
+          "1,013",
+          "997",
+          "1,082",
+          "1,069",
+          "793"
+         ],
+         "yours": false
+        },
+        {
+         "tag": "is.revenue_upfront",
+         "label": "of which: capacity sales recognised up front",
+         "values": [
+          "99",
+          "53",
+          "—",
+          "18",
+          "0",
+          "0"
+         ],
+         "yours": false
+        },
+        {
+         "tag": "is.operating_loss",
+         "label": "Operating income (loss)",
+         "values": [
+          "(391)",
+          "(470)",
+          "(580)",
+          "(513)",
+          "(539)",
+          "(897)"
+         ],
+         "yours": false
+        },
+        {
+         "tag": "is.net_loss_common",
+         "label": "Net income (loss) to common shareholders",
+         "values": [
+          "(516)",
+          "(602)",
+          "(514)",
+          "(675)",
+          "(689)",
+          "(3,407)"
+         ],
+         "yours": false
+        },
+        {
+         "tag": "bs.cash",
+         "label": "Cash and cash equivalents",
+         "values": [
+          "2,295",
+          "1,192",
+          "1,477",
+          "1,245",
+          "1,923",
+          "2,260"
+         ],
+         "yours": false
+        },
+        {
+         "tag": "bs.debt_total",
+         "label": "Debt (due within a year plus long-term)",
+         "values": [
+          "6,242",
+          "6,103",
+          "7,271",
+          "8,385",
+          "6,109",
+          "7,647"
+         ],
+         "yours": false
+        },
+        {
+         "tag": "bs.deferred_revenue",
+         "label": "Deferred revenue (cash received, not yet earned)",
+         "values": [
+          "1,015",
+          "1,394",
+          "1,700",
+          "2,243",
+          "2,694",
+          "2,758"
+         ],
+         "yours": false
+        },
+        {
+         "tag": "cf.capex_quarter",
+         "label": "Cash paid for capital expenditure (quarter)",
+         "values": [
+          "892",
+          "1,204",
+          "—",
+          "1,269",
+          "1,033",
+          "—"
+         ],
+         "yours": false
+        }
+       ],
+       "extra": null,
+       "basis": [
+        "Each quarter is shown as the company reported it at the time. The quarter to September 2001 excludes two businesses the company had moved to discontinued operations, so its revenue is on a narrower basis.",
+        "From the quarter to December 2000 the company reported “Recurring Adjusted EBITDA”, which leaves out items it called non-recurring. The two quarters you read show its earlier measure, “Adjusted EBITDA”.",
+        "The December 2000 cash revenue and Recurring Adjusted EBITDA come from the company’s results announcement as reported in the trade press; they agree with the totals in its annual report.",
+        "A dash means the figure was not reported on the same basis that quarter. The company later restated all of 2000 and the first three quarters of 2001."
+       ]
+      },
+      "facts": [
+       {
+        "period": "three months ended 31 Mar 2001",
+        "text": "$375m of cash revenue and Recurring Adjusted EBITDA came from significant carrier customers who signed contracts to buy $500m of capacity and to whom the company made substantial capital commitments in the same quarter; new capital commitments total about $625m"
+       },
+       {
+        "period": "three months ended 30 Jun 2001",
+        "text": "$345m of cash revenue and Recurring Adjusted EBITDA came from carriers who signed to buy $381m of capacity; the company made $358m of cash commitments to those carriers"
+       },
+       {
+        "period": "three months ended 30 Jun 2001",
+        "text": "Company expects slower growth from a lengthening sales cycle, customers' financial difficulties and an industry downturn; installation revenue expected to fall"
+       },
+       {
+        "period": "three months ended 30 Jun 2001",
+        "text": "Core network completed this quarter; capital spending guidance for the year cut to under $4,500m from $4,900-5,100m"
+       },
+       {
+        "period": "three months ended 30 Jun 2001",
+        "text": "Board approved eliminating more than 2,000 positions and a $250-325m charge"
+       },
+       {
+        "period": "three months ended 30 Jun 2001",
+        "text": "8.70% notes fair value $762 per $1,000 face (was $923 at 31 Mar)"
+       },
+       {
+        "period": "three months ended 30 Jun 2001",
+        "text": "Regional business sale closed for $3,369m (agreed $3,650m)"
+       },
+       {
+        "period": "three months ended 30 Sep 2001",
+        "text": "$152m of cash revenue came from carriers who signed to buy $177m of capacity; company cash commitments to those carriers $190m in the quarter ($1,173m over three quarters)"
+       },
+       {
+        "period": "three months ended 30 Sep 2001",
+        "text": "$1,700m corporate credit facility fully drawn"
+       },
+       {
+        "period": "three months ended 30 Sep 2001",
+        "text": "Company expects to need modifications to financial covenants to stay in compliance"
+       },
+       {
+        "period": "three months ended 30 Sep 2001",
+        "text": "Credit ratings cut in October; receivables facility and a $61m borrowing called"
+       },
+       {
+        "period": "three months ended 30 Sep 2001",
+        "text": "Complete evaluation of long-lived assets in the next quarter may bring a material write-down of goodwill"
+       },
+       {
+        "period": "three months ended 30 Sep 2001",
+        "text": "Carrier revenue flat; many providers deferred capacity purchases; carrier data customers delayed renewals"
+       },
+       {
+        "period": "three months ended 30 Sep 2001",
+        "text": "8.70% notes fair value $413 per $1,000 face"
+       },
+       {
+        "period": "three months ended 30 Sep 2001",
+        "text": "More than 2,000 jobs cut, a further ~1,200 planned; headcount to fall below 8,000"
+       }
+      ],
+      "outcome": [
+       {
+        "tag": "out.bankruptcy",
+        "text": "Filed for Chapter 11 on 28 January 2002, listing about $22.4bn of assets and $12.4bn of debt. Common and preferred shareholders were wiped out.",
+        "secondary": true
+       },
+       {
+        "tag": "out.sec_order",
+        "text": "The SEC later found that the company described reciprocal capacity purchases and sales in its reports without saying how much of its cash revenue and Adjusted EBITDA depended on them; the company and executives consented to a cease-and-desist order.",
+        "secondary": false
+       },
+       {
+        "tag": "out.sec_figures",
+        "text": "The SEC order states that in the quarter to March 2001, reciprocal deals made up 23% of cash revenue and 85% of Recurring Adjusted EBITDA. In the quarter to June 2001, without them, the reported $472m would have been about minus $43m.",
+        "secondary": false
+       },
+       {
+        "tag": "out.special_committee",
+        "text": "A board special committee later reviewed 16 of 36 concurrent purchase-and-sale deals made between October 2000 and September 2001.",
+        "secondary": false
+       },
+       {
+        "tag": "out.restated",
+        "text": "The company restated 2000 and the first three quarters of 2001.",
+        "secondary": false
+       }
+      ]
+     },
+     "disagreement": [
+      "Pick a pair that cited the same line with opposite calls. The strongest pairs for this case sit in the results summary or the Adjusted EBITDA build: cash revenue, Adjusted EBITDA, or cash received but not yet earned.",
+      "Opening question one: you both pointed at the same line. What does it tell you that it doesn't tell your partner?",
+      "Opening question two: what would the next quarter's figure on this line have to be for you to switch?",
+      "Stop before anyone names the company. If someone offers a guess, say \"hold that\" and move on."
+     ],
+     "turn": "Pick a company building long-lived capacity today. Which of these lines would you look at first, and where in its reports would you find them?",
+     "minorityCase": {
+      "infra": "The case for infrastructure: like-for-like growth is positive and speeding up (7% then 13%). Deferred revenue is cash already in hand, not a promise. The cost to finish the network is falling, and completion is expected within a year. Customer lending is described as limited. A network that is nearly finished and already carrying paying traffic is hard to call a bubble.",
+      "bubble": "The case for a bubble: reported revenue growth is several hundred percent, but like-for-like growth is single digits to low teens. The company measure of profit is smaller than the cash it received in advance, so strip that out and there is little left. Cash nearly halved in one quarter; capital spending is larger than revenue; prices are falling; and the company is lending customers money to buy from it."
+     },
+     "naming": [
+      {
+       "term": "Vendor financing",
+       "line": "Note: The company has lent limited amounts to customers to help th…"
+      },
+      {
+       "term": "Company-defined profit measures",
+       "line": "Adjusted EBITDA (company measure)"
+      },
+      {
+       "term": "Counting cash paid in advance as if earned",
+       "line": "Adjusted EBITDA includes: cash received but not yet recognised as revenue"
+      },
+      {
+       "term": "Reciprocal capacity deals (buying from customers who buy from you)",
+       "line": "Cash revenue (company measure)"
+      },
+      {
+       "term": "Recognising long-term capacity sales up front",
+       "line": "of which: capacity sales recognised up front"
+      },
+      {
+       "term": "Goodwill write-off periods",
+       "line": "Note: After discussion with the securities regulator, the company …"
+      },
+      {
+       "term": "Useful-life assumptions",
+       "line": "Note: Network systems are depreciated over their remaining economi…"
+      },
+      {
+       "term": "Overbuilding and falling prices",
+       "line": "Note: Margins fell partly because of lower prices on the capacity …"
+      },
+      {
+       "term": "Growth bought through acquisitions",
+       "line": "Revenue growth, like-for-like (company pro forma)"
+      }
+     ],
+     "afterNotes": [
+      "The goodwill life moved shorter, under regulator pressure. Ask: which way would you expect a company under pressure to move its asset lives, and what would that do to reported profit?",
+      "The reciprocal deals the SEC later described began in the quarter right after the two quarters students saw. Nothing in Quarters 1 and 2 shows them; that is the point of the reveal.",
+      "If Case B follows: Equinix's own filings list Global Crossing among its customers that went bankrupt."
+     ]
+    }
+   },
+   "reviewQuestions": [
+    "Read your 'what would change my mind' answer again. Did the later quarters show it?",
+    "Pick a company building long-lived capacity today. Which of these lines would you look at first, and where in its reports would you find them?"
+   ],
+   "lessonQuestions": [
+    "Which line did you cite, and what did it tell you that the headline figures did not?",
+    "Where did the company's own measure and the standard figure differ?",
+    "What would the next quarter have had to show for you to switch?",
+    "What did the later quarters show that your two quarters did not?"
+   ],
+   "lessons": [
+    {
+     "head": "Company measures are chosen by the company.",
+     "text": "Cash revenue and adjusted profit add back what the company decides. Read them beside the standard figures."
+    },
+    {
+     "head": "Cash paid in advance is not revenue earned.",
+     "text": "It is owed back as service, and it becomes revenue only as the service is provided."
+    },
+    {
+     "head": "Growth bought is not growth earned.",
+     "text": "Acquisitions make reported revenue jump. Like-for-like growth shows what the business itself is doing."
+    },
+    {
+     "head": "The same lines can mislead in both directions.",
+     "text": "A company that looks worse on almost every line can survive. Ask what would have to be true for each call."
+    }
+   ]
+  },
+  "you": "Vikram",
+  "serverNow": 1792238143534
+ }
+}

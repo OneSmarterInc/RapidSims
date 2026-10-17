@@ -1,0 +1,472 @@
+{
+ "simId": "rapid-09-money-land",
+ "state": {
+  "session": {
+   "code": "7SDN2",
+   "owner": "Vikram",
+   "ownerId": "fac",
+   "platformAuth": true,
+   "courseId": "crs_A",
+   "name": "Sat, Oct 17, 7:55 AM",
+   "mode": "individual",
+   "state": "closed",
+   "paused": false,
+   "released": 3,
+   "createdAt": 1792238130246,
+   "startedAt": 1792238131090,
+   "pausedTotalMs": 0,
+   "skipSeconds": 660.002,
+   "allocationClosed": true,
+   "allocationClosedAt": 1792238131420,
+   "releasedAt": [
+    1792238131569,
+    1792238131670,
+    1792238131754
+   ],
+   "closedAt": 1792238134299,
+   "clock": {
+    "phase": "closed",
+    "remaining": 0,
+    "stage": 3,
+    "paused": false
+   },
+   "ended": true
+  },
+  "roster": [
+   {
+    "id": "platform:ana",
+    "name": "Ana Lopez",
+    "groupId": "individual:platform:ana",
+    "teamLabel": ""
+   },
+   {
+    "id": "platform:ben",
+    "name": "Ben Ode",
+    "groupId": "individual:platform:ben",
+    "teamLabel": ""
+   }
+  ],
+  "participants": {
+   "platform:ana": {
+    "id": "platform:ana",
+    "name": "Ana Lopez",
+    "joinedAt": 1792238130643
+   },
+   "platform:ben": {
+    "id": "platform:ben",
+    "name": "Ben Ode",
+    "joinedAt": 1792238130962
+   }
+  },
+  "runs": {
+   "individual:platform:ana": {
+    "runId": "individual:platform:ana",
+    "teamLabel": "Ana Lopez",
+    "runnerId": "platform:ana",
+    "completedBy": null,
+    "done": true,
+    "completedAt": 1792238131360,
+    "phase": 1,
+    "joined": true,
+    "band": "followed",
+    "statements": {
+     "direction": "Business purchasing moves online, and most large buyers will run it through software.",
+     "pick": "marketplaces",
+     "reason": "The forecast says the marketplaces in the middle will take a fee on every order that passes through them."
+    },
+    "statementsBy": null,
+    "allocation": {
+     "RA": 500000,
+     "IC": 500000,
+     "LS": 0,
+     "MS": 0,
+     "PS": 0,
+     "cash": 0
+    },
+    "allocationBy": null,
+    "values": {
+     "2002": "$100K",
+     "2004": "$40K",
+     "2010": "$40K"
+    },
+    "finalValue": "$40K",
+    "reflections": {
+     "platform:ana": {
+      "reflection1": "Buyers kept the savings.",
+      "reflection2": "AI in accounting."
+     }
+    },
+    "reflection1": "Buyers kept the savings.",
+    "reflection2": "AI in accounting."
+   },
+   "individual:platform:ben": {
+    "runId": "individual:platform:ben",
+    "teamLabel": "Ben Ode",
+    "runnerId": "platform:ben",
+    "completedBy": null,
+    "done": true,
+    "completedAt": 1792238131369,
+    "phase": 1,
+    "joined": true,
+    "band": "against",
+    "statements": {
+     "direction": "Business purchasing moves online, and most large buyers will run it through software.",
+     "pick": "buyers",
+     "reason": "The forecast says the marketplaces in the middle will take a fee on every order that passes through them."
+    },
+    "statementsBy": null,
+    "allocation": {
+     "RA": 600000,
+     "IC": 0,
+     "LS": 0,
+     "MS": 0,
+     "PS": 0,
+     "cash": 400000
+    },
+    "allocationBy": null,
+    "values": {
+     "2002": "$520K",
+     "2004": "$450K",
+     "2010": "$450K"
+    },
+    "finalValue": "$450K",
+    "reflections": {},
+    "reflection1": "",
+    "reflection2": ""
+   }
+  },
+  "kit": {
+   "bands": {
+    "followed": {
+     "label": "Followed the statement",
+     "cls": "b",
+     "phrase": "The money went where the destination statement said"
+    },
+    "against": {
+     "label": "Against the statement",
+     "cls": "v",
+     "phrase": "Half or more went against the destination statement"
+    },
+    "cash": {
+     "label": "Held cash",
+     "cls": "n",
+     "phrase": "Half or more stayed in cash"
+    },
+    "unplaced": {
+     "label": "Unplaced",
+     "cls": "y",
+     "phrase": "Time ran out before the fund was placed"
+    }
+   },
+   "order": [
+    "followed",
+    "against",
+    "cash",
+    "unplaced"
+   ],
+   "ended": true,
+   "released": 3,
+   "stagesTotal": 3,
+   "nextYear": null,
+   "companies": [
+    {
+     "key": "RA",
+     "descriptor": "The reverse-auction firm",
+     "category": "marketplaces",
+     "name": "FreeMarkets (Pittsburgh)"
+    },
+    {
+     "key": "IC",
+     "descriptor": "The industry-community operator",
+     "category": "marketplaces",
+     "name": "VerticalNet (Horsham, Pennsylvania)"
+    },
+    {
+     "key": "LS",
+     "descriptor": "The lab-supplies marketplace",
+     "category": "marketplaces",
+     "name": "Chemdex, renamed Ventro in 2000 and NexPrise in 2002"
+    },
+    {
+     "key": "MS",
+     "descriptor": "The marketplace-software vendor",
+     "category": "software",
+     "name": "Commerce One (Pleasanton, California)"
+    },
+    {
+     "key": "PS",
+     "descriptor": "The procurement-software vendor",
+     "category": "software",
+     "name": "Ariba (Mountain View, later Sunnyvale, California)"
+    }
+   ],
+   "cashLabel": "Hold as cash",
+   "picks": [
+    {
+     "key": "marketplaces",
+     "text": "The companies that run the marketplaces"
+    },
+    {
+     "key": "software",
+     "text": "The companies that sell the software marketplaces run on"
+    },
+    {
+     "key": "buyers",
+     "text": "The businesses doing the buying"
+    },
+    {
+     "key": "sellers",
+     "text": "The businesses doing the selling"
+    },
+    {
+     "key": "incumbents",
+     "text": "The established business-software firms"
+    },
+    {
+     "key": "nobody",
+     "text": "Nobody in particular: competition hands it to customers"
+    }
+   ],
+   "stages": [
+    {
+     "year": 2002,
+     "heading": "Two years later",
+     "direction": "Businesses kept moving purchasing online. Online auctions for industrial parts became a normal tool in purchasing departments.",
+     "destination": "The large buyers mostly did not join independent marketplaces. They built their own, alone or with rivals in their industry, and hired software vendors to run them. The marketplaces that sat in the middle lost their reason to exist.",
+     "values": {
+      "RA": "$190K",
+      "IC": "$10K",
+      "LS": "under $10K",
+      "MS": "under $10K",
+      "PS": "$40K"
+     }
+    },
+    {
+     "year": 2004,
+     "heading": "Four years later",
+     "direction": "Online sourcing and procurement software became standard in large companies. The established business-software firms added the same features to the systems their customers already ran.",
+     "destination": "The buyers kept the savings. Suppliers bid prices down in the auctions, and that money went to the companies doing the buying, not to the auction runners.",
+     "values": {
+      "RA": "$80K",
+      "IC": "under $10K",
+      "LS": "under $10K",
+      "MS": "under $10K",
+      "PS": "$20K"
+     }
+    },
+    {
+     "year": 2010,
+     "heading": "Ten years later",
+     "direction": "Buying and selling between businesses over electronic networks is now how most large companies purchase. The forecast's direction was right.",
+     "destination": "Two years from now, one of the largest established business-software firms buys the procurement-software vendor for $4.3 billion, far below what it was worth in 2000. The money from the move online settled with the buyers who saved, and with the incumbents who sold them the software.",
+     "values": {
+      "RA": "$80K",
+      "IC": "under $10K",
+      "LS": "$0",
+      "MS": "$0",
+      "PS": "$20K"
+     }
+    }
+   ],
+   "namesHeading": "Who they were",
+   "closingAsk": "Read your direction statement again. Then read your destination statement.",
+   "reviewQuestions": [
+    "Read your destination statement again. What would have had to be true for it to hold?",
+    "Find a forecast being made right now about your own field. Write its direction claim and its destination claim separately, and say what would have to be true for the second to hold."
+   ],
+   "lessonQuestions": [
+    "Was your direction statement right? Was your destination statement right?",
+    "Which company did you think would be paid, and who was paid instead?",
+    "What would have told you in 2000 that buyers would keep the savings?",
+    "Where did your money go: with your destination statement, or against it?"
+   ],
+   "lessons": [
+    {
+     "head": "The direction test.",
+     "text": "Was the forecast right about what would happen? Almost always, yes."
+    },
+    {
+     "head": "The destination test.",
+     "text": "Was it right about who would be paid? That is the bet, and it is harder."
+    },
+    {
+     "head": "Adoption is not revenue.",
+     "text": "Business purchasing did move online. The firms in the middle were not paid for it."
+    },
+    {
+     "head": "Cheap and universal loses its price.",
+     "text": "When a capability becomes cheap and universal, the firm that planned to charge for it loses its price."
+    }
+   ]
+  },
+  "projector": {
+   "clock": {
+    "phase": "closed",
+    "remaining": 0,
+    "stage": 3,
+    "paused": false
+   },
+   "mode": "individual",
+   "joined": 2,
+   "teams": null,
+   "units": 2,
+   "statementsIn": 2,
+   "allocationsIn": 2,
+   "released": 3,
+   "stagesTotal": 3,
+   "nextYear": null,
+   "room": {
+    "placed": 2,
+    "totals": {
+     "RA": 1100000,
+     "IC": 500000,
+     "LS": 0,
+     "MS": 0,
+     "PS": 0,
+     "cash": 400000
+    },
+    "picks": {
+     "marketplaces": 1,
+     "software": 0,
+     "buyers": 1,
+     "sellers": 0,
+     "incumbents": 0,
+     "nobody": 0
+    },
+    "concentrated": [
+     {
+      "id": "platform:ben",
+      "label": "Student 2",
+      "max": 0.6,
+      "holdings": 2
+     }
+    ],
+    "spread": [
+     {
+      "id": "platform:ana",
+      "label": "Student 1",
+      "max": 0.5,
+      "holdings": 2
+     },
+     {
+      "id": "platform:ben",
+      "label": "Student 2",
+      "max": 0.6,
+      "holdings": 2
+     }
+    ],
+    "contradictions": [
+     {
+      "id": "platform:ben",
+      "label": "Student 2",
+      "share": 0.6,
+      "pick": "buyers"
+     }
+    ],
+    "stages": [
+     {
+      "year": 2002,
+      "low": "$100K",
+      "median": "$310K",
+      "high": "$520K",
+      "room": "$620K",
+      "invested": "$2,000,000"
+     },
+     {
+      "year": 2004,
+      "low": "$40K",
+      "median": "$240K",
+      "high": "$450K",
+      "room": "$490K",
+      "invested": "$2,000,000"
+     },
+     {
+      "year": 2010,
+      "low": "$40K",
+      "median": "$240K",
+      "high": "$450K",
+      "room": "$490K",
+      "invested": "$2,000,000"
+     }
+    ],
+    "labels": {
+     "RA": "The reverse-auction firm",
+     "IC": "The industry-community operator",
+     "LS": "The lab-supplies marketplace",
+     "MS": "The marketplace-software vendor",
+     "PS": "The procurement-software vendor",
+     "cash": "Hold as cash"
+    },
+    "pickLabels": {
+     "marketplaces": "The companies that run the marketplaces",
+     "software": "The companies that sell the software marketplaces run on",
+     "buyers": "The businesses doing the buying",
+     "sellers": "The businesses doing the selling",
+     "incumbents": "The established business-software firms",
+     "nobody": "Nobody in particular: competition hands it to customers"
+    },
+    "statements": [
+     {
+      "id": "platform:ana",
+      "label": "Student 1",
+      "direction": "Business purchasing moves online, and most large buyers will run it through software.",
+      "pick": "marketplaces",
+      "reason": "The forecast says the marketplaces in the middle will take a fee on every order that passes through them.",
+      "allocation": {
+       "RA": 500000,
+       "IC": 500000,
+       "LS": 0,
+       "MS": 0,
+       "PS": 0,
+       "cash": 0
+      }
+     },
+     {
+      "id": "platform:ben",
+      "label": "Student 2",
+      "direction": "Business purchasing moves online, and most large buyers will run it through software.",
+      "pick": "buyers",
+      "reason": "The forecast says the marketplaces in the middle will take a fee on every order that passes through them.",
+      "allocation": {
+       "RA": 600000,
+       "IC": 0,
+       "LS": 0,
+       "MS": 0,
+       "PS": 0,
+       "cash": 400000
+      }
+     }
+    ],
+    "flagText": "{team} said {pick}, then put {share} into companies that bet the other way.",
+    "pairHeading": "The most concentrated bet beside the most spread one",
+    "names": {
+     "RA": "FreeMarkets (Pittsburgh)",
+     "IC": "VerticalNet (Horsham, Pennsylvania)",
+     "LS": "Chemdex, renamed Ventro in 2000 and NexPrise in 2002",
+     "MS": "Commerce One (Pleasanton, California)",
+     "PS": "Ariba (Mountain View, later Sunnyvale, California)"
+    }
+   },
+   "debrief": {
+    "facilitatorNote": [
+     "Everyone loses money. That is the outcome the sim was built to produce, and saying so before the first stage lands keeps the class from reading it as failure.",
+     "The direction statements will almost all hold. Put two of them on the projector at the 2010 stage and ask what they have in common. Then put the destination statements beside them.",
+     "Two figures are reconstructed rather than read from a single day's close (see the source notes on each company). None of them changes which companies lost almost everything."
+    ],
+    "disagreement": "Ask the most concentrated team and the most spread team why, before anyone mentions what happened.",
+    "naming": [
+     "The direction test: was the forecast right about what would happen?",
+     "The destination test: was it right about who would be paid?",
+     "Adoption is not revenue",
+     "When a capability becomes cheap and universal, the firm that planned to charge for it loses its price"
+    ],
+    "turn": "Find a forecast being made right now about your own field. Write its direction claim and its destination claim separately, and say what would have to be true for the second to hold.",
+    "cashPrompt": "For the teams that held cash: where did you say the money would land, and were you right?",
+    "teamPrompt": null,
+    "sawItComing": "Six months after these funds committed, in December 2000, a Wharton faculty member told the school's business journal that big buyers would build their own purchasing systems and keep the savings, rather than pay an outside marketplace to do it. The destination was visible within the year. Ask who in the class wrote something close to that.",
+    "epilogue": "If anyone held on until 2012: the procurement-software vendor was bought for $45 a share. A June 2000 holder of it would have $80K of every $1M. A holder of the reverse-auction firm, carried through the merger, would have about $220K. The best outcome in the class still lost most of the money."
+   }
+  },
+  "you": "Vikram"
+ }
+}

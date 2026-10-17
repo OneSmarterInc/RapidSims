@@ -1,0 +1,99 @@
+{
+ "simId": "rapid-03-midland",
+ "state": {
+  "session": {
+   "code": "KUKEZ",
+   "owner": "faculty",
+   "ownerId": "faculty",
+   "platformAuth": true,
+   "courseId": "course-a",
+   "name": "Midland Equipment",
+   "mode": "team",
+   "state": "running",
+   "paused": false,
+   "thresholds": {
+    "budgetPerYear": 9,
+    "runFloor": 4,
+    "perLineCap": 3,
+    "year1ConnectStrong": 2,
+    "heatUptimeStrong": 3,
+    "heatUptimeMiddle": 2,
+    "competitorConnectStrong": 4,
+    "competitorConnectPilotMin": 2,
+    "competitorConnectPilotMax": 3,
+    "year3ConnectStrong": 5,
+    "year3CapacityStrong": 2,
+    "year3ConnectPilotMin": 3,
+    "year3ConnectPilotMax": 4
+   },
+   "createdAt": 1792238241657,
+   "startedAt": 1792238241703
+  },
+  "participants": {
+   "platform:a": {
+    "id": "platform:a",
+    "name": "Ana Lopez",
+    "groupId": "team:team-1",
+    "teamLabel": "Team 1",
+    "isCaptain": true,
+    "source": "course",
+    "addedAt": 1792238241698,
+    "joinedAt": 1792238241704
+   },
+   "platform:b": {
+    "id": "platform:b",
+    "name": "Ben Ode",
+    "groupId": "team:team-1",
+    "teamLabel": "Team 1",
+    "isCaptain": false,
+    "source": "course",
+    "addedAt": 1792238241698,
+    "joinedAt": null
+   },
+   "platform:c": {
+    "id": "platform:c",
+    "name": "Cal Reyes",
+    "groupId": null,
+    "teamLabel": "",
+    "isCaptain": false,
+    "source": "course",
+    "addedAt": 1792238241705,
+    "joinedAt": null
+   }
+  },
+  "runs": {
+   "team:team-1": {
+    "runId": "team:team-1",
+    "strategicView": "Ana Lopez argued for Dale first; Ben Ode agreed.",
+    "done": false
+   }
+  },
+  "you": "faculty",
+  "defaultThresholds": {
+   "budgetPerYear": 9,
+   "runFloor": 4,
+   "perLineCap": 3,
+   "year1ConnectStrong": 2,
+   "heatUptimeStrong": 3,
+   "heatUptimeMiddle": 2,
+   "competitorConnectStrong": 4,
+   "competitorConnectPilotMin": 2,
+   "competitorConnectPilotMax": 3,
+   "year3ConnectStrong": 5,
+   "year3CapacityStrong": 2,
+   "year3ConnectPilotMin": 3,
+   "year3ConnectPilotMax": 4
+  },
+  "responsePrompts": {
+   "opening": "This budget is for ___, because ___.",
+   "reflections": [
+    "Dale, Renata, Tom and Sam each wanted more money. Whose line got the least from you, and why?",
+    "Now that you have seen Year 3, which line would you move $1M into in Year 1, and where would you take it from?"
+   ],
+   "followups": [
+    "",
+    ""
+   ]
+  }
+ }
+}

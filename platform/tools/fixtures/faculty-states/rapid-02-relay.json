@@ -1,0 +1,209 @@
+{
+ "simId": "rapid-02-relay",
+ "state": {
+  "session": {
+   "code": "5QWRD",
+   "owner": "Vikram",
+   "ownerId": "fac-1",
+   "platformAuth": true,
+   "courseId": "crs_A",
+   "name": "Sat, Oct 17, 7:54 AM",
+   "mode": "individual",
+   "state": "closed",
+   "paused": false,
+   "revealed": true,
+   "holdReveal": false,
+   "createdAt": 1792238075251,
+   "startedAt": 1792238075703,
+   "closedAt": 1792238081730,
+   "closedBy": "Vikram",
+   "closedFrom": "class-page"
+  },
+  "participants": {
+   "platform:ana": {
+    "id": "platform:ana",
+    "name": "Ana Lopez",
+    "groupId": "platform:ana",
+    "joinedAt": 1792238075602
+   },
+   "platform:ben": {
+    "id": "platform:ben",
+    "name": "Ben Ode",
+    "groupId": "platform:ben",
+    "joinedAt": 1792238080387
+   }
+  },
+  "runs": {
+   "individual:platform:ana": {
+    "groupId": "platform:ana",
+    "positions": [
+     {
+      "reading": "content",
+      "action": "preserve",
+      "tripwire": "If the log shows other families."
+     },
+     {
+      "reading": "both",
+      "action": "halt",
+      "tripwire": "If Devin names who approved it."
+     },
+     {
+      "reading": "both",
+      "action": "notify",
+      "tripwire": "If counsel asks."
+     }
+    ],
+    "phase": 3,
+    "done": true,
+    "ladderEarnedAt": 0,
+    "ladderPrivate": true,
+    "preservedAt": 0,
+    "privateCount": 1,
+    "completedAt": 1792238080456,
+    "updatedAt": 1792238080474,
+    "reflection1": "Nadia, once she said the escalations dried up.",
+    "reflection2": "Ask Devin what it was for.",
+    "reviewedAt": 1792238080474,
+    "runId": "individual:platform:ana",
+    "runnerId": "platform:ana",
+    "completedBy": "platform:ana",
+    "teamLabel": "Ana Lopez",
+    "band": "ready_both"
+   },
+   "individual:platform:ben": {
+    "groupId": "platform:ben",
+    "positions": [
+     {
+      "reading": "content",
+      "action": "reindex",
+      "tripwire": "If the log shows other families."
+     },
+     {
+      "reading": "content",
+      "action": "halt",
+      "tripwire": "If Devin names who approved it."
+     },
+     {
+      "reading": "content",
+      "action": "notify",
+      "tripwire": "If counsel asks."
+     }
+    ],
+    "phase": 3,
+    "done": true,
+    "completedAt": 1792238080469,
+    "updatedAt": 1792238080469,
+    "runId": "individual:platform:ben",
+    "runnerId": "platform:ben",
+    "completedBy": "platform:ben",
+    "teamLabel": "Ben Ode",
+    "band": "gone"
+   }
+  },
+  "you": "Vikram",
+  "phases": [
+   "Hour 1",
+   "Hour 7",
+   "Day 2"
+  ],
+  "kit": {
+   "bands": {
+    "ready_both": {
+     "label": "Ready for both",
+     "cls": "g",
+     "phrase": "Kept the index and named both causes"
+    },
+    "held": {
+     "label": "Held, undecided",
+     "cls": "y",
+     "phrase": "Kept the index, but never named both causes"
+    },
+    "late": {
+     "label": "Right, can't answer",
+     "cls": "o",
+     "phrase": "Named both causes after the index was gone"
+    },
+    "gone": {
+     "label": "Index lost",
+     "cls": "l",
+     "phrase": "Lost the index and settled on one cause"
+    }
+   },
+   "order": [
+    "ready_both",
+    "held",
+    "late",
+    "gone"
+   ],
+   "irreversible": {
+    "reindex": true,
+    "rollback": true,
+    "notify": true
+   },
+   "actionLabels": {
+    "preserve": "Preserve the index",
+    "halt": "Halt Relay for CS-7400",
+    "pull_log": "Pull the 90-day log",
+    "reindex": "Re-index the library",
+    "rollback": "Roll back the threshold",
+    "notify": "Notify customers"
+   },
+   "readingLabels": {
+    "content": "Stale document",
+    "supervision": "Not escalated",
+    "both": "Both",
+    "unknown": "Undetermined"
+   },
+   "phases": [
+    "Hour 1",
+    "Hour 7",
+    "Day 2"
+   ],
+   "reviewQuestions": [
+    "At Hour 1, whose account did you trust most, and what did that person stand to lose if they were wrong?",
+    "Now that you know it was both, which one decision would you change, and what question would have told you sooner?"
+   ],
+   "lessonQuestions": [
+    "Whose answer did you trust, and what did they stand to lose?",
+    "Did you keep the evidence before you fixed the problem?",
+    "When did you change your mind?",
+    "Did you ask what the Q3 change was for?"
+   ],
+   "lessons": [
+    {
+     "head": "Every adviser tells the truth they can afford.",
+     "text": "Joanna and Devin were each right about their half, and each found the other half more persuasive."
+    },
+    {
+     "head": "Keep the evidence before you fix.",
+     "text": "Preserve cost nothing. The 2:00 rebuild erased the record of what Relay served."
+    },
+    {
+     "head": "Change course when the evidence changes.",
+     "text": "At Hour 7, nine rating questions answered with no escalation pointed past the document."
+    },
+    {
+     "head": "Ask what a change was for.",
+     "text": "\"Did anything change?\" gets a yes. \"What was it for?\" gets the deflection target."
+    }
+   ],
+   "resolution": {
+    "headline": "It was <span class=\"md-t-both\">both</span>.",
+    "text": "Revision C was in the index, because the nightly job takes every file in the library. Separately, Devin moved the routing threshold in week three of Q3, against a deflection target, so rating questions stopped reaching an engineer. Neither one did this alone."
+   },
+   "fork": {
+    "reversible": {
+     "content": "You held the index, established that Relay served the superseded figure, and told the nine on your own timetable with an answer attached. A slow week and a workflow that finally gets funded.",
+     "both": "You held the index, so when counsel asked what your system told their engineer you could answer. And because you asked Devin the question nobody else asked, you knew the number was only half of it. The audit committee got the sentence that was actually true."
+    },
+    "irreversible": {
+     "content": "Library corrected, wrong number gone, Ridgeline handled. Nobody ever establishes what Relay was serving, including you — and on this reading it didn't matter.",
+     "both": "You corrected the library and lost the index in the same move. Counsel asked what your system told their engineer and the honest answer was that you can't say. Meanwhile the setting that let the question through was never examined, because everyone had an explanation that fit."
+    }
+   },
+   "rebuild": "the 2:00 rebuild",
+   "ladder": "Devin moved the threshold himself, against a deflection number, and nobody reviewed it. \"Did anything change?\" got a yes. \"What was the change for?\" got the target.",
+   "preserve": "The index is rebuilt from the library every night at 2:00. Only Nadia had reason to mention it. Preserving it by Hour 7 kept the answer to counsel's question."
+  }
+ }
+}

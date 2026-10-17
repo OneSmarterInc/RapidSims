@@ -1,0 +1,428 @@
+{
+ "simId": "rapid-06-switch",
+ "state": {
+  "session": {
+   "code": "K65GJ",
+   "mode": "individual",
+   "state": "closed",
+   "phase": "ended",
+   "solo": false,
+   "startedAt": 1792238100357,
+   "serverNow": 1792238706937,
+   "playMs": 600000,
+   "name": "Sat, Oct 17, 7:54 AM",
+   "createdAt": 1792238099340,
+   "platformAuth": true,
+   "courseId": "crs_A",
+   "practice": false,
+   "ended": true
+  },
+  "participants": {
+   "platform:ana": {
+    "id": "platform:ana",
+    "name": "Ana Lopez",
+    "joinedAt": 1792238099710
+   },
+   "platform:ben": {
+    "id": "platform:ben",
+    "name": "Ben Ode",
+    "joinedAt": 1792238100110
+   }
+  },
+  "runs": {
+   "individual:platform:ana": {
+    "runId": "individual:platform:ana",
+    "teamLabel": "Ana Lopez",
+    "runnerId": "platform:ana",
+    "completedBy": null,
+    "done": true,
+    "completedAt": 1792238148373,
+    "phase": 1,
+    "joined": true,
+    "band": "switch",
+    "atReport": 2,
+    "storyTime": "11:09",
+    "reason": "Every store is failing.",
+    "by": null,
+    "openedBoth": false,
+    "lost": 35520,
+    "reflections": {
+     "platform:ana": {
+      "reflection1": "Report 2. A map of who carries what.",
+      "reflection2": "Our LMS. Its cloud host."
+     }
+    },
+    "reflection1": "Report 2. A map of who carries what.",
+    "reflection2": "Our LMS. Its cloud host."
+   },
+   "individual:platform:ben": {
+    "runId": "individual:platform:ben",
+    "teamLabel": "Ben Ode",
+    "runnerId": "platform:ben",
+    "completedBy": null,
+    "done": true,
+    "completedAt": 1792238283738,
+    "phase": 1,
+    "joined": true,
+    "band": "stay",
+    "atReport": 5,
+    "storyTime": "11:23",
+    "reason": "Both documents name the same carrier.",
+    "by": null,
+    "openedBoth": false,
+    "lost": 33600,
+    "reflections": {},
+    "reflection1": "",
+    "reflection2": ""
+   }
+  },
+  "kit": {
+   "bands": {
+    "stay": {
+     "label": "Held",
+     "cls": "g",
+     "phrase": "Committed to staying on the primary provider"
+    },
+    "none": {
+     "label": "No decision",
+     "cls": "y",
+     "phrase": "The clock ran out before a decision"
+    },
+    "switch": {
+     "label": "Switched",
+     "cls": "o",
+     "phrase": "Switched to the backup provider"
+    }
+   },
+   "order": [
+    "stay",
+    "none",
+    "switch"
+   ],
+   "ended": true,
+   "reports": [
+    {
+     "n": 1,
+     "source": "Head office POS desk",
+     "text": "Card payments timing out at all twelve stores. About one in three is going through after 40 to 60 seconds."
+    },
+    {
+     "n": 2,
+     "source": "Dana Okafor, flagship store",
+     "text": "Our terminals took a firmware update overnight. First morning on the new version and now this."
+    },
+    {
+     "n": 3,
+     "source": "Northline status page",
+     "text": "Investigating reports of degraded service for some business customers in the Tri-County region."
+    },
+    {
+     "n": 4,
+     "source": "Terminal vendor helpdesk",
+     "text": "We've had two other calls this morning from customers on the new firmware. We're looking into it."
+    },
+    {
+     "n": 5,
+     "source": "Dana Okafor",
+     "text": "Mr. Reyes has a full cart and has tried his card three times. He's asking whether he should come back later."
+    },
+    {
+     "n": 6,
+     "source": "ClearPath status page",
+     "text": "All systems operational."
+    },
+    {
+     "n": 7,
+     "source": "Terminal vendor helpdesk",
+     "text": "We rolled the firmware back at stores 3 and 7 as a test. No change at either."
+    },
+    {
+     "n": 8,
+     "source": "Store 9 manager",
+     "text": "Ours are going through more often than an hour ago. Maybe one in two now."
+    },
+    {
+     "n": 9,
+     "source": "Dana Okafor",
+     "text": "The coffee shop next door says their card machine is down too. They're on ClearPath."
+    },
+    {
+     "n": 10,
+     "source": "Northline status page",
+     "text": "Fault identified outside the Northline network. We're working with our partner on restoration. No estimate yet."
+    },
+    {
+     "n": 11,
+     "source": "Social media, forwarded by a store",
+     "text": "Photo of utility crews at a street cabinet on Route 4, van marked Meridian Transit."
+    },
+    {
+     "n": 12,
+     "source": "Dana Okafor",
+     "text": "Mr. Reyes left his cart and went home. We've got a queue of eleven at the one register taking cash."
+    }
+   ],
+   "projector": {
+    "counts": {
+     "switched": 1,
+     "stayed": 1,
+     "noDecision": 0,
+     "stillDeciding": 0
+    },
+    "byReport": [
+     {
+      "n": 1,
+      "switch": 0,
+      "stay": 0
+     },
+     {
+      "n": 2,
+      "switch": 1,
+      "stay": 0
+     },
+     {
+      "n": 3,
+      "switch": 0,
+      "stay": 0
+     },
+     {
+      "n": 4,
+      "switch": 0,
+      "stay": 0
+     },
+     {
+      "n": 5,
+      "switch": 0,
+      "stay": 1
+     },
+     {
+      "n": 6,
+      "switch": 0,
+      "stay": 0
+     },
+     {
+      "n": 7,
+      "switch": 0,
+      "stay": 0
+     },
+     {
+      "n": 8,
+      "switch": 0,
+      "stay": 0
+     },
+     {
+      "n": 9,
+      "switch": 0,
+      "stay": 0
+     },
+     {
+      "n": 10,
+      "switch": 0,
+      "stay": 0
+     },
+     {
+      "n": 11,
+      "switch": 0,
+      "stay": 0
+     },
+     {
+      "n": 12,
+      "switch": 0,
+      "stay": 0
+     }
+    ],
+    "openedBothPct": {
+     "overall": null,
+     "switched": null,
+     "stayed": null,
+     "noDecision": null
+    }
+   },
+   "map": {
+    "nodes": [
+     {
+      "id": "stores",
+      "label": "Harlow Home & Hardware · 12 stores"
+     },
+     {
+      "id": "northline",
+      "label": "Northline Fibre (fibre)"
+     },
+     {
+      "id": "clearpath",
+      "label": "ClearPath Business (fixed wireless)"
+     },
+     {
+      "id": "meridian",
+      "label": "Meridian Transit · Route 4 exchange",
+      "fault": true
+     },
+     {
+      "id": "processor",
+      "label": "Card processor"
+     }
+    ],
+    "edges": [
+     [
+      "stores",
+      "northline"
+     ],
+     [
+      "stores",
+      "clearpath"
+     ],
+     [
+      "northline",
+      "meridian"
+     ],
+     [
+      "clearpath",
+      "meridian"
+     ],
+     [
+      "meridian",
+      "processor"
+     ]
+    ],
+    "faultNote": "Cable damaged by roadworks, 11:02. Restored 12:40."
+   },
+   "caption": "Harlow had two contracts and two providers. Both providers bought backhaul from the same company, which appears in both documents and in neither of Harlow's contracts.",
+   "documents": [
+    {
+     "id": "northline",
+     "title": "Northline Fibre contract extract"
+    },
+    {
+     "id": "clearpath",
+     "title": "ClearPath Business network summary"
+    }
+   ],
+   "hidden": "Meridian",
+   "minGroup": 3,
+   "reviewQuestions": [
+    "Which report decided it for you, and what would have changed your mind?",
+    "Name a service you depend on. Then name who it depends on. Keep going until you reach a company you had never heard of."
+   ],
+   "lessonQuestions": [
+    "Which report made you most sure, and was it right?",
+    "What did the two documents have in common?",
+    "What would have told you that switching could not help?",
+    "Who does your own backup depend on?"
+   ],
+   "lessons": [
+    {
+     "head": "Redundancy is having two of something.",
+     "text": "Harlow had two providers and two contracts."
+    },
+    {
+     "head": "Diversity means the second one fails for different reasons.",
+     "text": "Both providers ran over the same Meridian cable."
+    },
+    {
+     "head": "The risk sat outside every contract Harlow signed.",
+     "text": "Meridian appears in both documents and in neither contract."
+    },
+    {
+     "head": "Switching has a cost even when it fixes nothing.",
+     "text": "Eight minutes with no card sales, and the payments still timed out."
+    }
+   ]
+  },
+  "joined": 2,
+  "teams": null,
+  "projector": {
+   "counts": {
+    "switched": 1,
+    "stayed": 1,
+    "noDecision": 0,
+    "stillDeciding": 0
+   },
+   "byReport": [
+    {
+     "n": 1,
+     "switch": 0,
+     "stay": 0
+    },
+    {
+     "n": 2,
+     "switch": 1,
+     "stay": 0
+    },
+    {
+     "n": 3,
+     "switch": 0,
+     "stay": 0
+    },
+    {
+     "n": 4,
+     "switch": 0,
+     "stay": 0
+    },
+    {
+     "n": 5,
+     "switch": 0,
+     "stay": 1
+    },
+    {
+     "n": 6,
+     "switch": 0,
+     "stay": 0
+    },
+    {
+     "n": 7,
+     "switch": 0,
+     "stay": 0
+    },
+    {
+     "n": 8,
+     "switch": 0,
+     "stay": 0
+    },
+    {
+     "n": 9,
+     "switch": 0,
+     "stay": 0
+    },
+    {
+     "n": 10,
+     "switch": 0,
+     "stay": 0
+    },
+    {
+     "n": 11,
+     "switch": 0,
+     "stay": 0
+    },
+    {
+     "n": 12,
+     "switch": 0,
+     "stay": 0
+    }
+   ],
+   "openedBothPct": {
+    "overall": null,
+    "switched": null,
+    "stayed": null,
+    "noDecision": null
+   }
+  },
+  "debrief": [
+   {
+    "step": "Disagreement",
+    "prompt": "Before showing anything: who switched early, and what made you sure? Who committed to holding, and what did you see? Who never decided, and what were you waiting for?"
+   },
+   {
+    "step": "Naming",
+    "prompt": "Redundancy means having two of something. Diversity means the second one fails for different reasons than the first. Then concentration risk and blast radius, and the point that the dependency sat outside every contract Harlow signed (Northline Schedule B excludes it by name)."
+   },
+   {
+    "step": "Reading",
+    "prompt": "Put up the reading figures. Did the people who opened both documents decide differently? Anyone who found Meridian in both: did you believe it, or did the reports win?"
+   },
+   {
+    "step": "The turn",
+    "prompt": "Name a service you depend on. Then name who it depends on. Keep going until you reach a company you had never heard of."
+   }
+  ]
+ }
+}

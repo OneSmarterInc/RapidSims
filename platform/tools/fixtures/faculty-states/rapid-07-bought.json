@@ -1,0 +1,277 @@
+{
+ "simId": "rapid-07-bought",
+ "state": {
+  "session": {
+   "code": "JK3MZ",
+   "owner": "Vikram",
+   "ownerId": "fac",
+   "platformAuth": true,
+   "courseId": "crs_A",
+   "name": "Sat, Oct 17, 7:55 AM",
+   "mode": "individual",
+   "state": "closed",
+   "settings": {
+    "decisionMinutes": 10,
+    "justificationMinWords": 8,
+    "autoAdvanceSeconds": 90
+   },
+   "stage": 3,
+   "pinned": [],
+   "showPrompts": false,
+   "teamSize": 4,
+   "createdAt": 1792238105276,
+   "startedAt": 1792238106173,
+   "closedEarlyAt": 1792238109403,
+   "closedAt": 1792238117071,
+   "paused": false,
+   "ended": true,
+   "phase": "closed"
+  },
+  "participants": {
+   "platform:ana": {
+    "id": "platform:ana",
+    "name": "Ana Lopez",
+    "joinedAt": 1792238105708
+   },
+   "platform:ben": {
+    "id": "platform:ben",
+    "name": "Ben Ode",
+    "joinedAt": 1792238106007
+   }
+  },
+  "runs": {
+   "individual:platform:ana": {
+    "runId": "individual:platform:ana",
+    "teamLabel": "Ana Lopez",
+    "runnerId": "platform:ana",
+    "completedBy": null,
+    "done": true,
+    "completedAt": 1792238108904,
+    "phase": 1,
+    "joined": true,
+    "band": "bought",
+    "votes": null,
+    "reasons": [
+     {
+      "id": "platform:ana",
+      "name": "Ana Lopez",
+      "choice": "buy",
+      "lapsed": false,
+      "text": "Fifty million is a small price for a business we cannot build ourselves.",
+      "recognised": "no"
+     }
+    ],
+    "reflections": {
+     "platform:ana": {
+      "reflection1": "The price against our revenue.",
+      "reflection2": "Choosing a major."
+     }
+    },
+    "reflection1": "The price against our revenue.",
+    "reflection2": "Choosing a major.",
+    "choice": "buy",
+    "lapsed": false,
+    "justification": "Fifty million is a small price for a business we cannot build ourselves.",
+    "recognised": "no"
+   },
+   "individual:platform:ben": {
+    "runId": "individual:platform:ben",
+    "teamLabel": "Ben Ode",
+    "runnerId": "platform:ben",
+    "completedBy": null,
+    "done": true,
+    "completedAt": 1792238109253,
+    "phase": 1,
+    "joined": true,
+    "band": "declined",
+    "votes": null,
+    "reasons": [
+     {
+      "id": "platform:ben",
+      "name": "Ben Ode",
+      "choice": "decline",
+      "lapsed": false,
+      "text": "They lost thirty million last year and nobody would buy their shares.",
+      "recognised": "yes"
+     }
+    ],
+    "reflections": {},
+    "reflection1": "",
+    "reflection2": "",
+    "choice": "decline",
+    "lapsed": false,
+    "justification": "They lost thirty million last year and nobody would buy their shares.",
+    "recognised": "yes"
+   }
+  },
+  "kit": {
+   "bands": {
+    "bought": {
+     "label": "Bought",
+     "cls": "b",
+     "phrase": "Bought the company for $50 million"
+    },
+    "declined": {
+     "label": "Declined",
+     "cls": "v",
+     "phrase": "Declined the offer"
+    },
+    "lapsed": {
+     "label": "Lapsed",
+     "cls": "n",
+     "phrase": "The clock ran out, which counts as declining"
+    }
+   },
+   "order": [
+    "bought",
+    "declined",
+    "lapsed"
+   ],
+   "ended": true,
+   "stage": 3,
+   "stages": [
+    {
+     "n": 1,
+     "year": "2002",
+     "title": "Two years later",
+     "body": [
+      "The seller survives the downturn and goes public in May 2002, with about 600,000 subscribers. Its revenue that year is about $150 million.",
+      "Your company is still growing. Revenue passes $5 billion. On the evidence of 2002, neither choice looks foolish yet."
+     ],
+     "names": null
+    },
+    {
+     "n": 2,
+     "year": "2005",
+     "title": "Five years later",
+     "body": [
+      "The seller ends 2005 with about 4 million subscribers.",
+      "Your company launched its own DVD-by-mail service in 2004, and in January 2005 it stopped charging late fees. Between the fees it gave up and the cost of the new service, the change was estimated at about $400 million.",
+      "It removed the fees without rebuilding what sat underneath them: the stores, the leases and the way the business made money were the same as before."
+     ],
+     "names": null
+    },
+    {
+     "n": 3,
+     "year": "2010",
+     "title": "Ten years later",
+     "body": [
+      "In September 2010 your company files for bankruptcy.",
+      "The seller ends 2010 with 20 million subscribers. By then most of them watch over the internet rather than on discs."
+     ],
+     "names": "Your company was Blockbuster. The seller was Netflix."
+    }
+   ],
+   "recognitionOptions": [
+    [
+     "yes",
+     "Yes"
+    ],
+    [
+     "no",
+     "No"
+    ],
+    [
+     "unsure",
+     "Not sure"
+    ]
+   ],
+   "reviewQuestions": [
+    "What did you weigh most, and would you weigh it the same way now?",
+    "Name a decision you made on incomplete information. What would have to be true for it to look foolish later?"
+   ],
+   "lessonQuestions": [
+    "What on the briefing sheet carried the most weight for you?",
+    "Which adviser did you find most convincing, and why?",
+    "Did anything in 2002 make your decision look wrong? Should it have?",
+    "What would you have needed to know in 2000 to decide differently?"
+   ],
+   "lessons": [
+    {
+     "head": "Hindsight rewrites the judgement.",
+     "text": "Once you know the ending, one choice looks obvious. In 2000 everyone read the same sheet you did."
+    },
+    {
+     "head": "Judge the decision, not the outcome.",
+     "text": "A good decision uses what was knowable at the time and reasons from it. The outcome came ten years later."
+    },
+    {
+     "head": "Right about the market, wrong about the company.",
+     "text": "The internet hype was overblown. The seller survived it anyway."
+    },
+    {
+     "head": "A cheap option is still an option.",
+     "text": "Fifty million was about 1% of revenue. A small, capped loss bought the right to learn."
+    }
+   ]
+  },
+  "phase": "closed",
+  "now": 1792238117104,
+  "closesAt": 1792238109403,
+  "stage": 3,
+  "responses": [
+   {
+    "id": "platform:ana",
+    "label": "Response 1",
+    "name": "Ana Lopez",
+    "team": "",
+    "choice": "buy",
+    "lapsed": false,
+    "text": "Fifty million is a small price for a business we cannot build ourselves.",
+    "recognised": "no"
+   },
+   {
+    "id": "platform:ben",
+    "label": "Response 2",
+    "name": "Ben Ode",
+    "team": "",
+    "choice": "decline",
+    "lapsed": false,
+    "text": "They lost thirty million last year and nobody would buy their shares.",
+    "recognised": "yes"
+   }
+  ],
+  "teams": null,
+  "projector": {
+   "title": "Sat, Oct 17, 7:55 AM",
+   "mode": "individual",
+   "phase": "closed",
+   "now": 1792238117104,
+   "closesAt": 1792238109403,
+   "joined": 2,
+   "decided": 2,
+   "stage": 3,
+   "prompts": null,
+   "split": {
+    "bought": 1,
+    "declined": 1,
+    "lapsed": 0
+   },
+   "recognition": {
+    "yes": {
+     "buy": 0,
+     "decline": 1
+    },
+    "no": {
+     "buy": 1,
+     "decline": 0
+    },
+    "unsure": {
+     "buy": 0,
+     "decline": 0
+    },
+    "none": {
+     "buy": 0,
+     "decline": 0
+    }
+   },
+   "pinned": [],
+   "stageTitle": {
+    "year": "2010",
+    "title": "Ten years later",
+    "names": "Your company was Blockbuster. The seller was Netflix."
+   }
+  },
+  "you": "Vikram"
+ }
+}

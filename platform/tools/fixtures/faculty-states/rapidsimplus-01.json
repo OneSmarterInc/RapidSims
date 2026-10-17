@@ -1,0 +1,388 @@
+{
+ "simId": "rapidsimplus-01",
+ "state": {
+  "session": {
+   "code": "74LAN",
+   "owner": {
+    "sub": "fac",
+    "course": "crs_A"
+   },
+   "ownerName": "Vikram",
+   "platformAuth": true,
+   "courseId": "crs_A",
+   "kit": true,
+   "state": "running",
+   "mode": "individual",
+   "name": "Sat, Oct 17, 7:57 AM",
+   "createdAt": 1792238222338,
+   "startedAt": 1792238222851,
+   "paused": false,
+   "ended": false
+  },
+  "participants": {
+   "platform:stu1": {
+    "id": "platform:stu1",
+    "name": "Ana Student",
+    "joinedAt": 1792238222709,
+    "groupId": "platform:stu1",
+    "isCaptain": false
+   }
+  },
+  "runs": {
+   "individual:platform:stu1": {
+    "runId": "individual:platform:stu1",
+    "runnerId": "platform:stu1",
+    "teamLabel": "Ana Student",
+    "completedBy": "platform:stu1",
+    "joined": true,
+    "phase": 4,
+    "stage": "Report filed",
+    "done": true,
+    "completedAt": 1792238228298,
+    "band": "matched",
+    "order": [
+     "Terry Voss",
+     "Ray Duffy",
+     "Ruth Kessler"
+    ],
+    "windows": [
+     {
+      "label": "9:00 – 9:15",
+      "source": "Terry Voss",
+      "questions": 3,
+      "seconds": 270
+     },
+     {
+      "label": "9:35 – 9:50",
+      "source": "Ray Duffy",
+      "questions": 2,
+      "seconds": 180
+     },
+     {
+      "label": "10:10 – 10:25",
+      "source": "Ruth Kessler",
+      "questions": 2,
+      "seconds": 180
+     }
+    ],
+    "ruth": "closed",
+    "ruthClosedBy": "Could this step be automated?",
+    "ruthOpenedBy": "What happens when two copies look alike?",
+    "observationSeconds": 30,
+    "observationNote": "Divided the clock by the count. Accurate, and it describes seven and a half minutes of an eighty-minute batch.",
+    "chart": {
+     "intake": {
+      "longestWait": {
+       "value": "Established in the interviews",
+       "couldNotEstablish": false
+      },
+      "faxRouting": {
+       "value": "",
+       "couldNotEstablish": true
+      },
+      "providerReceipt": {
+       "value": "Established in the interviews",
+       "couldNotEstablish": false
+      }
+     },
+     "log": {
+      "purpose": {
+       "value": "Established in the interviews",
+       "couldNotEstablish": false
+      },
+      "receiver": {
+       "value": "Established in the interviews",
+       "couldNotEstablish": false
+      }
+     },
+     "review": {
+      "timingSeconds": 30,
+      "step": {
+       "value": "Established in the interviews",
+       "couldNotEstablish": false
+      },
+      "owner": {
+       "value": "Ruth Kessler",
+       "couldNotEstablish": false
+      },
+      "receiver": {
+       "value": "Established in the interviews",
+       "couldNotEstablish": false
+      },
+      "catches": {
+       "value": "Established in the interviews",
+       "couldNotEstablish": false
+      },
+      "dependsOn": {
+       "value": "Established in the interviews",
+       "couldNotEstablish": false
+      }
+     }
+    },
+    "report": {
+     "rootCause": "Senders hear nothing back and send claims again days later.",
+     "rows": [
+      {
+       "rowId": "intake",
+       "label": "Claim intake — channels and release schedule",
+       "disposition": "automate",
+       "justification": "Supported by what the interviews established.",
+       "severity": "ok",
+       "configured": "Continuous intake. Batching removed.",
+       "supported": true
+      },
+      {
+       "rowId": "log",
+       "label": "Receipt log",
+       "disposition": "eliminate",
+       "justification": "Supported by what the interviews established.",
+       "severity": "ok",
+       "configured": "Receipt log discontinued.",
+       "supported": true
+      },
+      {
+       "rowId": "vendor",
+       "label": "Fax conversion vendor",
+       "disposition": "cannot_assess",
+       "justification": "Supported by what the interviews established.",
+       "severity": "correct",
+       "configured": "Flagged. Vendor terms and error rates requested before configuration.",
+       "supported": false
+      },
+      {
+       "rowId": "review",
+       "label": "First-pass review and matching",
+       "disposition": "keep",
+       "justification": "Supported by what the interviews established.",
+       "severity": "ok",
+       "configured": "First-pass review retained as a manual step.",
+       "supported": true
+      }
+     ]
+    },
+    "evidence": {
+     "held": [
+      "Nothing goes back to non-electronic senders",
+      "Terry has never seen anyone use the log",
+      "The log answers a problem last seen ten years ago",
+      "Matching is judgment, and it is written down nowhere",
+      "Anything after the 2:00 release waits until morning"
+     ],
+     "missed": [
+      "Terry tells callers the claim has been processed",
+      "Repeat copies arrive six to ten days apart",
+      "Electronic claims almost never arrive twice",
+      "Nobody inside can describe the vendor step"
+     ],
+     "loop": false,
+     "loopPair": []
+    },
+    "transcript": [
+     {
+      "window": 1,
+      "source": "Terry Voss",
+      "question": "Who actually reads the log?",
+      "answer": "The log? Audit pull it, I'd assume. It's a record of receipt, so if there's ever a question about whether something came in, it's there. That's the point of it.",
+      "kind": "who receives it",
+      "spent": 90,
+      "closed": false,
+      "opened": false
+     },
+     {
+      "window": 1,
+      "source": "Terry Voss",
+      "question": "Who uses it now?",
+      "answer": "Seen them? No, not personally. But I wouldn't necessarily, would I.",
+      "kind": "who receives it",
+      "spent": 90,
+      "closed": false,
+      "opened": false
+     },
+     {
+      "window": 1,
+      "source": "Terry Voss",
+      "question": "Why does the log exist?",
+      "answer": "The log's been going about ten years. Before me. The way it was told to me, a plan booklet went out with the wrong claims address on it — a PO box that had been closed. So providers were sending claims to nowhere and then calling saying they'd sent them, and we had no way to say whether we'd got them or not. So they started the log. Address got fixed inside a month, I think. It was all paper back then, mostly. Somebody said if we're logging the paper we may as well log the faxes too, and that's stuck.",
+      "kind": "purpose / origin",
+      "spent": 90,
+      "closed": false,
+      "opened": false
+     },
+     {
+      "window": 2,
+      "source": "Ray Duffy",
+      "question": "What does the sender hear back after they fax a claim?",
+      "answer": "Nothing goes out from here. We don't send anything back. The electronic ones get a confirmation but that's the clearinghouse doing it, not us. Paper and fax, no, there's nothing.",
+      "kind": "sender’s view",
+      "spent": 90,
+      "closed": false,
+      "opened": false
+     },
+     {
+      "window": 2,
+      "source": "Ray Duffy",
+      "question": "What time does the last batch go?",
+      "answer": "Twelve hundred a day, give or take. Three hundred paper. Four hundred faxes go out to the vendor, hundred and fifty I do here. The rest come in electronic through the clearinghouse and I never see those at all. Releases are nine and two. Anything that lands after the two o'clock sits until nine the next morning.",
+      "kind": "volume / timing",
+      "spent": 90,
+      "closed": false,
+      "opened": false
+     },
+     {
+      "window": 3,
+      "source": "Ruth Kessler",
+      "question": "What happens when two copies look alike?",
+      "answer": "The hard ones are the repeats. About one in seven of what I get is a claim I've already had, and finding the first one isn't a lookup, because the same claim doesn't look the same depending how it came in. If it came through the conversion vendor the tooth numbers drop out sometimes, or the date of service comes back wrong by a digit. So I've got the paper original saying one thing and the converted file saying another and they're the same claim. You learn which fields to trust from which path.\n\nAnd then there's the ones that look like repeats and aren't. Same patient, same date, same provider, two claims. That can be a duplicate or it can be two teeth. I had one — a girl who had two extractions the same morning, different sides. Anything matching on patient and date would have thrown the second one out and she'd have had a denial letter for something that actually happened.",
+      "kind": "exceptions",
+      "spent": 90,
+      "closed": false,
+      "opened": true
+     },
+     {
+      "window": 3,
+      "source": "Ruth Kessler",
+      "question": "Could this step be automated?",
+      "answer": "I'd think most of it could be, yes. It's not complicated work when you get down to it.",
+      "kind": "efficiency framing",
+      "spent": 90,
+      "closed": true,
+      "opened": false
+     }
+    ],
+    "reflections": {
+     "platform:stu1": {
+      "reflection1": "Asking who reads the log opened Terry up.",
+      "reflection2": "I would ask Ruth about exceptions first."
+     }
+    },
+    "reflection1": "Asking who reads the log opened Terry up.",
+    "reflection2": "I would ask Ruth about exceptions first."
+   }
+  },
+  "kit": {
+   "bands": {
+    "matched": {
+     "label": "Matching kept, with the evidence",
+     "cls": "g",
+     "phrase": "Kept first-pass review after hearing why the matching matters"
+    },
+    "kept": {
+     "label": "Matching kept, without the evidence",
+     "cls": "y",
+     "phrase": "Kept first-pass review without hearing why it matters"
+    },
+    "study": {
+     "label": "Sent for a second study",
+     "cls": "o",
+     "phrase": "Left the review desk unchanged for another study"
+    },
+    "duplicates": {
+     "label": "Duplicates paid",
+     "cls": "l",
+     "phrase": "The new system pays repeat copies twice"
+    }
+   },
+   "order": [
+    "matched",
+    "kept",
+    "study",
+    "duplicates"
+   ],
+   "ended": false,
+   "rows": [
+    {
+     "id": "intake",
+     "label": "Claim intake — channels and release schedule"
+    },
+    {
+     "id": "log",
+     "label": "Receipt log"
+    },
+    {
+     "id": "vendor",
+     "label": "Fax conversion vendor"
+    },
+    {
+     "id": "review",
+     "label": "First-pass review and matching"
+    }
+   ],
+   "dispositions": {
+    "automate": "Automate",
+    "keep": "Keep",
+    "eliminate": "Eliminate",
+    "cannot_assess": "Cannot assess"
+   },
+   "severities": {
+    "harm": "Causes harm",
+    "miss": "Carries the problem forward",
+    "dodge": "Left for another study",
+    "partial": "Partly addresses it",
+    "ok": "Holds up",
+    "correct": "The defensible call"
+   },
+   "sources": {
+    "ray": {
+     "name": "Ray Duffy",
+     "role": "Intake"
+    },
+    "terry": {
+     "name": "Terry Voss",
+     "role": "Receipt log"
+    },
+    "ruth": {
+     "name": "Ruth Kessler",
+     "role": "First-pass review"
+    }
+   },
+   "observation": {
+    "claims": 20,
+    "seconds": 600,
+    "trueMean": 30,
+    "cleanSeconds": 12,
+    "longClaims": 3
+   },
+   "reveal": {
+    "heading": "What was going on",
+    "paragraphs": [
+     "Paper and fax senders never hear that a claim arrived. Six to ten days later, many send it again.",
+     "Ruth Kessler’s first-pass review is where those repeat copies are caught. She matches them by judgment, and that judgment is written down nowhere.",
+     "The receipt log has no reader: it answers a mail problem last seen ten years ago. The fax vendor step is out of sight from inside Wexford.",
+     "An acknowledgment to every sender addresses the cause. Until it exists, the review desk is the safety net."
+    ]
+   },
+   "debriefNotes": [
+    "Open with the review desk: ask who kept it, and what they heard that made them keep it.",
+    "Put one transcript on screen where Ruth stopped volunteering. Ask the class to find the question that did it; she stays polite, so the author rarely notices.",
+    "Observation: six claims in seven take 12 seconds and three take two to three minutes. Ask what students saw at claims four, eleven and seventeen, and who asked Ruth about them.",
+    "The loop needs two people: Ray (nothing goes back to paper and fax senders) and Ruth (repeat copies arrive six to ten days apart). Ask who held both halves.",
+    "The fax vendor is the one step nobody inside Wexford can describe, so Cannot assess is the defensible call there."
+   ],
+   "reviewQuestions": [
+    "Which question opened the most useful answer, and why did it work?",
+    "What would you ask first if you ran the interviews again?"
+   ],
+   "lessonQuestions": [],
+   "lessons": [
+    {
+     "head": "The wording of a question decides what you hear.",
+     "text": "Open-ended questions cost the most time. Questions about exceptions, about what would happen if a step stopped, and about how the sender sees it opened the useful answers."
+    },
+    {
+     "head": "One question can close a source for good.",
+     "text": "Asking Ruth whether her step could be automated or cut made her stop volunteering anything. She stayed polite, so most people did not notice."
+    },
+    {
+     "head": "The cause sits between the people you interview.",
+     "text": "Ray knew senders hear nothing back. Ruth knew repeat copies arrive six to ten days apart. Together they explain the duplicates."
+    },
+    {
+     "head": "A recommendation is only as strong as its evidence.",
+     "text": "Keeping the review desk is the safe call. Knowing why it matters is what lets you design what replaces it."
+    }
+   ]
+  },
+  "you": "Vikram",
+  "serverNow": 1792238231355
+ }
+}
