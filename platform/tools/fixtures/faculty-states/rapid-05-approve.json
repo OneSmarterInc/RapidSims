@@ -1,0 +1,451 @@
+{
+ "simId": "rapid-05-approve",
+ "state": {
+  "session": {
+   "code": "G9SML",
+   "owner": "Vikram",
+   "ownerId": "fac",
+   "platformAuth": true,
+   "courseId": "crs_A",
+   "name": "Sat, Oct 17, 7:54 AM",
+   "mode": "individual",
+   "intensity": "lighter",
+   "state": "closed",
+   "paused": false,
+   "createdAt": 1792238094495,
+   "startedAt": 1792238095205,
+   "pausedTotalMs": 0,
+   "skipMs": 1260000,
+   "closedAt": 1792238097936,
+   "endedAt": 1792238097936,
+   "clock": {
+    "phase": "closed",
+    "round": 0,
+    "remaining": 0,
+    "closedRounds": 5,
+    "openedRounds": 5
+   },
+   "ended": true
+  },
+  "roster": [
+   {
+    "id": "platform:ana",
+    "name": "Ana Lopez",
+    "groupId": "individual:platform:ana",
+    "teamLabel": "",
+    "joined": true,
+    "ready": false,
+    "late": false
+   },
+   {
+    "id": "platform:ben",
+    "name": "Ben Ode",
+    "groupId": "individual:platform:ben",
+    "teamLabel": "",
+    "joined": true,
+    "ready": false,
+    "late": false
+   }
+  ],
+  "participants": {
+   "platform:ana": {
+    "id": "platform:ana",
+    "name": "Ana Lopez",
+    "joinedAt": 1792238094869
+   },
+   "platform:ben": {
+    "id": "platform:ben",
+    "name": "Ben Ode",
+    "joinedAt": 1792238095099
+   }
+  },
+  "runs": {
+   "individual:platform:ana": {
+    "runId": "individual:platform:ana",
+    "teamLabel": "Ana Lopez",
+    "runnerId": "platform:ana",
+    "completedBy": null,
+    "done": true,
+    "completedAt": 1792238097936,
+    "phase": 1,
+    "joined": true,
+    "late": false,
+    "decisions": [
+     "approve",
+     "approve",
+     "approve",
+     "approve",
+     "approve"
+    ],
+    "band": "e1",
+    "knows": [
+     {
+      "label": "Daily routine",
+      "level": "high"
+     },
+     {
+      "label": "Home and workplace",
+      "level": "high"
+     },
+     {
+      "label": "A second address",
+      "level": "high"
+     },
+     {
+      "label": "A change in her health",
+      "level": "high"
+     }
+    ],
+    "reflections": {
+     "platform:ana": {
+      "reflection1": "Sleep tracking.",
+      "reflection2": "My bank. Where I shop."
+     }
+    },
+    "reflection1": "Sleep tracking.",
+    "reflection2": "My bank. Where I shop."
+   },
+   "individual:platform:ben": {
+    "runId": "individual:platform:ben",
+    "teamLabel": "Ben Ode",
+    "runnerId": "platform:ben",
+    "completedBy": null,
+    "done": true,
+    "completedAt": 1792238097936,
+    "phase": 1,
+    "joined": true,
+    "late": false,
+    "decisions": [
+     "approve",
+     "decline",
+     "decline",
+     "approve",
+     "decline"
+    ],
+    "band": "e2",
+    "knows": [
+     {
+      "label": "Daily routine",
+      "level": "high"
+     },
+     {
+      "label": "A change in her health",
+      "level": "low"
+     }
+    ],
+    "reflections": {},
+    "reflection1": "",
+    "reflection2": ""
+   }
+  },
+  "kit": {
+   "bands": {
+    "e1": {
+     "label": "Health change, high confidence",
+     "cls": "l",
+     "phrase": "Loopwell can name the change with high confidence"
+    },
+    "e2": {
+     "label": "Health change, moderate or low",
+     "cls": "o",
+     "phrase": "Loopwell can guess at the change"
+    },
+    "e3": {
+     "label": "Second address, no health estimate",
+     "cls": "o",
+     "phrase": "Loopwell found a second address"
+    },
+    "e4": {
+     "label": "Home and workplace only",
+     "cls": "y",
+     "phrase": "Loopwell knows home and workplace"
+    },
+    "e5": {
+     "label": "Routine only",
+     "cls": "g",
+     "phrase": "Loopwell knows her routine"
+    },
+    "e6": {
+     "label": "Nothing beyond what she enters herself",
+     "cls": "g",
+     "phrase": "Loopwell knows only what Dana enters"
+    }
+   },
+   "order": [
+    "e1",
+    "e2",
+    "e3",
+    "e4",
+    "e5",
+    "e6"
+   ],
+   "ended": true,
+   "intensity": "lighter",
+   "rounds": [
+    {
+     "n": 1,
+     "title": "Step count and active minutes"
+    },
+    {
+     "n": 2,
+     "title": "Location on logged walks and runs"
+    },
+    {
+     "n": 3,
+     "title": "Overnight sleep tracking"
+    },
+    {
+     "n": 4,
+     "title": "Grocery loyalty card link"
+    },
+    {
+     "n": 5,
+     "title": "Resting heart rate from her watch"
+    }
+   ],
+   "aggregate": {
+    "rounds": [
+     {
+      "round": 1,
+      "title": "Step count and active minutes",
+      "approve": 2,
+      "decline": 0,
+      "timeout": 0,
+      "splitTeams": 0
+     },
+     {
+      "round": 2,
+      "title": "Location on logged walks and runs",
+      "approve": 1,
+      "decline": 1,
+      "timeout": 0,
+      "splitTeams": 0
+     },
+     {
+      "round": 3,
+      "title": "Overnight sleep tracking",
+      "approve": 1,
+      "decline": 1,
+      "timeout": 0,
+      "splitTeams": 0
+     },
+     {
+      "round": 4,
+      "title": "Grocery loyalty card link",
+      "approve": 2,
+      "decline": 0,
+      "timeout": 0,
+      "splitTeams": 0
+     },
+     {
+      "round": 5,
+      "title": "Resting heart rate from her watch",
+      "approve": 1,
+      "decline": 1,
+      "timeout": 0,
+      "splitTeams": 0
+     }
+    ],
+    "groups": [
+     {
+      "group": 1,
+      "label": "Health change, high confidence",
+      "count": 1
+     },
+     {
+      "group": 2,
+      "label": "Health change, moderate or low",
+      "count": 1
+     },
+     {
+      "group": 3,
+      "label": "Second address, no health estimate",
+      "count": 0
+     },
+     {
+      "group": 4,
+      "label": "Home and workplace only",
+      "count": 0
+     },
+     {
+      "group": 5,
+      "label": "Routine only",
+      "count": 0
+     },
+     {
+      "group": 6,
+      "label": "Nothing beyond what she enters herself",
+      "count": 0
+     }
+    ],
+    "complete": 2,
+    "reached": 1,
+    "headline": "1 of 2 students ended with Loopwell estimating a change in Dana's health. None of them declined a request.",
+    "disagreement": "Round 2 split 1–1. Find one of each.",
+    "mostDivided": 2
+   },
+   "reviewQuestions": [
+    "Which approval would you take back, and what did it let Loopwell work out?",
+    "Name a company that holds data about you, and something it could work out that you never told it."
+   ],
+   "lessonQuestions": [
+    "Which request was hardest to decide, and why?",
+    "What could Loopwell work out about Dana that she never told it?",
+    "Which feature asked for more data than it needed?",
+    "Did Dana agree to the combination, or only to each step?"
+   ],
+   "lessons": [
+    {
+     "head": "Collected vs inferred",
+     "text": "Loopwell collected steps, routes, sleep, shopping and heart rate. It inferred a change in her health nobody told it about."
+    },
+    {
+     "head": "Purpose limitation",
+     "text": "Data gathered for one purpose shouldn't be used for another. Route maps don't justify knowing where Dana sleeps."
+    },
+    {
+     "head": "Data minimization",
+     "text": "Collect only what a feature needs. Sleep reports needed a time zone, not a nightly location."
+    },
+    {
+     "head": "Consent for every step, covering none of the result",
+     "text": "Dana agreed to each feature. She never agreed to the combination."
+    }
+   ],
+   "teamPrompt": null
+  },
+  "projector": {
+   "clock": {
+    "phase": "closed",
+    "round": 0,
+    "remaining": 0,
+    "closedRounds": 5,
+    "openedRounds": 5
+   },
+   "mode": "individual",
+   "intensity": "lighter",
+   "joined": 2,
+   "ready": 0,
+   "late": 0,
+   "teams": null,
+   "live": null,
+   "rounds": [
+    {
+     "round": 1,
+     "title": "Step count and active minutes",
+     "approve": 2,
+     "decline": 0,
+     "timeout": 0,
+     "splitTeams": 0
+    },
+    {
+     "round": 2,
+     "title": "Location on logged walks and runs",
+     "approve": 1,
+     "decline": 1,
+     "timeout": 0,
+     "splitTeams": 0
+    },
+    {
+     "round": 3,
+     "title": "Overnight sleep tracking",
+     "approve": 1,
+     "decline": 1,
+     "timeout": 0,
+     "splitTeams": 0
+    },
+    {
+     "round": 4,
+     "title": "Grocery loyalty card link",
+     "approve": 2,
+     "decline": 0,
+     "timeout": 0,
+     "splitTeams": 0
+    },
+    {
+     "round": 5,
+     "title": "Resting heart rate from her watch",
+     "approve": 1,
+     "decline": 1,
+     "timeout": 0,
+     "splitTeams": 0
+    }
+   ],
+   "endings": [
+    {
+     "group": 1,
+     "label": "Health change, high confidence",
+     "count": 1
+    },
+    {
+     "group": 2,
+     "label": "Health change, moderate or low",
+     "count": 1
+    },
+    {
+     "group": 3,
+     "label": "Second address, no health estimate",
+     "count": 0
+    },
+    {
+     "group": 4,
+     "label": "Home and workplace only",
+     "count": 0
+    },
+    {
+     "group": 5,
+     "label": "Routine only",
+     "count": 0
+    },
+    {
+     "group": 6,
+     "label": "Nothing beyond what she enters herself",
+     "count": 0
+    }
+   ],
+   "headline": "1 of 2 students ended with Loopwell estimating a change in Dana's health. None of them declined a request.",
+   "disagreement": "Round 2 split 1–1. Find one of each.",
+   "progress": {
+    "students": [
+     {
+      "name": "Ana Lopez",
+      "joined": true,
+      "ready": false,
+      "decided": null,
+      "late": false
+     },
+     {
+      "name": "Ben Ode",
+      "joined": true,
+      "ready": false,
+      "decided": null,
+      "late": false
+     }
+    ]
+   },
+   "debrief": {
+    "naming": [
+     {
+      "term": "Collected vs inferred",
+      "line": "Loopwell collected steps, routes, sleep, shopping and heart rate. It inferred a change in her health nobody told it about."
+     },
+     {
+      "term": "Purpose limitation",
+      "line": "Data gathered for one purpose shouldn't be used for another. Route maps don't justify knowing where Dana sleeps."
+     },
+     {
+      "term": "Data minimization",
+      "line": "Collect only what a feature needs. Sleep reports needed a time zone, not a nightly location."
+     },
+     {
+      "term": "Consent for every step, covering none of the result",
+      "line": "Dana agreed to each feature. She never agreed to the combination."
+     }
+    ],
+    "turn": "Name a company that holds data about you, and something it could work out that you never told it.",
+    "teamPrompt": null
+   }
+  },
+  "you": "Vikram"
+ }
+}

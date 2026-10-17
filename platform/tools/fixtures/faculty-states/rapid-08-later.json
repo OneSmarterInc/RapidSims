@@ -1,0 +1,504 @@
+{
+ "simId": "rapid-08-later",
+ "state": {
+  "session": {
+   "code": "XSNKJ",
+   "owner": "Vikram",
+   "ownerId": "fac",
+   "platformAuth": true,
+   "courseId": "crs_A",
+   "name": "Sat, Oct 17, 7:55 AM",
+   "mode": "individual",
+   "state": "closed",
+   "paused": false,
+   "revealStep": 0,
+   "createdAt": 1792238118758,
+   "startedAt": 1792238119611,
+   "pausedTotalMs": 0,
+   "skipMs": 1015000,
+   "closedAt": 1792238128636,
+   "clock": {
+    "phase": "report",
+    "remaining": 0,
+    "paused": false,
+    "closed": true
+   },
+   "ended": true
+  },
+  "roster": [
+   {
+    "id": "platform:ana",
+    "name": "Ana Lopez",
+    "groupId": "individual:platform:ana",
+    "teamLabel": "",
+    "late": false
+   },
+   {
+    "id": "platform:ben",
+    "name": "Ben Ode",
+    "groupId": "individual:platform:ben",
+    "teamLabel": "",
+    "late": false
+   }
+  ],
+  "participants": {
+   "platform:ana": {
+    "id": "platform:ana",
+    "name": "Ana Lopez",
+    "joinedAt": 1792238119154
+   },
+   "platform:ben": {
+    "id": "platform:ben",
+    "name": "Ben Ode",
+    "joinedAt": 1792238119463
+   }
+  },
+  "runs": {
+   "individual:platform:ana": {
+    "runId": "individual:platform:ana",
+    "teamLabel": "Ana Lopez",
+    "runnerId": "platform:ana",
+    "completedBy": null,
+    "done": true,
+    "completedAt": null,
+    "phase": 1,
+    "joined": true,
+    "late": false,
+    "band": "adopted",
+    "vendor": "kestrel",
+    "vendorName": "Kestrel Practice Suite",
+    "boardChose": false,
+    "questionIds": [
+     "q10"
+    ],
+    "plan": "cover",
+    "found": true,
+    "headline": "Whiteboard down by month four",
+    "reportText": "Eighteen months on, Brookfield runs on Kestrel at all four clinics. The first ten weeks were as slow as Gavin said they'd be: check-in at Main Street went from about four minutes to nine, and the queue reached the door first thing most mornings. The extra front-desk cover you funded absorbed it. Rosa spent those weeks learning the new flow instead of working around it, and by month four the emergency whiteboard came down. Nobody asked her to take it down. She just stopped needing it. The practice spent $239,200 of its $240,000.",
+    "votes": null,
+    "reflections": {
+     "platform:ana": {
+      "reflection1": "The front desk question.",
+      "reflection2": "Our LMS. A shared drive."
+     }
+    },
+    "reflection1": "The front desk question.",
+    "reflection2": "Our LMS. A shared drive."
+   },
+   "individual:platform:ben": {
+    "runId": "individual:platform:ben",
+    "teamLabel": "Ben Ode",
+    "runnerId": "platform:ben",
+    "completedBy": null,
+    "done": true,
+    "completedAt": null,
+    "phase": 1,
+    "joined": true,
+    "late": false,
+    "band": "shadow",
+    "vendor": "pawtime",
+    "vendorName": "Pawtime",
+    "boardChose": false,
+    "questionIds": [
+     "q01"
+    ],
+    "plan": "parallel",
+    "found": false,
+    "headline": "Four calendars and a spreadsheet",
+    "reportText": "Eighteen months on, Pawtime is live, cheap and well liked. The front desk learned it in a week. It's four clinics on four accounts with no way to see each other's calendars, which is exactly where you started. The calling around never stopped. In month two, Rosa built a shared spreadsheet of openings, and it now runs all the cross-clinic booking. The board approved $240,000 to get one calendar across four sites. It spent $25,440 and got four calendars and a spreadsheet. The old scheduler you kept running in parallel was never switched off. Northgate still books into it when things get busy.",
+    "votes": null,
+    "reflections": {},
+    "reflection1": "",
+    "reflection2": ""
+   }
+  },
+  "kit": {
+   "bands": {
+    "adopted": {
+     "label": "Adopted",
+     "cls": "g",
+     "phrase": "The practice runs on the new system"
+    },
+    "lucky": {
+     "label": "Right plan, not found",
+     "cls": "y",
+     "phrase": "The fix was funded, aimed at the wrong thing"
+    },
+    "knew": {
+     "label": "Found, wrong plan",
+     "cls": "o",
+     "phrase": "The committee knew and did not act"
+    },
+    "shadow": {
+     "label": "Shadow system",
+     "cls": "l",
+     "phrase": "A shadow system runs the practice"
+    }
+   },
+   "order": [
+    "adopted",
+    "lucky",
+    "knew",
+    "shadow"
+   ],
+   "ended": true,
+   "phase": "report",
+   "vendors": [
+    {
+     "key": "kestrel",
+     "name": "Kestrel Practice Suite",
+     "threeYear": 211200,
+     "risk": "Front-desk training gap"
+    },
+    {
+     "key": "tailwind",
+     "name": "Tailwind Scheduling",
+     "threeYear": 107400,
+     "risk": "Nobody owns the exceptions"
+    },
+    {
+     "key": "pawtime",
+     "name": "Pawtime",
+     "threeYear": 25440,
+     "risk": "No shared calendar across clinics"
+    }
+   ],
+   "questions": [
+    {
+     "id": "q01",
+     "text": "What's your platform architecture, and where is our data hosted?",
+     "routes": {}
+    },
+    {
+     "id": "q02",
+     "text": "What's your uptime commitment, and what happens when you miss it?",
+     "routes": {}
+    },
+    {
+     "id": "q03",
+     "text": "What's on your product roadmap for the next two years?",
+     "routes": {}
+    },
+    {
+     "id": "q04",
+     "text": "What security certifications do you hold?",
+     "routes": {}
+    },
+    {
+     "id": "q05",
+     "text": "Can you give us three reference customers?",
+     "routes": {
+      "pawtime": "partial"
+     }
+    },
+    {
+     "id": "q06",
+     "text": "What does it integrate with: lab results, payments, reminders?",
+     "routes": {}
+    },
+    {
+     "id": "q07",
+     "text": "What's the full five-year cost, including everything not in the quote?",
+     "routes": {
+      "kestrel": "partial"
+     }
+    },
+    {
+     "id": "q08",
+     "text": "How do you move our existing appointments and client records across?",
+     "routes": {}
+    },
+    {
+     "id": "q09",
+     "text": "Who at our practice has to change how they work, and by how much?",
+     "routes": {
+      "pawtime": "partial"
+     }
+    },
+    {
+     "id": "q10",
+     "text": "What are the first three months like for the person at the front desk?",
+     "routes": {
+      "kestrel": "direct"
+     }
+    },
+    {
+     "id": "q11",
+     "text": "In your system, who handles emergencies, walk-ins and same-day squeezes?",
+     "routes": {
+      "tailwind": "direct"
+     }
+    },
+    {
+     "id": "q12",
+     "text": "What happens to the things our staff do by hand today?",
+     "routes": {
+      "tailwind": "direct",
+      "pawtime": "direct"
+     }
+    },
+    {
+     "id": "q13",
+     "text": "Can we talk to a front-desk person at a reference customer, not the manager?",
+     "routes": {
+      "kestrel": "direct",
+      "tailwind": "partial"
+     }
+    },
+    {
+     "id": "q14",
+     "text": "Show us a booking for a client with no phone number on file.",
+     "routes": {
+      "kestrel": "partial"
+     }
+    },
+    {
+     "id": "q15",
+     "text": "Show us booking a patient into a different clinic from the one you're logged into.",
+     "routes": {
+      "pawtime": "direct"
+     }
+    },
+    {
+     "id": "q16",
+     "text": "Show us what the screen does when someone enters it wrong.",
+     "routes": {
+      "tailwind": "partial"
+     }
+    }
+   ],
+   "plans": [
+    {
+     "key": "cover",
+     "text": "Fund extra front-desk cover for the first three months (about $28,000).",
+     "matches": [
+      "kestrel"
+     ]
+    },
+    {
+     "key": "owner",
+     "text": "Name an owner for emergencies, walk-ins and squeezes, and have them write the rules before go-live.",
+     "matches": [
+      "tailwind"
+     ]
+    },
+    {
+     "key": "multisite",
+     "text": "Buy the vendor's multi-site tier before go-live, if it has one.",
+     "matches": [
+      "pawtime"
+     ]
+    },
+    {
+     "key": "parallel",
+     "text": "Run the old scheduler in parallel for three months, just in case.",
+     "matches": []
+    }
+   ],
+   "disagreement": "{a} and {b} both bought {vendor} and ended up in different places. Before anything else, what did one of you know that the other didn't?",
+   "disagreementNone": "Nobody who chose the same vendor landed differently. Ask which team came closest to asking the question that mattered, and what stopped them.",
+   "closingAsk": "Ask what would make this fail, not what you should do.",
+   "reviewQuestions": [
+    "Which of your questions was most useful, and which would you swap for a different one now?",
+    "Name a system you have been made to use, and the workaround you or someone near you invented to get around it."
+   ],
+   "lessonQuestions": [
+    "Which question told you the most, and why did you spend it when you did?",
+    "Which vendor answer sounded reassuring and turned out to matter?",
+    "Who at Brookfield had to work differently, and did your plan help them?",
+    "What did the three-year quote leave out?"
+   ],
+   "lessons": [
+    {
+     "head": "The quote is the first item, not the total.",
+     "text": "Total cost of ownership includes the cover, the training and the slow weeks."
+    },
+    {
+     "head": "Shadow systems grow beside the real one.",
+     "text": "The paper sheet, the whiteboard and the spreadsheet are signs that the system missed something."
+    },
+    {
+     "head": "Configurable means somebody has to configure it.",
+     "text": "A rule nobody owns is a rule nobody writes."
+    },
+    {
+     "head": "Change has a cost, and someone pays it.",
+     "text": "Ask who has to work differently, and who covers the slow weeks."
+    }
+   ]
+  },
+  "projector": {
+   "clock": {
+    "phase": "report",
+    "remaining": 0,
+    "paused": false,
+    "closed": true
+   },
+   "mode": "individual",
+   "joined": 2,
+   "late": 0,
+   "teams": null,
+   "revealStep": 0,
+   "live": null,
+   "rows": [
+    {
+     "label": "Player 1",
+     "vendor": "kestrel",
+     "vendorName": "Kestrel Practice Suite",
+     "boardChose": false,
+     "questions": [
+      {
+       "id": "q10",
+       "text": "What are the first three months like for the person at the front desk?",
+       "route": "direct"
+      }
+     ],
+     "plan": "cover",
+     "planText": "Fund extra front-desk cover for the first three months (about $28,000).",
+     "tier": "adopted",
+     "tierLabel": "Adopted",
+     "headline": "Whiteboard down by month four",
+     "found": true
+    },
+    {
+     "label": "Player 2",
+     "vendor": "pawtime",
+     "vendorName": "Pawtime",
+     "boardChose": false,
+     "questions": [
+      {
+       "id": "q01",
+       "text": "What's your platform architecture, and where is our data hosted?",
+       "route": null
+      }
+     ],
+     "plan": "parallel",
+     "planText": "Run the old scheduler in parallel for three months, just in case.",
+     "tier": "shadow",
+     "tierLabel": "Shadow system",
+     "headline": "Four calendars and a spreadsheet",
+     "found": false
+    }
+   ],
+   "steps": [
+    {
+     "key": "vendors",
+     "label": "1 · Vendors"
+    },
+    {
+     "key": "outcomes",
+     "label": "2 · Eighteen months on"
+    },
+    {
+     "key": "questions",
+     "label": "3 · Questions and plans"
+    },
+    {
+     "key": "routes",
+     "label": "4 · Where the warnings were"
+    }
+   ],
+   "disagreement": "Nobody who chose the same vendor landed differently. Ask which team came closest to asking the question that mattered, and what stopped them.",
+   "routes": [
+    {
+     "vendor": "kestrel",
+     "name": "Kestrel Practice Suite",
+     "risk": "Front-desk training gap",
+     "direct": [
+      {
+       "id": "q10",
+       "text": "What are the first three months like for the person at the front desk?",
+       "answer": "Candidly, check-in runs slower for two or three months. Super users get two days of training. The front desk gets a ninety-minute video. Practices that fund extra cover through that stretch come out fine."
+      },
+      {
+       "id": "q13",
+       "text": "Can we talk to a front-desk person at a reference customer, not the manager?",
+       "answer": "Keisha, front desk at a reference group: \"The first two months were rough. We ran a paper sign-in sheet beside it until we caught up, and a couple of our sites still do.\""
+      }
+     ],
+     "partial": [
+      {
+       "id": "q07",
+       "text": "What's the full five-year cost, including everything not in the quote?",
+       "answer": "Licence and implementation as quoted. Most practices your size also budget for extra front-desk cover in the first quarter, somewhere around $25,000 to $30,000."
+      },
+      {
+       "id": "q14",
+       "text": "Show us a booking for a client with no phone number on file.",
+       "answer": "The screen won't save. A red banner asks for a supervisor override code. Gavin enters his own admin code and moves on."
+      }
+     ]
+    },
+    {
+     "vendor": "tailwind",
+     "name": "Tailwind Scheduling",
+     "risk": "Nobody owns the exceptions",
+     "direct": [
+      {
+       "id": "q11",
+       "text": "In your system, who handles emergencies, walk-ins and same-day squeezes?",
+       "answer": "That's all configurable. You define how emergencies, walk-ins and squeezes are handled, and the system enforces it. The practices that name someone to own that before go-live do well. The ones that don't tend to feel it."
+      },
+      {
+       "id": "q12",
+       "text": "What happens to the things our staff do by hand today?",
+       "answer": "Anything that follows a rule, the system takes over. Anything that is a judgement call, somebody still has to make, and that person has to be written into the rules."
+      }
+     ],
+     "partial": [
+      {
+       "id": "q13",
+       "text": "Can we talk to a front-desk person at a reference customer, not the manager?",
+       "answer": "Marco, front desk at a reference practice: \"Routine booking was easy. Emergencies were a mess until our manager finally sat down and wrote the rules. That took about four months.\""
+      },
+      {
+       "id": "q16",
+       "text": "Show us what the screen does when someone enters it wrong.",
+       "answer": "It saves and drops into a review queue \"for a supervisor\". Asked which supervisor, Lena says: \"Whoever you configure.\""
+      }
+     ]
+    },
+    {
+     "vendor": "pawtime",
+     "name": "Pawtime",
+     "risk": "No shared calendar across clinics",
+     "direct": [
+      {
+       "id": "q12",
+       "text": "What happens to the things our staff do by hand today?",
+       "answer": "Each clinic has its own calendar, so the calling around would stay as it is. A few customers keep a shared sheet of openings between sites."
+      },
+      {
+       "id": "q15",
+       "text": "Show us booking a patient into a different clinic from the one you're logged into.",
+       "answer": "Neil logs out, logs back in to the Northgate account, and books. \"Each clinic's its own account. On our Group plan you get a shared view across clinics. That's $290 more a month.\""
+      }
+     ],
+     "partial": [
+      {
+       "id": "q05",
+       "text": "Can you give us three reference customers?",
+       "answer": "Sure. Three practices that have been with us for years. They're all single-clinic, but they'll tell you how easy it is."
+      },
+      {
+       "id": "q09",
+       "text": "Who at our practice has to change how they work, and by how much?",
+       "answer": "Hardly anyone changes anything. It looks and works a lot like what you've got now."
+      }
+     ]
+    }
+   ],
+   "debrief": {
+    "naming": [
+     "Total cost of ownership: the quote is the first item, not the total.",
+     "Shadow systems: the paper sheet, the whiteboard, the spreadsheet beside the real system.",
+     "Configuration against customisation: configurable means somebody has to configure it.",
+     "Change management: who has to work differently, and who pays for the slow weeks.",
+     "Ask what would make this fail, not what you should do."
+    ],
+    "turn": "Name a system you have been made to use, and the workaround you or someone near you invented to get around it."
+   }
+  },
+  "you": "Vikram"
+ }
+}

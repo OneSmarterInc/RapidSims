@@ -1,0 +1,206 @@
+{
+ "simId": "rapid-01-disaster",
+ "state": {
+  "session": {
+   "code": "NB3B6",
+   "owner": "Vikram",
+   "ownerId": "fac-1",
+   "platformAuth": true,
+   "courseId": "crs_A",
+   "name": "Sat, Oct 17, 7:54 AM",
+   "mode": "individual",
+   "state": "closed",
+   "paused": false,
+   "revealed": true,
+   "holdReveal": false,
+   "createdAt": 1792238066815,
+   "startedAt": 1792238067512,
+   "closedAt": 1792238073877,
+   "closedBy": "Vikram",
+   "closedFrom": "class-page"
+  },
+  "participants": {
+   "platform:ana": {
+    "id": "platform:ana",
+    "name": "Ana Lopez",
+    "groupId": "platform:ana",
+    "joinedAt": 1792238067432
+   },
+   "platform:ben": {
+    "id": "platform:ben",
+    "name": "Ben Ode",
+    "groupId": "platform:ben",
+    "joinedAt": 1792238072292
+   }
+  },
+  "runs": {
+   "individual:platform:ana": {
+    "groupId": "platform:ana",
+    "positions": [
+     {
+      "reading": "hardware",
+      "action": "image_first",
+      "tripwire": "If a second array fails."
+     },
+     {
+      "reading": "both",
+      "action": "isolate",
+      "tripwire": "If it crosses arrays."
+     },
+     {
+      "reading": "both",
+      "action": "notify",
+      "tripwire": "If the audit is clean."
+     }
+    ],
+    "phase": 3,
+    "done": true,
+    "coverageEarnedAt": 0,
+    "coveragePrivate": true,
+    "privateCount": 1,
+    "completedAt": 1792238072373,
+    "updatedAt": 1792238072386,
+    "reflection1": "Sophia, once she said where she could not see.",
+    "reflection2": "Image first at Hour 4.",
+    "reviewedAt": 1792238072386,
+    "runId": "individual:platform:ana",
+    "runnerId": "platform:ana",
+    "completedBy": "platform:ana",
+    "teamLabel": "Ana Lopez",
+    "band": "ready_both"
+   },
+   "individual:platform:ben": {
+    "groupId": "platform:ben",
+    "positions": [
+     {
+      "reading": "hardware",
+      "action": "restore_now",
+      "tripwire": "If a second array fails."
+     },
+     {
+      "reading": "hardware",
+      "action": "restore_clean",
+      "tripwire": "If it crosses arrays."
+     },
+     {
+      "reading": "hardware",
+      "action": "restore_clean",
+      "tripwire": "If the audit is clean."
+     }
+    ],
+    "phase": 3,
+    "done": true,
+    "completedAt": 1792238072382,
+    "updatedAt": 1792238072382,
+    "runId": "individual:platform:ben",
+    "runnerId": "platform:ben",
+    "completedBy": "platform:ben",
+    "teamLabel": "Ben Ode",
+    "band": "gone"
+   }
+  },
+  "you": "Vikram",
+  "phases": [
+   "Hour 4",
+   "Hour 20",
+   "Day 3"
+  ],
+  "kit": {
+   "bands": {
+    "ready_both": {
+     "label": "Ready for both",
+     "cls": "g",
+     "phrase": "Named both causes, with the evidence still intact"
+    },
+    "held": {
+     "label": "Held, undecided",
+     "cls": "y",
+     "phrase": "Kept the evidence, but never named the cause"
+    },
+    "late": {
+     "label": "Right, too late",
+     "cls": "o",
+     "phrase": "Named both causes after the evidence was gone"
+    },
+    "gone": {
+     "label": "Evidence gone",
+     "cls": "l",
+     "phrase": "Acted early and settled on one cause"
+    }
+   },
+   "order": [
+    "ready_both",
+    "held",
+    "late",
+    "gone"
+   ],
+   "irreversible": {
+    "restore_now": true,
+    "restore_clean": true,
+    "notify": true
+   },
+   "actionLabels": {
+    "restore_now": "Restore 4-hour incremental",
+    "restore_clean": "Restore 19-hour backup",
+    "image_first": "Image, then restore",
+    "isolate": "Isolate and hold",
+    "hunt": "Security hunt",
+    "notify": "Notify clients"
+   },
+   "readingLabels": {
+    "hardware": "Hardware",
+    "breach": "Intrusion",
+    "both": "Both",
+    "unknown": "Undetermined"
+   },
+   "phases": [
+    "Hour 4",
+    "Hour 20",
+    "Day 3"
+   ],
+   "reviewQuestions": [
+    "At Hour 4, whose account did you trust most, and what did that person stand to lose if they were wrong?",
+    "Now that you know it was both, which one decision would you change, and what question would have told you sooner?"
+   ],
+   "lessonQuestions": [
+    "Whose answer did you trust, and what did they stand to lose?",
+    "Did you keep your options open until the facts arrived?",
+    "When did you change your mind?",
+    "Did you find what the silence was hiding?"
+   ],
+   "lessons": [
+    {
+     "head": "Every adviser tells the truth they can afford.",
+     "text": "Each person on the call was honest, and each one had a reading that spared them."
+    },
+    {
+     "head": "Buy time with moves you can undo.",
+     "text": "A move you cannot take back belongs after the facts arrive, not before."
+    },
+    {
+     "head": "Change course when the evidence changes.",
+     "text": "A second array failing with no shared hardware was the evidence. The audit only confirmed it."
+    },
+    {
+     "head": "Ask where the silence is worth less.",
+     "text": "\"Nothing has alerted\" describes the tooling, not the estate. Ask where it could not see."
+    }
+   ],
+   "resolution": {
+    "headline": "It was <span class=\"md-t-both\">both</span>.",
+    "text": "A real FW-2231 firmware fault corrupted SAN-03, as Kate said. Separately, an intruder had been in the estate for three weeks and used the incident window. The modified backup jobs were theirs."
+   },
+   "fork": {
+    "reversible": {
+     "hardware": "You're back four hours later than you had to be. Nineteen hours of transactions gone either way. A mildly annoyed board, and a firmware patch that finally gets applied.",
+     "both": "The images show the persistence. You rebuild clean, disclose inside the window, and the intruder leaves with nothing. The four hours were the cheapest insurance you ever bought."
+    },
+    "irreversible": {
+     "hardware": "Service restored fast. You look decisive. Nobody ever finds out how close this was, including you.",
+     "both": "You restored over the evidence and over the persistence with it. Nineteen days of dwell time became five months. The notification window closed while you weren't looking, and the regulator's first question is why the volumes were overwritten."
+    }
+   },
+   "coverage": "A cost review had cut Sophia's detection on one segment. \"Nothing has alerted\" meant her tooling saw nothing there. She told anyone who asked where her silence was worth less."
+  }
+ }
+}

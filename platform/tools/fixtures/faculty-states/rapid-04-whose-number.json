@@ -1,0 +1,315 @@
+{
+ "simId": "rapid-04-whose-number",
+ "state": {
+  "session": {
+   "code": "TCDWF",
+   "name": "Sat, Oct 17, 7:54 AM",
+   "mode": "team",
+   "state": "closed",
+   "paused": false,
+   "platformAuth": true,
+   "courseId": "crs_A",
+   "createdAt": 1792238083660,
+   "practice": false,
+   "reviewOpen": true,
+   "locked": true,
+   "startedAt": 1792238084159
+  },
+  "participants": {
+   "platform:ana": {
+    "id": "platform:ana",
+    "name": "Ana Lopez",
+    "joinedAt": 1792238084442,
+    "groupId": "slot-1",
+    "teamLabel": "Team 1",
+    "isCaptain": true
+   },
+   "platform:ben": {
+    "id": "platform:ben",
+    "name": "Ben Ode",
+    "joinedAt": 1792238084984,
+    "groupId": "slot-2",
+    "teamLabel": "Team 2",
+    "isCaptain": true
+   },
+   "platform:cal": {
+    "id": "platform:cal",
+    "name": "Cal Wu",
+    "joinedAt": 1792238085536,
+    "groupId": "slot-3",
+    "teamLabel": "Team 3",
+    "isCaptain": true
+   }
+  },
+  "runs": {
+   "slot-1": {
+    "runId": "slot-1",
+    "teamLabel": "Team 1",
+    "runnerId": "platform:ana",
+    "completedBy": "platform:ana",
+    "done": true,
+    "completedAt": 1792238085877,
+    "phase": 1,
+    "joined": true,
+    "sheetId": "A",
+    "number": "90.0",
+    "confidence": 4,
+    "band": "match",
+    "reflections": {
+     "platform:ana": {
+      "reflection1": "The last-day line decided it.",
+      "reflection2": "My grade. It leaves out effort."
+     }
+    }
+   },
+   "slot-2": {
+    "runId": "slot-2",
+    "teamLabel": "Team 2",
+    "runnerId": "platform:ben",
+    "completedBy": "platform:ben",
+    "done": true,
+    "completedAt": 1792238088166,
+    "phase": 1,
+    "joined": true,
+    "sheetId": "E",
+    "number": "69.6",
+    "confidence": 3,
+    "band": "match",
+    "reflections": {}
+   },
+   "slot-3": {
+    "runId": "slot-3",
+    "teamLabel": "Team 3",
+    "runnerId": "platform:cal",
+    "completedBy": "platform:cal",
+    "done": true,
+    "completedAt": 1792238088298,
+    "phase": 1,
+    "joined": true,
+    "sheetId": "D",
+    "number": "80.0",
+    "confidence": 3,
+    "band": "off",
+    "reflections": {}
+   }
+  },
+  "kit": {
+   "bands": {
+    "match": {
+     "label": "Matches its sheet",
+     "cls": "g",
+     "phrase": "Reported the number its definition gives"
+    },
+    "off": {
+     "label": "Off its sheet",
+     "cls": "o",
+     "phrase": "Reported a number its definition does not give"
+    },
+    "none": {
+     "label": "No number reported",
+     "cls": "l",
+     "phrase": "The clock ran out before a number was locked"
+    }
+   },
+   "order": [
+    "match",
+    "off",
+    "none"
+   ],
+   "locked": true,
+   "clock": {
+    "remaining": 1492,
+    "warning": false,
+    "expired": false,
+    "running": true,
+    "paused": false
+   },
+   "reviewQuestions": [
+    "Which line of your definition decided your number, and who would want it written that way?",
+    "Name a number you are judged by. What is its definition, and what does it leave out?"
+   ],
+   "lessonQuestions": [
+    "What did your definition count, and what did it leave out?",
+    "If someone challenged your number, what would you show them first?",
+    "Who in the company would want retention measured your way?",
+    "What would change your number without changing the data?"
+   ],
+   "lessons": [
+    {
+     "head": "A number is a definition, a measurement and a purpose.",
+     "text": "The data was the same for every team. The definition and the purpose behind it set the number."
+    },
+    {
+     "head": "Every definition gives a correct number.",
+     "text": "Each one answers its own question. None of them is the retention figure."
+    },
+    {
+     "head": "Ask for the definition before you argue about the number.",
+     "text": "Two careful teams can defend two numbers far apart, and both can be correct."
+    },
+    {
+     "head": "Who writes the definition decides what counts.",
+     "text": "Sales, Finance and Investor Relations each wrote the line that suits their job."
+    }
+   ],
+   "assignmentOrder": [
+    "A",
+    "E",
+    "D",
+    "C",
+    "B"
+   ],
+   "sheets": {
+    "A": {
+     "lines": [
+      "Period: 1 July to 30 September.",
+      "Scope: only accounts active on 1 July. Accounts that signed up after 1 July are excluded.",
+      "Source: the account records in the data pack.",
+      "An account counts as retained if it was active on the last day of the quarter.",
+      "Report retention as a percentage to one decimal place, rounded half up."
+     ],
+     "contestedIndex": 3,
+     "department": "Sales",
+     "purpose": "Wins back a customer and wants credit for it.",
+     "derivation": [
+      "3 mid-quarter signups excluded; 40 accounts in scope.",
+      "4 accounts not retained: cancelled and still gone on the last day.",
+      "36 / 40 = 90.0%."
+     ],
+     "value": "90.0"
+    },
+    "E": {
+     "lines": [
+      "Period: 1 July to 30 September.",
+      "Scope: only accounts active on 1 July. Accounts that signed up after 1 July are excluded.",
+      "Source: the account records in the data pack.",
+      "Retention is the share of starting monthly revenue still billed on the last day of the quarter, including accounts whose invoice is unpaid.",
+      "Report retention as a percentage to one decimal place, rounded half up."
+     ],
+     "contestedIndex": 3,
+     "department": "Investor Relations",
+     "purpose": "Investors price dollars, not logos.",
+     "derivation": [
+      "3 mid-quarter signups excluded; 40 accounts in scope, starting MRR $10,800.",
+      "4 cancelled accounts bill nothing at quarter end: -$2,126.",
+      "4 downgrades bill less: -$1,160.",
+      "$7,514 / $10,800 = 69.6%."
+     ],
+     "value": "69.6"
+    },
+    "D": {
+     "lines": [
+      "Period: 1 July to 30 September.",
+      "Scope: only accounts active on 1 July. Accounts that signed up after 1 July are excluded.",
+      "Source: the account records in the data pack.",
+      "An account counts as retained if it was active on the last day of the quarter and had paid its quarter-end invoice.",
+      "Report retention as a percentage to one decimal place, rounded half up."
+     ],
+     "contestedIndex": 3,
+     "department": "Finance",
+     "purpose": "Unpaid isn't retained until the cash arrives.",
+     "derivation": [
+      "3 mid-quarter signups excluded; 40 accounts in scope.",
+      "10 accounts not retained: gone, or active with an unpaid quarter-end invoice.",
+      "30 / 40 = 75.0%."
+     ],
+     "value": "75.0"
+    },
+    "C": {
+     "lines": [
+      "Period: 1 July to 30 September.",
+      "Scope: only accounts active on 1 July. Accounts that signed up after 1 July are excluded.",
+      "Source: the account records in the data pack.",
+      "An account counts as retained if it was active on the last day of the quarter on the same tier or higher.",
+      "Report retention as a percentage to one decimal place, rounded half up."
+     ],
+     "contestedIndex": 3,
+     "department": "Product",
+     "purpose": "A downgrade means the product disappointed.",
+     "derivation": [
+      "3 mid-quarter signups excluded; 40 accounts in scope.",
+      "8 accounts not retained: gone, or on a lower tier than they started.",
+      "32 / 40 = 80.0%."
+     ],
+     "value": "80.0"
+    },
+    "B": {
+     "lines": [
+      "Period: 1 July to 30 September.",
+      "Scope: only accounts active on 1 July. Accounts that signed up after 1 July are excluded.",
+      "Source: the account records in the data pack.",
+      "An account counts as retained if it was active on every day of the quarter.",
+      "Report retention as a percentage to one decimal place, rounded half up."
+     ],
+     "contestedIndex": 3,
+     "department": "Customer Success",
+     "purpose": "Any lapse means the relationship failed.",
+     "derivation": [
+      "3 mid-quarter signups excluded; 40 accounts in scope.",
+      "6 accounts not retained: cancelled at some point, including the two that came back.",
+      "34 / 40 = 85.0%."
+     ],
+     "value": "85.0"
+    }
+   }
+  },
+  "warningMinutes": 2,
+  "projector": {
+   "session": {
+    "code": "TCDWF",
+    "name": "Sat, Oct 17, 7:54 AM",
+    "mode": "team",
+    "groupSize": 4,
+    "state": "closed",
+    "stage": 0,
+    "clockMinutes": 25
+   },
+   "clock": {
+    "remaining": 1492,
+    "warning": false,
+    "expired": false,
+    "running": true,
+    "paused": false
+   },
+   "unassigned": [],
+   "groups": [
+    {
+     "id": "slot-1",
+     "label": "Team 1",
+     "members": [
+      {
+       "id": "platform:ana",
+       "name": "Ana Lopez"
+      }
+     ],
+     "committed": true,
+     "locked": true
+    },
+    {
+     "id": "slot-2",
+     "label": "Team 2",
+     "members": [
+      {
+       "id": "platform:ben",
+       "name": "Ben Ode"
+      }
+     ],
+     "committed": true,
+     "locked": true
+    },
+    {
+     "id": "slot-3",
+     "label": "Team 3",
+     "members": [
+      {
+       "id": "platform:cal",
+       "name": "Cal Wu"
+      }
+     ],
+     "committed": true,
+     "locked": true
+    }
+   ]
+  }
+ }
+}

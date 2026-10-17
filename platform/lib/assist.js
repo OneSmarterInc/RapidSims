@@ -10,8 +10,10 @@ const MODEL = process.env.ASSIST_MODEL || 'claude-haiku-5-5';
 const PRICE = { input: 0.10, output: 0.50, cacheRead: 0.01, cacheWrite: 0.125 };
 const LIMITS = { trying: 30, adopted: 200 };
 const CEILING_USD = Number(process.env.ASSIST_MONTHLY_CEILING_USD || 25);
-// The pilot runs on one sim; more join as their material is checked.
-const PILOT_SIMS = String(process.env.ASSIST_SIMS || 'rapidsimplus-01').split(',').map(x => x.trim()).filter(Boolean);
+// All twelve sims (rolled out Oct 17 after the pilot on rapidsimplus-01). ASSIST_SIMS can narrow the list.
+const ALL_SIMS = ['rapid-01-disaster', 'rapid-02-relay', 'rapid-03-midland', 'rapid-04-whose-number', 'rapid-05-approve',
+  'rapid-06-switch', 'rapid-07-bought', 'rapid-08-later', 'rapid-09-money-land', 'rapid-10-bubble', 'rapidsimplus-01', 'rapidsimplus-02'];
+const PILOT_SIMS = process.env.ASSIST_SIMS ? String(process.env.ASSIST_SIMS).split(',').map(x => x.trim()).filter(Boolean) : ALL_SIMS;
 const MAX_CONTEXT_CHARS = 240000; // about 60,000 tokens, well under the 100,000-token price step
 // Haiku 5.5 thinks by default and thinking counts toward max_tokens, which cut answers short (Oct 17). The helper
 // explains material it is given, so thinking is turned off; the limit leaves room for a full ~250-word answer.
@@ -23,9 +25,13 @@ const enabled = simId => PILOT_SIMS.includes(simId) && !!process.env.ANTHROPIC_A
 function anonymise(state) {
   const names = new Map(), label = name => { if (!names.has(name)) names.set(name, `Student ${names.size + 1}`); return names.get(name); };
   const people = Object.values((state && state.participants) || {});
-  for (const p of people) if (p && p.name) label(p.name);
+  for (const p of [...people, ...(Array.isArray(state && state.roster) ? state.roster : [])]) if (p && typeof p.name === 'string' && p.name.trim().length >= 2) label(p.name.trim());
+  // Whole names only, matched at word edges, longest first, in one pass ("Ana Lopez" never rewrites "Analysis").
+  const esc = n => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const sorted = [...names.keys()].sort((a, b) => b.length - a.length);
+  const re = sorted.length ? new RegExp(`(?<![\\p{L}\\p{N}])(?:${sorted.map(esc).join('|')})(?![\\p{L}\\p{N}])`, 'gu') : null;
   const swap = v => {
-    if (typeof v === 'string') { let out = v; for (const [n, l] of names) if (n) out = out.split(n).join(l); return out; }
+    if (typeof v === 'string') return re ? v.replace(re, m => names.get(m)) : v;
     if (Array.isArray(v)) return v.map(swap);
     if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, swap(x)]));
     return v;
@@ -37,7 +43,7 @@ function anonymise(state) {
 function compact(v, depth = 0) {
   if (typeof v === 'string') return v.length > 400 ? v.slice(0, 400) + '…' : v;
   if (Array.isArray(v)) return v.slice(0, 60).map(x => compact(x, depth + 1));
-  if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).filter(([k]) => !['answer', 'key', 'launch', 'launchId', 'owner', 'joinUrl'].includes(k)).map(([k, x]) => [k, compact(x, depth + 1)]));
+  if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).filter(([k]) => !['answer', 'key', 'launch', 'launchId', 'owner', 'ownerId', 'ownerKey', 'platformAuth', 'joinUrl', 'you', 'email', 'sub'].includes(k)).map(([k, x]) => [k, compact(x, depth + 1)]));
   return v;
 }
 
@@ -107,8 +113,8 @@ async function ask({ s, me, course, sim, question, history, sessionState, fetchI
   if (!a.left) return { status: 429, body: { error: 'helper_limit', message: `You have used this month’s ${a.limit} questions for this simulation.${a.adopted ? '' : ' Licensing a class raises the limit to 200.'}`, allowance: a } };
   const page = onePagerFor(sim.id, sim.detail);
   const anon = sessionState ? anonymise(sessionState) : { data: null, names: {} };
-  const session = anon.data ? compact({ session: anon.data.session && { state: anon.data.session.state, mode: anon.data.session.mode, practice: anon.data.session.practice },
-    participants: anon.data.participants, runs: anon.data.runs }) : null;
+  // Everything the sim sent its faculty pages except the teaching material (that goes in the cached system prompt).
+  const session = anon.data ? compact(Object.fromEntries(Object.entries(anon.data).filter(([k]) => k !== 'kit'))) : null;
   const system = systemPrompt(sim, page, sessionState && compact(anonymise({ participants: sessionState.participants, kit: sessionState.kit }).data.kit));
   const turns = (Array.isArray(history) ? history : []).slice(-4).filter(t => t && typeof t.q === 'string' && typeof t.a === 'string')
     .flatMap(t => [{ role: 'user', content: t.q.slice(0, 1500) }, { role: 'assistant', content: t.a.slice(0, 3000) }]);
@@ -126,4 +132,4 @@ async function ask({ s, me, course, sim, question, history, sessionState, fetchI
   return { status: 200, body: { answer: out.text, names: anon.names, allowance: { ...a, used: a.used + 1, left: Math.max(0, a.left - 1) } } };
 }
 
-module.exports = { MODEL, PRICE, LIMITS, CEILING_USD, PILOT_SIMS, enabled, anonymise, compact, allowance, ask, usd };
+module.exports = { ALL_SIMS, MODEL, PRICE, LIMITS, CEILING_USD, PILOT_SIMS, enabled, anonymise, compact, allowance, ask, usd };

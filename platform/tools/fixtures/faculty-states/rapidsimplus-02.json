@@ -1,0 +1,422 @@
+{
+ "simId": "rapidsimplus-02",
+ "state": {
+  "session": {
+   "code": "L7YMB",
+   "createdAt": 1792238145147,
+   "createdBy": "Vikram",
+   "phase": "closed",
+   "phaseEndsAt": null,
+   "negotiationStartedAt": 1792238149922,
+   "extended": true,
+   "tableIds": [
+    "T1"
+   ],
+   "reveal": false,
+   "walkthroughVersion": 1,
+   "owner": {
+    "sub": "teacher",
+    "course": "class1"
+   },
+   "ownerId": "teacher",
+   "platformAuth": true,
+   "courseId": "class1",
+   "kit": true,
+   "state": "closed",
+   "mode": "team",
+   "name": "Sat, Oct 17, 7:55 AM",
+   "tableOf": {
+    "team:team-1": "T1"
+   },
+   "startedAt": 1792238147412,
+   "walkthroughOverride": {
+    "at": 1792238147412,
+    "by": "Vikram",
+    "participants": [
+     {
+      "id": "platform:student3",
+      "name": "Sam Okafor"
+     }
+    ]
+   },
+   "deadlineAt": 1792238157831,
+   "closedAt": 1792238162360,
+   "paused": false,
+   "walkthroughPending": [
+    "Sam Okafor"
+   ],
+   "clock": {
+    "phase": "closed",
+    "endsAt": null
+   },
+   "ended": true
+  },
+  "roster": [
+   {
+    "id": "platform:student0",
+    "name": "Priya Shah",
+    "groupId": "team:team-1",
+    "teamLabel": "Team 1"
+   },
+   {
+    "id": "platform:student1",
+    "name": "Tom Becker",
+    "groupId": "team:team-1",
+    "teamLabel": "Team 1"
+   },
+   {
+    "id": "platform:student2",
+    "name": "Lena Ortiz",
+    "groupId": "team:team-1",
+    "teamLabel": "Team 1"
+   },
+   {
+    "id": "platform:student3",
+    "name": "Sam Okafor",
+    "groupId": "team:team-1",
+    "teamLabel": "Team 1"
+   }
+  ],
+  "participants": {
+   "platform:student0": {
+    "id": "platform:student0",
+    "name": "Priya Shah",
+    "joinedAt": 1792238145464,
+    "groupId": "team:team-1",
+    "teamLabel": "Team 1",
+    "isCaptain": false
+   },
+   "platform:student1": {
+    "id": "platform:student1",
+    "name": "Tom Becker",
+    "joinedAt": 1792238145727,
+    "groupId": "team:team-1",
+    "teamLabel": "Team 1",
+    "isCaptain": false
+   },
+   "platform:student2": {
+    "id": "platform:student2",
+    "name": "Lena Ortiz",
+    "joinedAt": 1792238146012,
+    "groupId": "team:team-1",
+    "teamLabel": "Team 1",
+    "isCaptain": false
+   },
+   "platform:student3": {
+    "id": "platform:student3",
+    "name": "Sam Okafor",
+    "joinedAt": 1792238146300,
+    "groupId": "team:team-1",
+    "teamLabel": "Team 1",
+    "isCaptain": false
+   }
+  },
+  "runs": {
+   "team:team-1": {
+    "runId": "team:team-1",
+    "teamLabel": "Team 1",
+    "runnerId": "platform:student0",
+    "completedBy": null,
+    "done": true,
+    "completedAt": 1792238162360,
+    "joined": true,
+    "phase": 1,
+    "band": "threshold",
+    "tableId": "T1",
+    "seats": [
+     {
+      "name": "Priya Shah",
+      "seat": "advocate",
+      "joined": true
+     },
+     {
+      "name": "Tom Becker",
+      "seat": "manufacturers",
+      "joined": true
+     },
+     {
+      "name": "Lena Ortiz",
+      "seat": "utility",
+      "joined": true
+     },
+     {
+      "name": "Sam Okafor",
+      "seat": "developer",
+      "joined": true
+     }
+    ],
+    "sheet": {
+     "dials": {
+      "top": 85,
+      "term": 12,
+      "exit": 3,
+      "coll": 24,
+      "threshold": 25
+     },
+     "locked": {
+      "money": false,
+      "threshold": true
+     },
+     "moves": 0,
+     "notices": 1,
+     "minutesSinceActivity": 0,
+     "stalled": false
+    },
+    "result": {
+     "terms": {
+      "top": 95,
+      "term": 15,
+      "exit": 4.5,
+      "coll": 30,
+      "threshold": 25
+     },
+     "imposed": [
+      "top",
+      "term",
+      "exit",
+      "coll"
+     ],
+     "freezeMonths": 12,
+     "settled": [
+      "threshold"
+     ]
+    },
+    "playForward": {
+     "terms": {
+      "top": 95,
+      "term": 15,
+      "exit": 4.5,
+      "coll": 30,
+      "threshold": 25
+     },
+     "imposed": [
+      "top",
+      "term",
+      "exit",
+      "coll"
+     ],
+     "freezeMonths": 12,
+     "subscribedMW": 3213,
+     "arrives": {
+      "advocate": "The Hammonds' bill rises by $2.32 a month for five years, to $144.32.",
+      "manufacturers": "Industrial rates rise 2.1%. At a 25 MW threshold, Linda's 38 MW plant falls inside the tariff. All three shifts keep running.",
+      "developer": "Marcus's campus energises in month 34. The tenant has already walked. Halvorsen's obligation of $125 million breaks the lender's $65 million cap.",
+      "utility": "Data-centre contracts cover 76% of the build Dana Okafor signed off. The other $284 million is paid by shareholders and customers."
+     },
+     "misses": {
+      "advocate": "The Hammonds' bill rises by $3.60 a month for five years, to $145.60.",
+      "manufacturers": "Industrial rates rise 3.4%. At a 25 MW threshold, Linda's 38 MW plant falls inside the tariff. The third shift is cut.",
+      "developer": "Marcus's campus energises in month 34. The tenant has already walked. Halvorsen's obligation of $125 million breaks the lender's $65 million cap.",
+      "utility": "Data centres pay for 60% of the build Dana Okafor signed off. $484 million is stranded and spread across shareholders and customers."
+     }
+    },
+    "reflections": {
+     "platform:student0": {
+      "reflection1": "I gave on the threshold and got the term.",
+      "reflection2": "We would have stopped at three signatures."
+     }
+    }
+   }
+  },
+  "kit": {
+   "bands": {
+    "both": {
+     "label": "Both settled",
+     "cls": "b",
+     "phrase": "The team signed every term"
+    },
+    "money": {
+     "label": "Money settled",
+     "cls": "v",
+     "phrase": "The team signed the money terms; the Commission set the threshold"
+    },
+    "threshold": {
+     "label": "Threshold settled",
+     "cls": "y",
+     "phrase": "The team signed the threshold; the Commission set the money terms"
+    },
+    "commission": {
+     "label": "Commission set both",
+     "cls": "n",
+     "phrase": "The Commission set every term"
+    }
+   },
+   "order": [
+    "both",
+    "money",
+    "threshold",
+    "commission"
+   ],
+   "phase": "closed",
+   "ended": true,
+   "extended": true,
+   "next": null,
+   "seatNames": {
+    "utility": "Crestline Power",
+    "developer": "Halvorsen Digital",
+    "manufacturers": "Industrial Energy Users",
+    "advocate": "Office of the Consumer Advocate"
+   },
+   "dials": {
+    "top": {
+     "label": "Minimum take-or-pay (%)",
+     "short": "Take-or-pay (%)",
+     "min": 50,
+     "max": 95,
+     "step": 5,
+     "filed": 85
+    },
+    "term": {
+     "label": "Contract term (years)",
+     "short": "Term (years)",
+     "min": 5,
+     "max": 15,
+     "step": 1,
+     "filed": 12
+    },
+    "exit": {
+     "label": "Exit fee (years of minimum charges)",
+     "short": "Exit fee (years)",
+     "min": 0,
+     "max": 5,
+     "step": 0.5,
+     "filed": 3
+    },
+    "coll": {
+     "label": "Collateral (months of minimum charges)",
+     "short": "Collateral (months)",
+     "min": 0,
+     "max": 36,
+     "step": 6,
+     "filed": 24
+    },
+    "threshold": {
+     "label": "Size threshold (MW)",
+     "short": "Threshold (MW)",
+     "min": 10,
+     "max": 100,
+     "step": 5,
+     "filed": 25
+    }
+   },
+   "groups": {
+    "money": [
+     "top",
+     "term",
+     "exit",
+     "coll"
+    ],
+    "threshold": [
+     "threshold"
+    ]
+   },
+   "staffNotices": [
+    {
+     "id": "fallback",
+     "label": "Reminder: fallback",
+     "text": "Commission staff remind the parties of the published fallback. Each term left unsigned extends the freeze by 3–4 months."
+    },
+    {
+     "id": "closest",
+     "label": "Question: closest term",
+     "text": "Commission staff ask: which group of terms is closest to agreement? Staff suggest locking it first."
+    },
+    {
+     "id": "onesentence",
+     "label": "Question: one sentence each",
+     "text": "Commission staff ask each party to state, in one sentence, what it needs on one term of its choosing."
+    }
+   ],
+   "walkthrough": {
+    "finished": 3,
+    "pending": [
+     "Sam Okafor"
+    ]
+   },
+   "walkthroughScreens": 4,
+   "reveal": {
+    "heading": "What actually happened",
+    "projector": [
+     "Crestline Power is modelled on AEP Ohio. In July 2025, Ohio’s Commission chose between two competing settlements. It adopted the agreement backed by AEP Ohio, Commission staff, consumer advocates and others. The data-centre parties had backed the competing agreement, so the Commission approved a package without their signatures.",
+     "The tariff tied demand charges to minimum billing demand, with a capacity-based minimum capped at 85%. A four-year ramp plus eight years gives a twelve-year contract. Early exit and collateral provisions add commitments of their own. The details matter: the 85% applies to demand charges only.",
+     "By February 2026, roughly 30,000 MW of initial interest had led to 5,642 MW of new binding contracts. Those were additional to 12,219 MW contracted earlier. The lesson is how financial commitments change a forecast, and how a regulator chooses a package when only some parties sign it."
+    ],
+    "paragraphs": [
+     "Crestline Power is modelled on AEP Ohio. The Commission is the Public Utilities Commission of Ohio.",
+     "From March 2023, AEP Ohio paused new data-centre service requests and agreements in central Ohio. The proceeding recorded roughly 600 MW of existing data-centre demand and over 30,000 MW of requests without signed agreements. The July 2025 order directed AEP Ohio to end that moratorium.",
+     "There were two competing settlements. On 9 July 2025, the Commission adopted the 23 October 2024 agreement signed by AEP Ohio, Commission staff, the Ohio Consumers’ Counsel, Ohio Energy Group, Walmart and Ohio Partners for Affordable Energy, with a modification to the collateral provisions. It rejected the competing 10 October agreement supported by data-centre interests and others. The adopted agreement carried the signatures of some parties, and the Commission approved it.",
+     "The new tariff applies to new data-centre load above 25 MW and qualifying expansions. Minimum billing demand is the greater of 85% of the highest monthly billing demand in the previous eleven months or a capacity-based minimum. That minimum starts at 15 MW plus 85% of capacity above 25 MW through 75 MW; above 75 MW, it is 57.5 MW plus the additional capacity, capped at 85% of total contract capacity. This determines demand charges, rather than a flat percentage of the entire electricity bill.",
+     "A load ramp can last no more than four years, with agreed ramp capacity of at least 50%, 65%, 80% and 90% of final capacity in years one to four. During the ramp, billing demand is at least 85% of that ramp capacity. The initial contract term is the ramp period plus eight years: twelve years for a four-year ramp.",
+     "A customer can use the early-exit provision only after five contract years following the ramp, paying thirty-six months of minimum charges after notice of termination. With a three-year ramp, that option becomes available after year eight. Otherwise the initial-term minimum charges remain payable even if service is reduced or stopped.",
+     "The customer, including a financial sponsor that co-signs, must meet both the A- S&P and A3 Moody’s credit thresholds and hold audited cash and cash equivalents exceeding ten times the collateral requirement to avoid posting security. Otherwise, security equals 50% of full-term minimum charges, supplied through a qualifying guarantee, a bank letter of credit or cash. Timely payments reduce the requirement by one year’s minimum charges for each energized year.",
+     "In its February 2026 update, AEP Ohio reported that the roughly 30,000 MW of expressions of interest led to 13,022.7 MW of paid study requests and 5,642 MW of binding contracts under the new tariff as of 12 February. Those new contracts were additional to 12,219 MW contracted before the tariff, for a total of 17,861 MW. These were projects scheduled to come online through 2035."
+    ],
+    "sources": [
+     {
+      "label": "PUCO Opinion and Order, 9 July 2025 — case 24-508-EL-ATA",
+      "url": "https://dis.puc.state.oh.us/DocumentRecord.aspx?DocID=badab793-e041-4173-9b6d-436e51f80e5c",
+      "locator": "Paragraphs 42, 45, 46, 121–126 and 158; comparison of the two stipulations on pages 14–22."
+     },
+     {
+      "label": "Filed copy of the PUCO order — Florida PSC, Exhibit D",
+      "url": "https://www.psc.state.fl.us/library/FILINGS/2025/07142-2025/07142-2025.pdf",
+      "locator": "Exhibit D begins on PDF page 74. Used to read the original order when the Ohio docket blocked access."
+     },
+     {
+      "label": "AEP Ohio tariff explanation",
+      "url": "https://www.aepohio.com/company/about/rates/data-center-tariff/",
+      "locator": "Load ramp, contract term, minimum demand, collateral and exit sections."
+     },
+     {
+      "label": "Schedule DCT — AEP Ohio tariff book",
+      "url": "https://www.aepohio.com/lib/docs/ratesandtariffs/Ohio/October_2026_Ohio_Power_Tariff_Book.pdf",
+      "locator": "Sheets 223-1 through 223-7; checked against the provisions adopted in the July 2025 order."
+     },
+     {
+      "label": "AEP Ohio load update, 13 February 2026",
+      "url": "https://www.aepohio.com/company/news/view?releaseID=10753",
+      "locator": "5,642 MW of new contracts as of 12 February, additional to 12,219 MW of earlier contracts."
+     }
+    ],
+    "note": "The real order is one settlement among the ones possible. Ask what each real party gave up to reach it."
+   },
+   "debriefNotes": [
+    "Start with two contrasting team outcomes. Ask which risks the parties accepted, which terms made another seat’s agreement possible, and what the deadline changed.",
+    "The model shows how the terms move risk between the seats. Its numbers are fictional.",
+    "Use the settlement the Commission adopted with only some parties signing. The data-centre parties had backed the other one. Ask what changes when the regulator can approve a package without every party signing.",
+    "Keep the demand figures distinct: about 30,000 MW of interest, 13,022.7 MW of paid study requests and 5,642 MW of new binding contracts, additional to 12,219 MW contracted earlier. These were projects scheduled to come online through 2035.",
+    "Minimum billing demand determines demand charges; The 85% applies to demand charges only. A four-year ramp plus eight years gives a twelve-year contract."
+   ],
+   "reviewQuestions": [
+    "Which term did you give the most on, and what did you get for it?",
+    "What would change if the Commission could approve a package without every party signing?"
+   ],
+   "lessonQuestions": [
+    "Which risk did your party accept, and why?",
+    "Which term made another seat’s agreement possible?",
+    "What did the deadline change for your team?",
+    "What would change if the Commission could approve a package without every party signing?"
+   ],
+   "lessons": [
+    {
+     "head": "Contract terms decide who carries the risk.",
+     "text": "Take-or-pay, term, exit fee and collateral move the cost of missing demand between data centres, shareholders and customers."
+    },
+    {
+     "head": "A deal needs something for every seat.",
+     "text": "A term one party cannot accept can be traded for one it can."
+    },
+    {
+     "head": "A known fallback changes the bargaining.",
+     "text": "Terms left open went to the Commission, and each one extended the connection freeze."
+    },
+    {
+     "head": "A regulator can approve a package without every signature.",
+     "text": "In Ohio, the Commission chose between two settlements. The data-centre parties had backed the other one."
+    }
+   ]
+  },
+  "you": "Vikram",
+  "serverNow": 1792238162389
+ }
+}
