@@ -179,4 +179,24 @@ module.exports = [
 `ALTER TABLE enrolments ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ`,
 
 `ALTER TABLE enrolments ADD COLUMN IF NOT EXISTS archived_session TEXT`,
+
+`CREATE TABLE IF NOT EXISTS assist_usage (
+  id           BIGSERIAL PRIMARY KEY,
+  user_id      TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  sim_id       TEXT NOT NULL,
+  course_id    TEXT,
+  session_code TEXT,
+  model        TEXT NOT NULL,
+  tokens_in    INTEGER NOT NULL DEFAULT 0,
+  tokens_out   INTEGER NOT NULL DEFAULT 0,
+  cache_read   INTEGER NOT NULL DEFAULT 0,
+  cost_usd     NUMERIC(10,6) NOT NULL DEFAULT 0,
+  question     TEXT,
+  answer       TEXT,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
+)`,
+
+`CREATE INDEX IF NOT EXISTS assist_usage_user_sim_idx ON assist_usage(user_id, sim_id, created_at)`,
+
+`CREATE INDEX IF NOT EXISTS assist_usage_created_idx ON assist_usage(created_at)`,
 ];

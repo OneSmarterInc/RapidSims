@@ -129,7 +129,8 @@ function render() {
   const tabs = [['fac','Facilitators',D.data.faculty.length],
                 ['stu','Students',t.students||0],
                 ['crs','Courses',t.courses||0],
-                ['cat','Catalogue',(D.data.sims||[]).length]];
+                ['cat','Catalogue',(D.data.sims||[]).length],
+                ['hlp','Helper',(D.data.assist||{}).questions||0]];
   app.innerHTML = `
     <div class="strip">
       <div class="cell"><div class="n">${D.data.faculty.length}</div><div class="l">Facilitators</div></div>
@@ -146,8 +147,8 @@ function render() {
   app.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { D.tab = b.dataset.tab; D.open = null; D.personEdit = null; D.link = null; render(); });
   wireHelp();
   const body = document.getElementById('body');
-  body.innerHTML = ({ fac:facTab, stu:stuTab, crs:crsTab, cat:catTab })[D.tab]();
-  ({ fac:wireFac, stu:wireStu, crs:wireCrs, cat:wireCat })[D.tab]();
+  body.innerHTML = ({ fac:facTab, stu:stuTab, crs:crsTab, cat:catTab, hlp:hlpTab })[D.tab]();
+  ({ fac:wireFac, stu:wireStu, crs:wireCrs, cat:wireCat, hlp:() => {} })[D.tab]();
   wireCommon();
 }
 
@@ -175,6 +176,18 @@ function renderBlocked() {
   };
   const rt = document.getElementById('retry');
   if (rt) rt.onclick = () => { D.err = null; load(); };
+}
+
+/* ── faculty helper usage ───────────────────────────────────────────────── */
+// "Ask about this sim": this month's questions and cost against the platform ceiling.
+function hlpTab() {
+  const a = D.data.assist || { rows: [], spent: 0, ceiling: 25, limits: {}, pilotSims: [] };
+  const money = v => '$' + Number(v || 0).toFixed(2);
+  return `<div class="panel"><div style="padding:18px">
+    <p><b>${money(a.spent)}</b> of the <b>${money(a.ceiling)}</b> monthly ceiling used this month, ${a.questions || 0} questions. The helper pauses for everyone at the ceiling and returns on the 1st.</p>
+    <p class="hint">Model ${esc(a.model || '')}. Limits per faculty member per sim each month: ${a.limits.trying || 30} while trying a sim, ${a.limits.adopted || 200} once one of their classes has licensed students. On for: ${esc((a.pilotSims || []).join(', '))}. ${a.keySet ? 'API key set on the server.' : '<b>No API key on the server yet</b>, so the helper is hidden.'}</p>
+    ${a.rows.length ? `<table class="tbl"><thead><tr><th>Faculty</th><th>Simulation</th><th>Questions</th><th>Cost</th></tr></thead><tbody>${a.rows.map(r => `<tr><td>${esc(r.faculty)}</td><td>${esc(r.sim_id)}</td><td>${r.questions}</td><td>${money(r.cost)}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">No questions yet this month.</div>'}
+  </div></div>`;
 }
 
 /* ── facilitators ───────────────────────────────────────────────────────── */

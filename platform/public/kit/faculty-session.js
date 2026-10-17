@@ -220,6 +220,22 @@ if(!BASE)fetch(BASE+'/api/platform').then(r=>r.ok?r.json():null).then(d=>{
 }).catch(()=>{});
 
 // One handle on the live page, for checks and support: FacultySession.page.state and the like.
+// Ask about this sim: the faculty helper, answered by the platform (/api/faculty, action assist). Shown only where the
+// platform has it switched on for this sim. Students appear to the helper as "Student 1, 2, 3"; names are put back here.
+const PLATFORM_FACULTY_API='/api/faculty';
+const helper={open:false,turns:[],busy:false,allowance:null,error:''};
+async function helperCall(x){const r=await fetch(PLATFORM_FACULTY_API,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({simId:SIM.id,courseId:facultyCourse||undefined,...x})});const d=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(d.message||'The helper could not answer just now.'),{data:d});return d}
+const restoreNames=(text,names)=>Object.entries(names||{}).sort((a,b)=>b[0].length-a[0].length).reduce((t,[label,name])=>t.split(label).join(name),String(text||''));
+function helperPaint(){let box=document.getElementById('fs-helper');if(!box){box=document.createElement('div');box.id='fs-helper';document.body.appendChild(box)}
+ const a=helper.allowance;box.innerHTML=helper.open?`<section class="fs-helper-panel" aria-label="Ask about this sim"><div class="fs-helper-head"><b>Ask about this sim</b><button type="button" class="btn" data-helper="close">Close</button></div>
+  <div class="fs-helper-log">${helper.turns.length?helper.turns.map(t=>`<p class="fs-helper-q">${esc(t.q)}</p><div class="fs-helper-a">${esc(t.shown).replace(/\n/g,'<br>')}</div>`).join(''):'<p class="help">Ask how to run it, what a screen means, why a student got a result, or what to ask in the debrief. With a session open, the helper reads it with students shown as numbers; you see their names here.</p>'}</div>
+  ${helper.error?`<p class="fs-helper-err">${esc(helper.error)}</p>`:''}<form class="fs-helper-form"><textarea id="fsHelperQ" rows="3" maxlength="1500" placeholder="Ask a question about this sim…" ${helper.busy?'disabled':''}></textarea><button class="btn btn-primary" type="submit" ${helper.busy?'disabled':''}>${helper.busy?'Thinking…':'Ask'}</button></form>
+  ${a?`<p class="help">${a.left} of ${a.limit} questions left this month for this sim.</p>`:''}</section>`:`<button type="button" class="fs-helper-open" data-helper="open">Ask about this sim</button>`;
+ box.querySelectorAll('[data-helper]').forEach(x=>x.onclick=()=>{helper.open=x.dataset.helper==='open';helperPaint()});
+ const f=box.querySelector('form');if(f)f.onsubmit=async e=>{e.preventDefault();const q=document.getElementById('fsHelperQ').value.trim();if(!q||helper.busy)return;helper.busy=true;helper.error='';helperPaint();
+  try{const d=await helperCall({action:'assist',question:q,sessionCode:code||undefined,history:helper.turns.slice(-4).map(t=>({q:t.q,a:t.a}))});helper.turns.push({q,a:d.answer,shown:restoreNames(d.answer,d.names)});helper.allowance=d.allowance||helper.allowance}
+  catch(err){helper.error=err.message;if(err.data&&err.data.allowance)helper.allowance=err.data.allowance}finally{helper.busy=false;helperPaint();const log=document.querySelector('.fs-helper-log');if(log)log.scrollTop=log.scrollHeight}}}
+helperCall({action:'assist_status'}).then(d=>{if(d&&d.available){helper.allowance=d.allowance;helperPaint()}}).catch(()=>{});
 global.FacultySession.page={get state(){return state},get code(){return code},get LT(){return LT},set LT(v){LT=v},get enrolmentData(){return enrolmentData},api,refresh,refreshEnrolments};
 }
 global.FacultySession={start,launchToken};
