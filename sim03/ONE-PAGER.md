@@ -1,7 +1,7 @@
 <!-- Reviewed for: midland-v2-2026-09 -->
 # RapidSim 03 · Midland Equipment
 
-Twenty minutes of play, an hour with the debrief. Individual or team, chosen when you start the session.
+About an hour in all: twenty minutes of play and about forty minutes of debrief. Individual or team, chosen when you start the session.
 
 ## The situation
 
