@@ -56,7 +56,7 @@ async function api(lt, action, extra = {}) {
       if (url.pathname === '/api/session-enrolments') return res.json({ students: [{ participantId: 'platform:stu1', name: 'Ana Student', accessReleased: true }] });
       // The platform's faculty helper, stubbed: available, and an answer naming "Student 1".
       if (url.pathname === '/api/faculty') return res.json(req.body.action === 'assist_status' ? { available: true, allowance: { left: 30, limit: 30 } }
-        : { answer: 'Student 1 kept the review desk.', names: { 'Student 1': 'Ana Student' }, allowance: { left: 29, limit: 30 } });
+        : { answer: 'Student 1 kept the review desk. Plan for **70 minutes**.\n\n- Observation\n- Interviews', names: { 'Student 1': 'Ana Student' }, allowance: { left: 29, limit: 30 } });
       if (url.pathname === '/api/one-pager') { req.query = Object.fromEntries(url.searchParams); res.setHeader = res.setHeader.bind(res); return require('../../platform/api/one-pager')(req, res); }
       if (!url.pathname.startsWith('/sim-plus-01')) return res.status(404).json({ error: 'Not found' });
       const mounted = url.pathname.slice('/sim-plus-01'.length) || '/';
@@ -146,6 +146,8 @@ async function api(lt, action, extra = {}) {
     await fac.locator('.fs-helper-a').waitFor();
     ok((await fac.locator('.fs-helper-a').innerText()).includes('Ana Student kept the review desk.'), 'Ask about this sim: the answer shows the real name');
     ok((await fac.locator('.fs-helper-panel').innerText()).includes('29 of 30 questions left'), 'Ask about this sim: questions left this month');
+    ok(await fac.locator('.fs-helper-a b').innerText() === '70 minutes' && await fac.locator('.fs-helper-a li').count() === 2, 'Ask about this sim: bold and lists show as formatting');
+    ok((await fac.locator('.fs-helper-panel').boundingBox()).height >= 700, 'Ask about this sim: the panel opens tall');
     await fac.screenshot({ path: path.join(artifacts, '10-helper.png') });
     ok(errors.length === 0, 'No browser errors ' + errors.join(' | '));
     console.log(`SIMPLUS01_KIT_BROWSER_PASSED (${checks} checks). Screenshots: ${artifacts}`);

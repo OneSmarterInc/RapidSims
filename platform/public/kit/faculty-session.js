@@ -226,9 +226,19 @@ const PLATFORM_FACULTY_API='/api/faculty';
 const helper={open:false,turns:[],busy:false,allowance:null,error:''};
 async function helperCall(x){const r=await fetch(PLATFORM_FACULTY_API,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({simId:SIM.id,courseId:facultyCourse||undefined,...x})});const d=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(d.message||'The helper could not answer just now.'),{data:d});return d}
 const restoreNames=(text,names)=>Object.entries(names||{}).sort((a,b)=>b[0].length-a[0].length).reduce((t,[label,name])=>t.split(label).join(name),String(text||''));
+// The helper's answer, escaped first, then its light formatting shown: bold, short lists and paragraphs.
+function helperText(text){
+ const inline=x=>esc(x).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');
+ return String(text||'').trim().split(/\n\s*\n/).map(block=>{
+  const lines=block.split('\n').filter(l=>l.trim());
+  if(lines.length&&lines.every(l=>/^\s*[-*•]\s+/.test(l)))return `<ul>${lines.map(l=>`<li>${inline(l.replace(/^\s*[-*•]\s+/,''))}</li>`).join('')}</ul>`;
+  if(lines.length&&lines.every(l=>/^\s*\d+[.)]\s+/.test(l)))return `<ol>${lines.map(l=>`<li>${inline(l.replace(/^\s*\d+[.)]\s+/,''))}</li>`).join('')}</ol>`;
+  return `<p>${lines.map(inline).join('<br>')}</p>`;
+ }).join('');
+}
 function helperPaint(){let box=document.getElementById('fs-helper');if(!box){box=document.createElement('div');box.id='fs-helper';document.body.appendChild(box)}
  const a=helper.allowance;box.innerHTML=helper.open?`<section class="fs-helper-panel" aria-label="Ask about this sim"><div class="fs-helper-head"><b>Ask about this sim</b><button type="button" class="btn" data-helper="close">Close</button></div>
-  <div class="fs-helper-log">${helper.turns.length?helper.turns.map(t=>`<p class="fs-helper-q">${esc(t.q)}</p><div class="fs-helper-a">${esc(t.shown).replace(/\n/g,'<br>')}</div>`).join(''):'<p class="help">Ask how to run it, what a screen means, why a student got a result, or what to ask in the debrief. With a session open, the helper reads it with students shown as numbers; you see their names here.</p>'}</div>
+  <div class="fs-helper-log">${helper.turns.length?helper.turns.map(t=>`<p class="fs-helper-q">${esc(t.q)}</p><div class="fs-helper-a">${helperText(t.shown)}</div>`).join(''):'<p class="help">Ask how to run it, what a screen means, why a student got a result, or what to ask in the debrief. With a session open, the helper reads it with students shown as numbers; you see their names here.</p>'}</div>
   ${helper.error?`<p class="fs-helper-err">${esc(helper.error)}</p>`:''}<form class="fs-helper-form"><textarea id="fsHelperQ" rows="3" maxlength="1500" placeholder="Ask a question about this sim…" ${helper.busy?'disabled':''}></textarea><button class="btn btn-primary" type="submit" ${helper.busy?'disabled':''}>${helper.busy?'Thinking…':'Ask'}</button></form>
   ${a?`<p class="help">${a.left} of ${a.limit} questions left this month for this sim.</p>`:''}</section>`:`<button type="button" class="fs-helper-open" data-helper="open">Ask about this sim</button>`;
  box.querySelectorAll('[data-helper]').forEach(x=>x.onclick=()=>{helper.open=x.dataset.helper==='open';helperPaint()});
