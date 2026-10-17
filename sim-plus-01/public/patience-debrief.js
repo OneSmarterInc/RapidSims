@@ -27,21 +27,26 @@ function model(input) {
   base.slides.push({ key: 'settled', kicker: 'How the class filed the review desk', lesson: 3,
     headline: esc(n === 1 ? (B[rows[0].band] || {}).label + '.' : keepers.length ? `${cap1(word(keepers.length))} of ${word(n)} students kept the review desk.` : 'Nobody kept the review desk.'),
     sub: n === 1 ? 'One report, filed against the same three interviews everyone had.' : 'Everyone had the same three interviews and the same forty-five minutes.',
-    evidence: keepers.length ? `${matched.length} of ${keepers.length} who kept the desk had heard why the matching matters.` : 'Nobody kept the desk this time.',
-    ask: 'Who kept the review desk, and what did you hear that made you keep it?',
+    // With no keepers, the evidence says what the class did and the question asks what they heard first (#90).
+    evidence: keepers.length ? `${matched.length} of ${keepers.length} who kept the desk had heard why the matching matters.`
+      : `${ofN(rows.filter(r => r.band === 'duplicates').length)} configured the desk away; the new system pays repeat copies twice.`,
+    ask: keepers.length ? 'Who kept the review desk, and what did you hear that made you keep it?' : 'What did you hear about the review desk before you made your call?',
     body: { kind: 'tiles', tiles: order.map(b => ({ band: b, rows: rows.filter(r => r.band === b) })).filter(x => x.rows.length && B[x.band])
       .map(x => ({ label: B[x.band].label, cls: B[x.band].cls, phrase: B[x.band].phrase, names: x.rows.map(r => r.name) })) } });
 
   // D1 · the interviews: order, and what happened with Ruth
-  const closed = rows.filter(r => r.ruth === 'closed'), opened = rows.filter(r => r.ruth === 'opened');
+  // Opened counts anyone who opened Ruth at any point, including those who later closed her (#91).
+  const turns = r => r.transcript || [], everOpened = r => turns(r).some(x => x.opened);
+  const closed = rows.filter(r => r.ruth === 'closed'), opened = rows.filter(everOpened);
   base.slides.push({ key: 'ruth', kicker: 'The interviews', lesson: 1,
     headline: esc(`${who(opened.length)} opened Ruth up. ${who(closed.length)} closed her.`),
     sub: 'Ruth stays polite after she closes, so most people leave believing she helped.',
     evidence: `${ofN(closed.length)} asked the question that closed Ruth.`,
     ask: closed.length ? 'Read one closing question aloud. Why did it end the conversation?' : 'Which question opened Ruth up?',
     body: { kind: 'ruth', rows: rows.map(r => {
-      const t = (r.transcript || []).find(x => x.closed) || (r.transcript || []).find(x => x.opened);
-      return { name: r.name, order: (r.order || []).join(' › '), questions: (r.transcript || []).length, ruth: RUTH[r.ruth] || '', line: t ? t.question : '' };
+      const o = turns(r).find(x => x.opened), c = turns(r).find(x => x.closed);
+      const ruth = o && c ? 'Opened, then stopped volunteering' : RUTH[r.ruth] || '';
+      return { name: r.name, order: (r.order || []).join(' › '), questions: turns(r).length, ruth, lines: [o && `Opened: ${o.question}`, c && `Closed: ${c.question}`].filter(Boolean) };
     }) } });
 
   // D2 · the four steps and the class's calls on each
@@ -86,7 +91,7 @@ function bodyHTML(s, ui) {
   const b = s.body;
   const chips = list => `<div class="pc-names">${list.map(x => `<span>${esc(x)}</span>`).join('')}</div>`;
   if (b.kind === 'tiles') return `<div class="md-tiles">${b.tiles.map(t => `<div class="md-tile"><span class="md-band md-b${t.cls}"></span><div class="md-tin"><span class="md-tband md-t${t.cls}">${esc(t.label)}</span><span class="md-tphrase">${esc(t.phrase)}</span>${chips(t.names)}</div></div>`).join('')}</div>`;
-  if (b.kind === 'ruth') return `<table class="pc-grid"><thead><tr><th>Student</th><th>Order</th><th>Questions</th><th>Ruth</th><th>The question</th></tr></thead><tbody>${b.rows.map(r => `<tr><td>${esc(r.name)}</td><td>${esc(r.order)}</td><td>${r.questions}</td><td>${esc(r.ruth)}</td><td class="pc-line">${esc(r.line)}</td></tr>`).join('')}</tbody></table>`;
+  if (b.kind === 'ruth') return `<table class="pc-grid"><thead><tr><th>Student</th><th>Order</th><th>Questions</th><th>Ruth</th><th>The questions</th></tr></thead><tbody>${b.rows.map(r => `<tr><td>${esc(r.name)}</td><td>${esc(r.order)}</td><td>${r.questions}</td><td>${esc(r.ruth)}</td><td class="pc-line">${r.lines.map(esc).join('<br>')}</td></tr>`).join('')}</tbody></table>`;
   if (b.kind === 'calls') return `<table class="pc-grid"><thead><tr><th>Step</th>${b.heads.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${b.rows.map(r => `<tr><td>${esc(r.label)}</td>${r.counts.map(c => `<td>${c || ''}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
   if (b.kind === 'evidence') return `<table class="pc-grid"><thead><tr><th>Student</th><th>Key answers heard</th><th>Both halves</th><th>Review desk</th></tr></thead><tbody>${b.rows.map(r => `<tr><td>${esc(r.name)}</td><td class="pc-line">${r.held.length ? r.held.map(esc).join('<br>') : 'None'}</td><td>${r.loop ? 'Yes' : ''}</td><td>${r.band ? `<span class="md-tband md-t${r.band.cls}">${esc(r.band.label)}</span>` : ''}</td></tr>`).join('')}</tbody></table>`;
   if (b.kind === 'reveal') return `<div class="pc-reveal">${b.paragraphs.map(p => `<p>${esc(p)}</p>`).join('')}</div>`;
