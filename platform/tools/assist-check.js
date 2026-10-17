@@ -59,5 +59,15 @@ const state = { session: { code: 'ABCDE', state: 'running', mode: 'individual' }
   ok(r.status === 404, 'Only the pilot sim has the helper for now');
   r = await H.ask({ s: fakeDb(), me, sim, question: '   ', sessionState: null, fetchImpl });
   ok(r.status === 400, 'A question is required');
+  let calls = 0;
+  const emptyThenText = async () => { calls++; return { ok: true, json: async () => calls === 1 ? { stop_reason: 'max_tokens', content: [], usage: { input_tokens: 100, output_tokens: 600 } }
+    : { content: [{ type: 'text', text: 'Seventy minutes.' }], usage: { input_tokens: 100, output_tokens: 20 } } }; };
+  s = fakeDb();
+  r = await H.ask({ s, me, sim, question: 'How long?', sessionState: null, fetchImpl: emptyThenText });
+  ok(r.status === 200 && r.body.answer === 'Seventy minutes.' && calls === 2, 'An empty answer is asked once more');
+  ok(Math.abs(s.rows[0][8] - (200 * 0.10 + 620 * 0.50) / 1e6) < 1e-12, 'Both calls are recorded in the cost');
+  const alwaysEmpty = async () => ({ ok: true, json: async () => ({ content: [], usage: {} }) });
+  r = await H.ask({ s: fakeDb(), me, sim, question: 'How long?', sessionState: null, fetchImpl: alwaysEmpty });
+  ok(r.status === 502 && /ask again/.test(r.body.message), 'Two empty answers: the faculty member is asked to ask again');
   console.log(`PASS assist-check: ${n} assertions`);
 })().catch(e => { console.error(e); process.exit(1); });
