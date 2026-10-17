@@ -65,6 +65,7 @@ function systemPrompt(sim, page, kit, catalogue, inClass) {
     'Keep it short: at most about 150 words, in two or three short paragraphs or one short list (start list lines with "- ").',
     'Use the words the instructor sees on the faculty pages. Never mention field names, codes, ids or timestamps from the data (for example completedAt, phase, band keys).',
     'Speak to the instructor as "you". Offer a follow-up only when it is clearly useful.',
+    'Mention the open session only when the question is about it or it changes the answer.',
     'Students appear as "Student 1", "Student 2" and so on. Use those labels exactly; the instructor sees the real names.',
     'If the material does not settle a question, say so and suggest where on the faculty pages to look.',
     'For how RapidSims itself works (classes, the class link, access, the pages), use only the guide below; never guess.',
@@ -150,7 +151,7 @@ async function ask({ s, me, course, sim, question, history, sessionState, catalo
   // Everything the sim sent its faculty pages except the teaching material (that goes in the cached system prompt).
   const session = anon.data ? compact(Object.fromEntries(Object.entries(anon.data).filter(([k]) => k !== 'kit'))) : null;
   const system = systemPrompt(sim, page, sessionState && compact(anonymise({ participants: sessionState.participants, kit: sessionState.kit }).data.kit), catalogue, inClass);
-  const context = session ? `The open session, students shown as labels:\n${JSON.stringify(session).slice(0, MAX_CONTEXT_CHARS)}\n\n` : 'No session is open on the instructor’s screen.\n\n';
+  const context = session ? `The open session, students shown as labels:\n${JSON.stringify(session).slice(0, MAX_CONTEXT_CHARS)}\n\n` : '';
   const messages = [...historyTurns(history), { role: 'user', content: context + 'Question: ' + q }];
   return answer({ s, me, course, usageId: sim.id, sessionCode: sessionState && sessionState.session ? sessionState.session.code : null,
     system, messages, q, a, names: anon.names, fetchImpl, now });
