@@ -43,6 +43,7 @@ const state = { session: { code: 'ABCDE', state: 'running', mode: 'individual' }
   ok(sent.model === 'claude-haiku-5-5' && sent.max_tokens === 1200 && sent.thinking && sent.thinking.type === 'disabled', 'Claude Haiku 5.5, thinking off, room for a full answer');
   ok(sent.system[0].text.includes('150 words') && sent.system[0].text.includes('Never mention field names'), 'Short answers in the words faculty see');
   ok(/class link/.test(sent.system[0].text) && /join the open session by themselves/.test(sent.system[0].text), 'A sim\'s helper also has the guide to how students join');
+  ok(/Never use the words "room" or "bridge"/.test(sent.system[0].text) && /Keep the lessons, the cause/.test(sent.system[0].text), 'House wording and the spoiler line are in the prompt');
   ok(sent.system[0].cache_control && sent.system[0].text.includes('one-pager'), 'The sim material is sent once and cached');
   ok(wire.length < 400000, 'The prompt stays well under the 100,000-token price step');
   const cost = s.rows[0][8];

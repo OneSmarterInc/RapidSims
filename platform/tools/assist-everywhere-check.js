@@ -52,6 +52,7 @@ process.env.ANTHROPIC_API_KEY = 'test-key'; process.env.LAUNCH_SECRET = 'assist-
   const simSys = sent[0].system[0].text;
   check(r.statusCode === 200 && /## The other RapidSims/.test(simSys) && /Midland Equipment \(in this class\): About an hour in all[^\n]*It fits/.test(simSys) && /Why Don't They Have Any Patience\?: About seventy minutes[^\n]*It fits/.test(simSys) && !/- Disaster or Breach\?:/.test(simSys), 'A sim’s helper knows the other sims, what each fits and which are in the class');
   check(/in the Students section/.test(simSys), 'The guide says where student access is set');
+  check(/Keep the lessons, the cause/.test(sys) && /Keep the lessons, the cause/.test(simSys), 'Both prompts keep the lessons for the debrief');
   r = await call({ action: 'assist', courseId: 'nope', question: 'Hi' });
   check(r.statusCode === 404, 'Another faculty member’s class is refused');
 
