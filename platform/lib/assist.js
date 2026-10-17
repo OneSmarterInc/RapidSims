@@ -49,6 +49,12 @@ function compact(v, depth = 0) {
   return v;
 }
 
+// House wording and the line on spoilers, in every prompt (Oct 17).
+const HOUSE_RULES = [
+  'House wording: say what a thing does, never what it does not do or what is missing. Say "team", never "table". Never use the words "room" or "bridge". A class is the whole course; a session is one sitting.',
+  'Advice meant for students (what to tell them, tips before they start) stays within what the student brief and the one-pager’s Running it section already say: timing, how to join, how the run works. Keep the lessons, the cause, the bands and what really happens for the debrief, and say that you are keeping them for the debrief.'
+].join('\n');
+
 // One line per other sim: its title, whether it is in this class, and what it fits (from its one-pager).
 function catalogueLines(catalogue, inClass, exceptId) {
   const fits = t => { const m = String(t || '').match(/It (?:fits|sits beside|suits|works)[^.]*\./); return m ? m[0] : ''; };
@@ -66,6 +72,7 @@ function systemPrompt(sim, page, kit, catalogue, inClass) {
     'Use the words the instructor sees on the faculty pages. Never mention field names, codes, ids or timestamps from the data (for example completedAt, phase, band keys).',
     'Speak to the instructor as "you". Offer a follow-up only when it is clearly useful.',
     'Mention the open session only when the question is about it or it changes the answer.',
+    HOUSE_RULES,
     'Students appear as "Student 1", "Student 2" and so on. Use those labels exactly; the instructor sees the real names.',
     'If the material does not settle a question, say so and suggest where on the faculty pages to look.',
     'For how RapidSims itself works (classes, the class link, access, the pages), use only the guide below; never guess.',
@@ -179,6 +186,7 @@ function generalPrompt(courseInfo, catalogue) {
     'Use the words the instructor sees on the faculty pages. Never mention field names, codes or ids.',
     'For detailed questions about one simulation (a student’s result, the debrief, what really happens), suggest opening that simulation’s Sessions page and asking there.',
     'Never reveal how a simulation turns out; describe each one as its one-pager does.',
+    HOUSE_RULES,
     '',
     FACULTY_GUIDE,
     '',
@@ -202,4 +210,4 @@ async function askGeneral({ s, me, course, courseInfo, catalogue, question, hist
   return answer({ s, me, course, usageId: GENERAL, sessionCode: null, system, messages, q, a, names: {}, fetchImpl, now });
 }
 
-module.exports = { catalogueLines, ALL_SIMS, GENERAL, FACULTY_GUIDE, MODEL, PRICE, LIMITS, CEILING_USD, PILOT_SIMS, enabled, anonymise, compact, allowance, ask, askGeneral, generalPrompt, usd };
+module.exports = { HOUSE_RULES, catalogueLines, ALL_SIMS, GENERAL, FACULTY_GUIDE, MODEL, PRICE, LIMITS, CEILING_USD, PILOT_SIMS, enabled, anonymise, compact, allowance, ask, askGeneral, generalPrompt, usd };
