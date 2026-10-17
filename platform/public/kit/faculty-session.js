@@ -226,15 +226,19 @@ const PLATFORM_FACULTY_API='/api/faculty';
 const helper={open:false,turns:[],busy:false,allowance:null,error:'',qHeight:0,pending:'',retry:''};
 async function helperCall(x){const r=await fetch(PLATFORM_FACULTY_API,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({simId:SIM.id,courseId:facultyCourse||undefined,...x})});const d=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(d.message||'The helper could not answer just now.'),{data:d});return d}
 const restoreNames=(text,names)=>Object.entries(names||{}).sort((a,b)=>b[0].length-a[0].length).reduce((t,[label,name])=>t.split(label).join(name),String(text||''));
-// The helper's answer, escaped first, then its light formatting shown: bold, short lists and paragraphs.
+// The helper's answer, escaped first, then its light formatting shown: bold, lists and paragraphs. A block can mix a
+// lead-in sentence with list lines; each run of lines becomes its own paragraph or list.
 function helperText(text){
  const inline=x=>esc(x).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');
- return String(text||'').trim().split(/\n\s*\n/).map(block=>{
-  const lines=block.split('\n').filter(l=>l.trim());
-  if(lines.length&&lines.every(l=>/^\s*[-*•]\s+/.test(l)))return `<ul>${lines.map(l=>`<li>${inline(l.replace(/^\s*[-*•]\s+/,''))}</li>`).join('')}</ul>`;
-  if(lines.length&&lines.every(l=>/^\s*\d+[.)]\s+/.test(l)))return `<ol>${lines.map(l=>`<li>${inline(l.replace(/^\s*\d+[.)]\s+/,''))}</li>`).join('')}</ol>`;
-  return `<p>${lines.map(inline).join('<br>')}</p>`;
- }).join('');
+ const kind=l=>/^\s*[-*•]\s+/.test(l)?'ul':/^\s*\d+[.)]\s+/.test(l)?'ol':'p';
+ const out=[];
+ for(const line of String(text||'').split('\n')){
+  if(!line.trim()){out.push(null);continue}
+  const k=kind(line),last=out[out.length-1];
+  const body=k==='p'?line.trim():line.replace(/^\s*([-*•]|\d+[.)])\s+/,'');
+  if(last&&last.k===k)last.lines.push(body);else out.push({k,lines:[body]});
+ }
+ return out.filter(Boolean).map(g=>g.k==='p'?`<p>${g.lines.map(inline).join('<br>')}</p>`:`<${g.k}>${g.lines.map(l=>`<li>${inline(l)}</li>`).join('')}</${g.k}>`).join('');
 }
 function helperPaint(){let box=document.getElementById('fs-helper');if(!box){box=document.createElement('div');box.id='fs-helper';document.body.appendChild(box)}
  const a=helper.allowance;box.innerHTML=helper.open?`<section class="fs-helper-panel" aria-label="Ask Claude about this sim"><div class="fs-helper-head"><div><b>Ask Claude about this sim</b><span class="fs-helper-by">Answers come from Claude, Anthropic’s AI</span></div><button type="button" class="btn" data-helper="close">Close</button></div>
