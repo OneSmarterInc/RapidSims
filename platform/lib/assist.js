@@ -80,7 +80,9 @@ async function callModel(system, messages, fetchImpl = fetch) {
   });
   const d = await r.json().catch(() => ({}));
   if (!r.ok) throw Object.assign(new Error((d.error && d.error.message) || 'The helper is unavailable.'), { status: 502 });
-  return { text: (d.content || []).filter(c => c.type === 'text').map(c => c.text).join('\n').trim(), usage: d.usage || {} };
+  const text = (d.content || []).filter(c => c.type === 'text').map(c => c.text).join('\n').trim();
+  if (!text) console.warn('assist: no answer text', JSON.stringify({ stop: d.stop_reason, blocks: (d.content || []).map(c => c.type), usage: d.usage }));
+  return { text, usage: d.usage || {} };
 }
 
 // One question. sessionState is what the sim returned for faculty_state (or null when no session is open).
@@ -99,12 +101,16 @@ async function ask({ s, me, course, sim, question, history, sessionState, fetchI
   const turns = (Array.isArray(history) ? history : []).slice(-4).filter(t => t && typeof t.q === 'string' && typeof t.a === 'string')
     .flatMap(t => [{ role: 'user', content: t.q.slice(0, 1500) }, { role: 'assistant', content: t.a.slice(0, 3000) }]);
   const context = session ? `The open session, students shown as labels:\n${JSON.stringify(session).slice(0, MAX_CONTEXT_CHARS)}\n\n` : 'No session is open on the instructor’s screen.\n\n';
-  const out = await callModel(system, [...turns, { role: 'user', content: context + 'Question: ' + q }], fetchImpl);
-  const cost = usd(out.usage);
+  const messages = [...turns, { role: 'user', content: context + 'Question: ' + q }];
+  let out = await callModel(system, messages, fetchImpl), cost = usd(out.usage);
+  // An empty answer is asked once more; both calls are paid for, so both costs are recorded on the one question.
+  if (!out.text) { const again = await callModel(system, messages, fetchImpl); cost += usd(again.usage);
+    out = { text: again.text, usage: Object.fromEntries(['input_tokens', 'output_tokens', 'cache_read_input_tokens'].map(k => [k, (out.usage[k] || 0) + (again.usage[k] || 0)])) }; }
   await s`INSERT INTO assist_usage (user_id, sim_id, course_id, session_code, model, tokens_in, tokens_out, cache_read, cost_usd, question, answer, created_at)
     VALUES (${me.id}, ${sim.id}, ${course ? course.id : null}, ${sessionState && sessionState.session ? sessionState.session.code : null}, ${MODEL},
       ${out.usage.input_tokens || 0}, ${out.usage.output_tokens || 0}, ${out.usage.cache_read_input_tokens || 0}, ${cost}, ${q}, ${out.text}, ${now})`;
   await s`UPDATE assist_usage SET question = NULL, answer = NULL WHERE question IS NOT NULL AND created_at < now() - interval '30 days'`;
+  if (!out.text) return { status: 502, body: { error: 'helper_empty', message: 'No answer came back. Please ask again.', allowance: { ...a, used: a.used + 1, left: Math.max(0, a.left - 1) } } };
   return { status: 200, body: { answer: out.text, names: anon.names, allowance: { ...a, used: a.used + 1, left: Math.max(0, a.left - 1) } } };
 }
 
