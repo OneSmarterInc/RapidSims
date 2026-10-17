@@ -84,6 +84,9 @@ async function api(lt, action, extra = {}) {
     await fac.locator('#aboutSimBody h2').waitFor();
     ok((await fac.locator('#aboutSimBody').innerText()).includes('Why Don\'t They Have Any Patience?'), 'Sessions page: About this sim shows the one-pager');
     await fac.screenshot({ path: path.join(artifacts, '00-about-this-sim.png'), fullPage: true });
+    await fac.goto(fac.url().split('#')[0].replace(/\?.*$/, '') + '?session=ZZZZZ');
+    await fac.locator('#create').waitFor(); await fac.waitForTimeout(800);
+    ok(!/no_such_session|Check the five-character/.test(await fac.locator('body').innerText()) && !/session=ZZZZZ/.test(fac.url()), 'A stale session code from an earlier visit is dropped quietly');
     await fac.locator('#create').click();
     await fac.locator('#faculty-workspace').waitFor();
     const code = await fac.evaluate(() => FacultySession.page.code);
