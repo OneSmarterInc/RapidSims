@@ -497,6 +497,8 @@ function catTab() {
             <div class="field"><div><label class="f">Description</label><textarea rows="3" data-sf="description">${esc(si.description||'')}</textarea></div></div>
             <div class="field"><div><label class="f" for="session-capability-${esc(si.id)}">Account-bound classroom sessions</label><select id="session-capability-${esc(si.id)}" data-sf="sessionSupported"><option value="no" ${si.sessionSupported?'':'selected'}>Not supported</option><option value="yes" ${si.sessionSupported?'selected':''}>Supported (protocol v1)</option></select><div class="hint">Enable only after testing class invitations and roster integration.</div></div></div>
             <div class="field"><div><label class="f">Address</label><input data-sf="launchUrl" value="${esc(si.launch_url||'')}"></div></div>
+            ${si.onePager ? `<div class="field"><div><label class="f">Faculty one-pager${si.onePager.edited ? ' · edited here' : ''}</label><textarea rows="14" data-sf="onePager">${esc(si.onePager.text)}</textarea>
+              <div class="hint">Shown under About this sim. Your edit holds until the sim's next release (${esc(si.onePager.reviewedFor || '')}), then the sim's own page returns; update its ONE-PAGER.md to keep a change. Clear the box to restore the sim's own page now.</div></div></div>` : ''}
             <div class="hint">The id comes from the deployment and cannot change. The address is what students are sent to — the simulation reports its own, but if that is a deployment-specific URL rather than the project's stable one, correct it here and set <span class="mono">SIM_URL</span> on that project so it stops re-registering the wrong address. Everything else you write is yours; the simulation will not overwrite it.</div>
             <button class="btn pri sm" data-simsave="${esc(si.id)}">Save changes</button>
             <button class="btn sm" data-simedit="${esc(si.id)}">Cancel</button>
@@ -698,7 +700,8 @@ function wireCat() {
     try {
       await api('/api/admin', { action:'save_sim', id, number:v('number'), title:v('title'),
         tagline:v('tagline'), description:v('description'), minutes:v('minutes'),
-        launchUrl: v('launchUrl') || si.launch_url, sessionSupported: v('sessionSupported') === 'yes', published: !!si.published });
+        launchUrl: v('launchUrl') || si.launch_url, sessionSupported: v('sessionSupported') === 'yes', published: !!si.published,
+        ...(panel.querySelector('[data-sf="onePager"]') ? { onePager: v('onePager') } : {}) });
       done('Saved'); D.simEdit = null; load();
     } catch (e) { if (e.stale) return; if (out) out.innerHTML = `<div class="hint" style="color:var(--rose)">${esc(e.message)}</div>`; done('Not saved','bad'); }
   });

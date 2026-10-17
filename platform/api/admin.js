@@ -8,6 +8,7 @@ const A = require('../lib/auth.js');
 const credentials = require('../lib/credential-tokens');
 const { jsonDetail, launchUrl } = require('../lib/metadata');
 const { probeHealth } = require('../lib/health-probe');
+const { onePagerFor, overrideFrom } = require('../lib/one-pager');
 
 function body(req) {
   let b = req.body;
@@ -49,7 +50,7 @@ module.exports = async (req, res) => {
         const simRows = await s`SELECT * FROM sims ORDER BY number NULLS LAST, created_at`;
         // Every simulation carries the copy the public page will show, so the
         // editor opens on real sentences rather than empty boxes.
-        const sims = simRows.map(present);
+        const sims = simRows.map(r => ({ ...present(r), onePager: onePagerFor(r.id, r.detail) }));
         const totals = (await s`
           SELECT
             (SELECT count(*) FROM users WHERE role = 'student') AS students,
@@ -261,6 +262,11 @@ module.exports = async (req, res) => {
           }
           const detail = { ...(cur?.detail || {}) };
           detail._edited = [...new Set([...(detail._edited || []), 'title', 'tagline', 'description', 'launch_url', 'minutes'])];
+          // The faculty one-pager: an edit holds until the sim's next release; matching text or empty restores the sim's own.
+          if (b.onePager !== undefined) {
+            const edit = overrideFrom(sid, b.onePager, new Date().toISOString());
+            if (edit) detail.onePagerOverride = edit; else delete detail.onePagerOverride;
+          }
           if (b.sessionSupported !== undefined) {
             if (typeof b.sessionSupported !== 'boolean') throw Object.assign(new Error('Invalid session capability'), {status:400});
             detail._sessionSupported = b.sessionSupported;
