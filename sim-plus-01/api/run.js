@@ -129,9 +129,13 @@ module.exports = async (req, res) => {
       const code = String(b.code || '').toUpperCase().trim() || await KA.entryCode(req.launch) || ((await store.getRaw(lastKey)) || {}).code || '';
       sess = code ? await store.getSession(code) : null;
       const pid = `platform:${req.launch.sub}`;
-      const allowed = sess && sess.kit && sess.courseId === (req.launch.course || null) &&
-        (KA.isPracticeSub(req.launch.sub) ? sess.practice && code === await KA.entryCode(req.launch) : !sess.practice);
-      if (!allowed) return res.status(409).json({ error: 'no_open_session', message: 'Your instructor has not opened a session for this class yet. Open it again from your class page when it is ready.' });
+      // A practice student belongs to the practice session that lists them; a class student to a class session.
+      const practice = KA.isPracticeSub(req.launch.sub);
+      const reason = !code ? 'no_session_code' : !sess ? 'session_not_found' : !sess.kit ? 'not_a_kit_session'
+        : sess.courseId !== (req.launch.course || null) ? 'other_class'
+        : practice ? (!sess.practice ? 'not_a_practice_session' : !(await store.getParticipant(sess.code, pid)) ? 'not_on_practice_roster' : '')
+        : sess.practice ? 'practice_session' : '';
+      if (reason) return res.status(409).json({ error: 'no_open_session', reason, message: 'Your instructor has not opened a session for this class yet. Open it again from your class page when it is ready.' });
       me = await store.getParticipant(sess.code, pid);
       if (!me || !me.joinedAt || me.launchId !== (req.launch.run || null)) {
         if (!me && sess.state === 'closed') return res.status(409).json({ error: 'session_closed', message: 'This session is closed. Your instructor can open a new one.' });
