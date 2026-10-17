@@ -49,10 +49,18 @@ function compact(v, depth = 0) {
   return v;
 }
 
-function systemPrompt(sim, page, kit) {
+// One line per other sim: its title, whether it is in this class, and what it fits (from its one-pager).
+function catalogueLines(catalogue, inClass, exceptId) {
+  const fits = t => { const m = String(t || '').match(/It (?:fits|sits beside|suits|works)[^.]*\./); return m ? m[0] : ''; };
+  const set = new Set(inClass || []);
+  const lead = t => (String(t || '').split('\n').map(l => l.trim()).find(l => l && !l.startsWith('#') && !l.startsWith('<!--')) || '');
+  return (catalogue || []).filter(c => c.id !== exceptId).map(c => `- ${c.title}${set.has(c.id) ? ' (in this class)' : ''}: ${lead(c.text)} ${fits(c.text)}`.trim()).join('\n');
+}
+
+function systemPrompt(sim, page, kit, catalogue, inClass) {
   return [
     `You are the faculty helper for the RapidSims simulation "${sim.title}". You help instructors prepare, rehearse, run and debrief it.`,
-    'Answer only about this simulation, its sessions and teaching it. For anything else, say briefly that you can help with this simulation.',
+    'Answer about this simulation, its sessions and teaching it, and about which RapidSims suit a course (from the list of other RapidSims below). For anything else, say briefly that you can help with RapidSims.',
     'Answer the question in your first sentence. Then add only what the instructor needs to act on it.',
     'Keep it short: at most about 150 words, in two or three short paragraphs or one short list (start list lines with "- ").',
     'Use the words the instructor sees on the faculty pages. Never mention field names, codes, ids or timestamps from the data (for example completedAt, phase, band keys).',
@@ -63,6 +71,7 @@ function systemPrompt(sim, page, kit) {
     '',
     FACULTY_GUIDE,
     '',
+    ...(catalogue && catalogue.length ? ['## The other RapidSims (for questions about which sim suits a unit)', catalogueLines(catalogue, inClass, sim.id), ''] : []),
     '## The faculty one-pager',
     page ? page.text : '(not available)',
     '',
@@ -130,7 +139,7 @@ async function answer({ s, me, course, usageId, sessionCode, system, messages, q
 }
 
 // One question about a sim. sessionState is what the sim returned for faculty_state (or null when no session is open).
-async function ask({ s, me, course, sim, question, history, sessionState, fetchImpl, now = new Date() }) {
+async function ask({ s, me, course, sim, question, history, sessionState, catalogue, inClass, fetchImpl, now = new Date() }) {
   const q = String(question || '').trim().slice(0, 1500);
   if (!q) return { status: 400, body: { error: 'question_required' } };
   if (!enabled(sim.id)) return { status: 404, body: { error: 'helper_not_available', message: 'The helper is not available for this simulation yet.' } };
@@ -140,7 +149,7 @@ async function ask({ s, me, course, sim, question, history, sessionState, fetchI
   const anon = sessionState ? anonymise(sessionState) : { data: null, names: {} };
   // Everything the sim sent its faculty pages except the teaching material (that goes in the cached system prompt).
   const session = anon.data ? compact(Object.fromEntries(Object.entries(anon.data).filter(([k]) => k !== 'kit'))) : null;
-  const system = systemPrompt(sim, page, sessionState && compact(anonymise({ participants: sessionState.participants, kit: sessionState.kit }).data.kit));
+  const system = systemPrompt(sim, page, sessionState && compact(anonymise({ participants: sessionState.participants, kit: sessionState.kit }).data.kit), catalogue, inClass);
   const context = session ? `The open session, students shown as labels:\n${JSON.stringify(session).slice(0, MAX_CONTEXT_CHARS)}\n\n` : 'No session is open on the instructor’s screen.\n\n';
   const messages = [...historyTurns(history), { role: 'user', content: context + 'Question: ' + q }];
   return answer({ s, me, course, usageId: sim.id, sessionCode: sessionState && sessionState.session ? sessionState.session.code : null,
@@ -153,7 +162,7 @@ const FACULTY_GUIDE = [
   '- Your classes: the list of classes. Each class has a title, a term and the number of students expected (a forecast, not a limit).',
   '- Class home: the class link students use to join (one link covers every simulation in the class, so nobody joins twice), the students and their access, and the simulations in the class. Simulations can be added to a class there.',
   '- How students get in: each student opens the class link once; the class then sits on their own page. When you start a session for a simulation, students open that simulation from their own page and join the open session by themselves. They need no separate session link.',
-  '- Student access: give a student access once their registration is settled. Payment happens outside RapidSims, so the instructor turns access on. A student without access can see what is coming but cannot open anything.',
+  '- Student access: on Class home, in the Students section, give a student access once their registration is settled. Payment happens outside RapidSims, so the instructor turns access on. A student without access can see what is coming but cannot open anything.',
   '- Each simulation in the class has four pages in the left menu: Sessions (start a session when the class is ready; students join the open session by themselves from their own page), Past sessions (every session’s results, newest first), Rehearse (play as practice students before class, worth doing once before teaching with it) and Play it yourself (opens in a new tab, as a student sees it).',
   '- During a session: Students, Results and Debrief tabs. The debrief runs from the instructor’s screen.',
   '- Every faculty page has Ask Claude. On a simulation’s pages it answers about that simulation with its teaching material and the open session.'
@@ -192,4 +201,4 @@ async function askGeneral({ s, me, course, courseInfo, catalogue, question, hist
   return answer({ s, me, course, usageId: GENERAL, sessionCode: null, system, messages, q, a, names: {}, fetchImpl, now });
 }
 
-module.exports = { ALL_SIMS, GENERAL, FACULTY_GUIDE, MODEL, PRICE, LIMITS, CEILING_USD, PILOT_SIMS, enabled, anonymise, compact, allowance, ask, askGeneral, generalPrompt, usd };
+module.exports = { catalogueLines, ALL_SIMS, GENERAL, FACULTY_GUIDE, MODEL, PRICE, LIMITS, CEILING_USD, PILOT_SIMS, enabled, anonymise, compact, allowance, ask, askGeneral, generalPrompt, usd };

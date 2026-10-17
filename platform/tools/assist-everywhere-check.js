@@ -47,6 +47,11 @@ process.env.ANTHROPIC_API_KEY = 'test-key'; process.env.LAUNCH_SECRET = 'assist-
   check(used.length === 1 && used[0].sim_id === 'general' && used[0].course_id === 'c1', 'A general question counts against the general allowance');
   r = await call({ action: 'assist_status', simId: 'rapid-03-midland', courseId: 'c1' });
   check(r.body.available && r.body.allowance.limit === 200, 'A sim keeps its own allowance (200: the class has a licensed student)');
+  sent.length = 0;
+  r = await call({ action: 'assist', simId: 'rapid-01-disaster', courseId: 'c1', question: 'Which of my sims suits a security unit?' });
+  const simSys = sent[0].system[0].text;
+  check(r.statusCode === 200 && /## The other RapidSims/.test(simSys) && /Midland Equipment \(in this class\): About an hour in all[^\n]*It fits/.test(simSys) && /Why Don't They Have Any Patience\?: About seventy minutes[^\n]*It fits/.test(simSys) && !/- Disaster or Breach\?:/.test(simSys), 'A sim’s helper knows the other sims, what each fits and which are in the class');
+  check(/in the Students section/.test(simSys), 'The guide says where student access is set');
   r = await call({ action: 'assist', courseId: 'nope', question: 'Hi' });
   check(r.statusCode === 404, 'Another faculty member’s class is refused');
 
