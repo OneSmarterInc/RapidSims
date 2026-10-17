@@ -14,7 +14,7 @@ const env = { ...process.env }, nativeFetch = global.fetch, requests=[];
  const direct={headers:{host:'preview.test'}};
  assert.equal(canonicalUrl(direct),'https://preview.test');
  process.env.PLATFORM_URL='https://platform.test/';
- assert.equal(canonicalUrl(direct),'https://platform.test/simplus01','platform fallback keeps the simulation path');
+ assert.equal(canonicalUrl(direct),'https://platform.test/sim-plus-01','platform fallback uses the RapidSim+ 01 path (/simplus01 is a Midland alias on EC2)');
  process.env.SIM_URL='https://platform.test/rapidsims01/';
  assert.equal(canonicalUrl(direct),'https://platform.test/rapidsims01','explicit legacy aliases remain supported');
  delete process.env.PLATFORM_URL;delete process.env.SIM_URL;
