@@ -21,6 +21,7 @@ run(['platform/tools/sync-catalogue-source.js', '--check']);
 run(['platform/tools/one-pager-check.js']);
 run(['platform/tools/assist-check.js']);
 run(['platform/tools/assist-sims-check.js']);
+run(['platform/tools/assist-everywhere-check.js']);
 run(['tools/test-entry-flow.js']);
 run(['tools/health-security-check.js']);
 for (const app of Object.values(require('../ec2/apps.json')).filter(app => app.dir !== 'platform')) {

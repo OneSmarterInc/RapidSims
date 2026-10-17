@@ -1,0 +1,17 @@
+/* Ask Claude: the faculty helper panel, on every faculty page (kit/assist-panel.js). */
+.fs-helper-open{position:fixed;right:20px;bottom:96px;z-index:40;background:#1f2a33;color:#fff;border:0;border-radius:20px;padding:10px 16px;font:600 13px system-ui,sans-serif;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.fs-helper-panel{position:fixed;right:20px;bottom:24px;z-index:40;width:min(420px,calc(100vw - 32px));height:min(82vh,860px);display:flex;flex-direction:column;gap:8px;background:#fff;border:1px solid #d9dfe4;border-radius:10px;padding:14px;box-shadow:0 8px 28px rgba(0,0,0,.2);font:14px/1.5 system-ui,sans-serif}
+.fs-helper-head{display:flex;justify-content:space-between;align-items:center}.fs-helper-log{overflow:auto;flex:1;min-height:80px}
+.fs-helper-q{font-weight:600;margin:10px 0 4px}.fs-helper-a{background:#f4f6f8;border-radius:8px;padding:8px 10px}.fs-helper-a p{margin:0 0 8px}.fs-helper-a p:last-child,.fs-helper-a ul:last-child,.fs-helper-a ol:last-child{margin-bottom:0}.fs-helper-a ul,.fs-helper-a ol{margin:0 0 8px;padding-left:20px}.fs-helper-err{color:#b42318;margin:0}
+.fs-helper-form{display:flex;gap:8px;align-items:flex-end}.fs-helper-form textarea{flex:1;resize:vertical}
+.fs-helper-by{display:block;font-size:12px;color:#5b6670;margin-top:2px}
+.fs-helper-typing{display:flex;gap:5px;align-items:center;width:max-content;padding:12px 14px}
+.fs-helper-typing span{width:7px;height:7px;border-radius:50%;background:#5b6670;animation:fs-helper-dot 1.2s infinite ease-in-out}
+.fs-helper-typing span:nth-child(2){animation-delay:.2s}.fs-helper-typing span:nth-child(3){animation-delay:.4s}
+@keyframes fs-helper-dot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+@media (prefers-reduced-motion:reduce){.fs-helper-typing span{animation:none;opacity:.6}}
+.fs-helper-panel .help,.fs-helper-panel .fs-helper-left{font-size:12.5px;color:#5b6670;margin:0}
+.fs-helper-panel button{font:600 11px/1 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;border:1px solid #c9d1d8;background:#fff;color:#1f2a33;border-radius:4px;padding:9px 12px;cursor:pointer}
+.fs-helper-panel button:disabled{opacity:.5;cursor:default}
+.fs-helper-panel textarea{font:14px/1.45 system-ui,sans-serif;border:1px solid #c9d1d8;border-radius:6px;padding:8px}
+.fs-helper-panel ul,.fs-helper-panel ol{margin:0 0 8px;padding-left:20px}

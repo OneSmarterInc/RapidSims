@@ -222,37 +222,10 @@ if(!BASE)fetch(BASE+'/api/platform').then(r=>r.ok?r.json():null).then(d=>{
   }
 }).catch(()=>{});
 
+// Ask Claude about this sim (kit/assist-panel.js): the faculty helper, answered by the platform with this sim's
+// material and the open session.
+const assist=global.AssistPanel?global.AssistPanel.mount({context:()=>({simId:SIM.id,courseId:facultyCourse||'',sessionCode:code||''})}):null;
 // One handle on the live page, for checks and support: FacultySession.page.state and the like.
-// Ask about this sim: the faculty helper, answered by the platform (/api/faculty, action assist). Shown only where the
-// platform has it switched on for this sim. Students appear to the helper as "Student 1, 2, 3"; names are put back here.
-const PLATFORM_FACULTY_API='/api/faculty';
-const helper={open:false,turns:[],busy:false,allowance:null,error:'',qHeight:0,pending:'',retry:''};
-async function helperCall(x){const r=await fetch(PLATFORM_FACULTY_API,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({simId:SIM.id,courseId:facultyCourse||undefined,...x})});const d=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(d.message||'The helper could not answer just now.'),{data:d});return d}
-const restoreNames=(text,names)=>Object.entries(names||{}).sort((a,b)=>b[0].length-a[0].length).reduce((t,[label,name])=>t.split(label).join(name),String(text||''));
-// The helper's answer, escaped first, then its light formatting shown: bold, lists and paragraphs. A block can mix a
-// lead-in sentence with list lines; each run of lines becomes its own paragraph or list.
-function helperText(text){
- const inline=x=>esc(x).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>');
- const kind=l=>/^\s*[-*•]\s+/.test(l)?'ul':/^\s*\d+[.)]\s+/.test(l)?'ol':'p';
- const out=[];
- for(const line of String(text||'').split('\n')){
-  if(!line.trim()){out.push(null);continue}
-  const k=kind(line),last=out[out.length-1];
-  const body=k==='p'?line.trim():line.replace(/^\s*([-*•]|\d+[.)])\s+/,'');
-  if(last&&last.k===k)last.lines.push(body);else out.push({k,lines:[body]});
- }
- return out.filter(Boolean).map(g=>g.k==='p'?`<p>${g.lines.map(inline).join('<br>')}</p>`:`<${g.k}>${g.lines.map(l=>`<li>${inline(l)}</li>`).join('')}</${g.k}>`).join('');
-}
-function helperPaint(){let box=document.getElementById('fs-helper');if(!box){box=document.createElement('div');box.id='fs-helper';document.body.appendChild(box)}
- const a=helper.allowance;box.innerHTML=helper.open?`<section class="fs-helper-panel" aria-label="Ask Claude about this sim"><div class="fs-helper-head"><div><b>Ask Claude about this sim</b><span class="fs-helper-by">Answers come from Claude, Anthropic’s AI</span></div><button type="button" class="btn" data-helper="close">Close</button></div>
-  <div class="fs-helper-log">${helper.turns.length||helper.pending?helper.turns.map(t=>`<p class="fs-helper-q">${esc(t.q)}</p><div class="fs-helper-a">${helperText(t.shown)||'<p>No answer came back. Please ask again.</p>'}</div>`).join('')+(helper.pending?`<p class="fs-helper-q">${esc(helper.pending)}</p><div class="fs-helper-a fs-helper-typing" role="status" aria-label="Claude is writing an answer"><span></span><span></span><span></span></div>`:''):'<p class="help">Ask how to run it, what a screen means, why a student got a result, or what to ask in the debrief. With a session open, Claude reads it with students shown as numbers; you see their names here.</p>'}</div>
-  ${helper.error?`<p class="fs-helper-err">${esc(helper.error)}</p>`:''}<form class="fs-helper-form"><textarea id="fsHelperQ" rows="6"${helper.qHeight?` style="height:${helper.qHeight}px"`:''} maxlength="1500" placeholder="Ask a question about this sim… Enter sends; Shift+Enter starts a new line." ${helper.busy?'disabled':''}></textarea><button class="btn btn-primary" type="submit" ${helper.busy?'disabled':''}>Ask</button></form>
-  ${a?`<p class="help">${a.left} of ${a.limit} questions left this month for this sim.</p>`:''}</section>`:`<button type="button" class="fs-helper-open" data-helper="open">Ask Claude about this sim</button>`;
- box.querySelectorAll('[data-helper]').forEach(x=>x.onclick=()=>{helper.open=x.dataset.helper==='open';helperPaint()});
- const f=box.querySelector('form');const qa=document.getElementById('fsHelperQ');if(qa&&f)qa.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();f.requestSubmit()}};if(f)f.onsubmit=async e=>{e.preventDefault();const ta=document.getElementById('fsHelperQ');if(ta)helper.qHeight=Math.round(ta.getBoundingClientRect().height);const q=document.getElementById('fsHelperQ').value.trim();if(!q||helper.busy)return;helper.busy=true;helper.pending=q;helper.error='';helperPaint();const lg=document.querySelector('.fs-helper-log');if(lg)lg.scrollTop=lg.scrollHeight;
-  try{const d=await helperCall({action:'assist',question:q,sessionCode:code||undefined,history:helper.turns.slice(-4).map(t=>({q:t.q,a:t.a}))});helper.turns.push({q,a:d.answer,shown:restoreNames(d.answer,d.names)});helper.allowance=d.allowance||helper.allowance}
-  catch(err){helper.error=err.message;helper.retry=q;if(err.data&&err.data.allowance)helper.allowance=err.data.allowance}finally{helper.busy=false;helper.pending='';helperPaint();if(helper.retry){const t=document.getElementById('fsHelperQ');if(t)t.value=helper.retry;helper.retry=''}const log=document.querySelector('.fs-helper-log');if(log)log.scrollTop=log.scrollHeight}}}
-helperCall({action:'assist_status'}).then(d=>{if(d&&d.available){helper.allowance=d.allowance;helperPaint()}}).catch(()=>{});
 global.FacultySession.page={get state(){return state},get code(){return code},get LT(){return LT},set LT(v){LT=v},get enrolmentData(){return enrolmentData},api,refresh,refreshEnrolments};
 }
 global.FacultySession={start,launchToken};

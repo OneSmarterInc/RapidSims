@@ -13,6 +13,7 @@
 <script src="/faculty-menu.js?v=20261015c"></script>
 <link rel="stylesheet" href="/faculty-results.css?v=20261015d">
 <script src="/faculty-results.js?v=20261015c"></script>
+<script src="/kit/assist-panel.js?v=20261017o"></script>
 </head>
 <body class="console">
 <div class="top">
@@ -294,7 +295,19 @@ function render() {
   else renderHome();
   document.body.classList.toggle?.('rs-framed', F.view === 'sim');
   drawMenu();
+  facultyAssist?.update();
 }
+
+/* ── Ask Claude: on every faculty page. A sim's own pages (in the frame) carry their own panel; Rehearse and a sim's
+   results answer about that sim; the rest answer about the class and RapidSims. ── */
+function assistContext() {
+  if (!F.data || F.view === 'sim') return null;
+  const course = menuCourse();
+  const simId = F.view === 'sim-results' ? F.simResults?.sim?.id : F.view === 'played' ? F.progress?.sim?.id : F.view === 'rehearse' ? rehearseSim() : '';
+  return { simId: simId || '', courseId: course?.id || '' };
+}
+var facultyAssist = null;
+setTimeout(() => { facultyAssist = window.AssistPanel ? AssistPanel.mount({ context: assistContext }) : null; }, 0);
 
 /* ── left menu and Midland's session status ─────────────────────────────── */
 const MIDLAND = 'rapid-03-midland';
