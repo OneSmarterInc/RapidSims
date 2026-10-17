@@ -40,7 +40,7 @@ const state = { session: { code: 'ABCDE', state: 'running', mode: 'individual' }
   ok(wire.includes('Student 1') && wire.includes('Student 2'), 'Students reach the model as numbers');
   ok(!wire.includes('A long scripted answer'), 'The characters’ answer text stays on the platform');
   ok(r.body.names['Student 1'] === 'Maria Lopez', 'The faculty page gets the names back to restore them');
-  ok(sent.model === 'claude-haiku-5-5' && sent.max_tokens <= 600, 'Claude Haiku 5.5, short answers');
+  ok(sent.model === 'claude-haiku-5-5' && sent.max_tokens === 1200 && sent.thinking && sent.thinking.type === 'disabled', 'Claude Haiku 5.5, thinking off, room for a full answer');
   ok(sent.system[0].cache_control && sent.system[0].text.includes('one-pager'), 'The sim material is sent once and cached');
   ok(wire.length < 400000, 'The prompt stays well under the 100,000-token price step');
   const cost = s.rows[0][8];
@@ -69,5 +69,14 @@ const state = { session: { code: 'ABCDE', state: 'running', mode: 'individual' }
   const alwaysEmpty = async () => ({ ok: true, json: async () => ({ content: [], usage: {} }) });
   r = await H.ask({ s: fakeDb(), me, sim, question: 'How long?', sessionState: null, fetchImpl: alwaysEmpty });
   ok(r.status === 502 && /ask again/.test(r.body.message), 'Two empty answers: the faculty member is asked to ask again');
+  const bodies = [];
+  const refuseThinking = async (url, opts) => { const b = JSON.parse(opts.body); bodies.push(b);
+    return b.thinking ? { ok: false, status: 400, json: async () => ({ error: { message: 'thinking: disabled is not supported' } }) }
+      : { ok: true, json: async () => ({ stop_reason: 'end_turn', content: [{ type: 'thinking' }, { type: 'text', text: 'Seventy minutes.' }], usage: {} }) }; };
+  r = await H.ask({ s: fakeDb(), me, sim, question: 'How long?', sessionState: null, fetchImpl: refuseThinking });
+  ok(r.status === 200 && r.body.answer === 'Seventy minutes.' && bodies[1].max_tokens === 3600, 'If thinking off is refused, it asks with thinking on and more room');
+  const cutOff = async () => ({ ok: true, json: async () => ({ stop_reason: 'max_tokens', content: [{ type: 'text', text: 'Plan for seventy' }], usage: {} }) });
+  r = await H.ask({ s: fakeDb(), me, sim, question: 'How long?', sessionState: null, fetchImpl: cutOff });
+  ok(r.body.answer.endsWith('…'), 'An answer cut off at the limit is marked');
   console.log(`PASS assist-check: ${n} assertions`);
 })().catch(e => { console.error(e); process.exit(1); });
