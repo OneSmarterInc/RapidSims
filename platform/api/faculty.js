@@ -125,7 +125,11 @@ module.exports = async (req, res) => {
           if (r.ok) sessionState = r.data;
         }
         try {
-          const r = await H.ask({ s, me, course, sim, question: b.question, history: b.history, sessionState });
+          const { onePagerFor } = require('../lib/one-pager');
+          const catalogue = (await s`SELECT id, title, detail FROM sims WHERE published = true ORDER BY number NULLS LAST, title`)
+            .map(x => ({ id: x.id, title: x.title, text: (onePagerFor(x.id, x.detail) || {}).text || '' })).filter(x => x.text);
+          const inClass = course ? (await s`SELECT sim_id FROM course_sims WHERE course_id = ${course.id}`).map(x => x.sim_id) : [];
+          const r = await H.ask({ s, me, course, sim, question: b.question, history: b.history, sessionState, catalogue, inClass });
           return res.status(r.status).json(r.body);
         } catch (e) { return res.status(e.status || 502).json({ error:'helper_unavailable', message: 'The helper could not answer just now. Try again in a minute.' }); }
       }
