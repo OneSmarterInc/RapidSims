@@ -183,7 +183,9 @@ module.exports = [
     bucket: 'DOWNSTREAM_CONSUMER',
     cost: 90,
     patterns: [
-      /\bwho (reads?|uses?|looks? at|pulls?|needs?|sees?|reviews?)\b/,
+      // An adverb between who and the verb ("who actually uses") is the same question (#85).
+      /\bwho (actually |really |else |ever |even |still )?(reads?|uses?|looks? at|pulls?|needs?|sees?|reviews?)\b/,
+      /\b(does|do|did|has|have) (anyone|anybody|someone|somebody) (actually |really |ever |even |still )?(read|use|look at|pull|need|see|review|check)\b/,
       /\bwhere does (it|that|this) go\b/,
       /\bwhere does (a |the )?claim go\b/,
       /\bwhat happens (to|next|after)\b/,

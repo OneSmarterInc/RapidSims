@@ -100,6 +100,8 @@ module.exports = [
 
   // --- DOWNSTREAM_CONSUMER ------------------------------------------
   ['Who reads the log?', 'DOWNSTREAM_CONSUMER'],
+  ['Who actually uses the log?', 'DOWNSTREAM_CONSUMER'],
+  ['Does anyone actually look at the log?', 'DOWNSTREAM_CONSUMER'],
   ['Who uses that information?', 'DOWNSTREAM_CONSUMER'],
   ['Where does it go after you?', 'DOWNSTREAM_CONSUMER'],
   ['Have you ever seen anyone pull it up?', 'DOWNSTREAM_CONSUMER'],
