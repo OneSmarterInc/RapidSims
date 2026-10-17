@@ -43,4 +43,5 @@ jobs:
         run: |
           export NODE_PATH="$RUNNER_TEMP/faculty-results/node_modules"
           node platform/tools/faculty-sim-results-check.js --browser
+          node platform/tools/assist-everywhere-check.js --browser
 

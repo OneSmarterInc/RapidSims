@@ -8,7 +8,9 @@ const { onePagerFor } = require('./one-pager');
 const MODEL = process.env.ASSIST_MODEL || 'claude-haiku-5-5';
 // Published Haiku 5.5 prices per million tokens for prompts up to 100,000 tokens (confirm against Anthropic's page).
 const PRICE = { input: 0.10, output: 0.50, cacheRead: 0.01, cacheWrite: 0.125 };
-const LIMITS = { trying: 30, adopted: 200 };
+// Per faculty member per month: per sim (trying, adopted), and for questions about the class as a whole (general).
+const LIMITS = { trying: 30, adopted: 200, general: 30 };
+const GENERAL = 'general';
 const CEILING_USD = Number(process.env.ASSIST_MONTHLY_CEILING_USD || 25);
 // All twelve sims (rolled out Oct 17 after the pilot on rapidsimplus-01). ASSIST_SIMS can narrow the list.
 const ALL_SIMS = ['rapid-01-disaster', 'rapid-02-relay', 'rapid-03-midland', 'rapid-04-whose-number', 'rapid-05-approve',
@@ -69,17 +71,18 @@ function systemPrompt(sim, page, kit) {
 const usd = u => ((u.input_tokens || 0) * PRICE.input + (u.output_tokens || 0) * PRICE.output +
   (u.cache_read_input_tokens || 0) * PRICE.cacheRead + (u.cache_creation_input_tokens || 0) * PRICE.cacheWrite) / 1e6;
 
-// Questions left for this faculty member on this sim this month, and whether the platform is under its ceiling.
+// Questions left for this faculty member on this sim (or on general questions) this month, and the platform ceiling.
 async function allowance(s, me, simId) {
-  const adopted = (await s`SELECT 1 FROM course_sims cs JOIN courses c ON c.id = cs.course_id
+  const general = simId === GENERAL;
+  const adopted = general ? false : (await s`SELECT 1 FROM course_sims cs JOIN courses c ON c.id = cs.course_id
     JOIN enrolments e ON e.course_id = c.id AND e.paid = true
     WHERE cs.sim_id = ${simId} AND c.faculty_id = ${me.id} LIMIT 1`).length > 0;
-  const limit = adopted ? LIMITS.adopted : LIMITS.trying;
+  const limit = general ? LIMITS.general : adopted ? LIMITS.adopted : LIMITS.trying;
   const used = Number((await s`SELECT count(*)::int AS n FROM assist_usage
     WHERE user_id = ${me.id} AND sim_id = ${simId} AND created_at >= date_trunc('month', now())`)[0].n);
   const spent = Number((await s`SELECT coalesce(sum(cost_usd), 0)::float AS c FROM assist_usage
     WHERE created_at >= date_trunc('month', now())`)[0].c);
-  return { adopted, limit, used, left: Math.max(0, limit - used), spent, paused: spent >= CEILING_USD };
+  return { adopted, general, limit, used, left: Math.max(0, limit - used), spent, paused: spent >= CEILING_USD };
 }
 
 async function callModel(system, messages, fetchImpl = fetch, thinkingOff = true) {
@@ -103,33 +106,86 @@ async function callModel(system, messages, fetchImpl = fetch, thinkingOff = true
   return { text, usage: d.usage || {} };
 }
 
-// One question. sessionState is what the sim returned for faculty_state (or null when no session is open).
-async function ask({ s, me, course, sim, question, history, sessionState, fetchImpl, now = new Date() }) {
-  const q = String(question || '').trim().slice(0, 1500);
-  if (!q) return { status: 400, body: { error: 'question_required' } };
-  if (!enabled(sim.id)) return { status: 404, body: { error: 'helper_not_available', message: 'The helper is not available for this simulation yet.' } };
-  const a = await allowance(s, me, sim.id);
-  if (a.paused) return { status: 429, body: { error: 'helper_paused', message: 'The helper has reached this month’s limit for the platform. It returns at the start of next month.', allowance: a } };
-  if (!a.left) return { status: 429, body: { error: 'helper_limit', message: `You have used this month’s ${a.limit} questions for this simulation.${a.adopted ? '' : ' Licensing a class raises the limit to 200.'}`, allowance: a } };
-  const page = onePagerFor(sim.id, sim.detail);
-  const anon = sessionState ? anonymise(sessionState) : { data: null, names: {} };
-  // Everything the sim sent its faculty pages except the teaching material (that goes in the cached system prompt).
-  const session = anon.data ? compact(Object.fromEntries(Object.entries(anon.data).filter(([k]) => k !== 'kit'))) : null;
-  const system = systemPrompt(sim, page, sessionState && compact(anonymise({ participants: sessionState.participants, kit: sessionState.kit }).data.kit));
-  const turns = (Array.isArray(history) ? history : []).slice(-4).filter(t => t && typeof t.q === 'string' && typeof t.a === 'string')
-    .flatMap(t => [{ role: 'user', content: t.q.slice(0, 1500) }, { role: 'assistant', content: t.a.slice(0, 3000) }]);
-  const context = session ? `The open session, students shown as labels:\n${JSON.stringify(session).slice(0, MAX_CONTEXT_CHARS)}\n\n` : 'No session is open on the instructor’s screen.\n\n';
-  const messages = [...turns, { role: 'user', content: context + 'Question: ' + q }];
+const blocked = (a, what) => a.paused ? { status: 429, body: { error: 'helper_paused', message: 'The helper has reached this month’s limit for the platform. It returns at the start of next month.', allowance: a } }
+  : !a.left ? { status: 429, body: { error: 'helper_limit', message: `You have used this month’s ${a.limit} questions ${what}.${a.general || a.adopted ? '' : ' Licensing a class raises the limit to 200.'}`, allowance: a } } : null;
+const historyTurns = history => (Array.isArray(history) ? history : []).slice(-4).filter(t => t && typeof t.q === 'string' && typeof t.a === 'string')
+  .flatMap(t => [{ role: 'user', content: t.q.slice(0, 1500) }, { role: 'assistant', content: t.a.slice(0, 3000) }]);
+
+// Calls the model, asks once more on an empty answer, records the question and its cost.
+async function answer({ s, me, course, usageId, sessionCode, system, messages, q, a, names, fetchImpl, now }) {
   let out = await callModel(system, messages, fetchImpl), cost = usd(out.usage);
   // An empty answer is asked once more; both calls are paid for, so both costs are recorded on the one question.
   if (!out.text) { const again = await callModel(system, messages, fetchImpl); cost += usd(again.usage);
     out = { text: again.text, usage: Object.fromEntries(['input_tokens', 'output_tokens', 'cache_read_input_tokens'].map(k => [k, (out.usage[k] || 0) + (again.usage[k] || 0)])) }; }
   await s`INSERT INTO assist_usage (user_id, sim_id, course_id, session_code, model, tokens_in, tokens_out, cache_read, cost_usd, question, answer, created_at)
-    VALUES (${me.id}, ${sim.id}, ${course ? course.id : null}, ${sessionState && sessionState.session ? sessionState.session.code : null}, ${MODEL},
+    VALUES (${me.id}, ${usageId}, ${course ? course.id : null}, ${sessionCode || null}, ${MODEL},
       ${out.usage.input_tokens || 0}, ${out.usage.output_tokens || 0}, ${out.usage.cache_read_input_tokens || 0}, ${cost}, ${q}, ${out.text}, ${now})`;
   await s`UPDATE assist_usage SET question = NULL, answer = NULL WHERE question IS NOT NULL AND created_at < now() - interval '30 days'`;
-  if (!out.text) return { status: 502, body: { error: 'helper_empty', message: 'No answer came back. Please ask again.', allowance: { ...a, used: a.used + 1, left: Math.max(0, a.left - 1) } } };
-  return { status: 200, body: { answer: out.text, names: anon.names, allowance: { ...a, used: a.used + 1, left: Math.max(0, a.left - 1) } } };
+  const left = { ...a, used: a.used + 1, left: Math.max(0, a.left - 1) };
+  if (!out.text) return { status: 502, body: { error: 'helper_empty', message: 'No answer came back. Please ask again.', allowance: left } };
+  return { status: 200, body: { answer: out.text, names, allowance: left } };
 }
 
-module.exports = { ALL_SIMS, MODEL, PRICE, LIMITS, CEILING_USD, PILOT_SIMS, enabled, anonymise, compact, allowance, ask, usd };
+// One question about a sim. sessionState is what the sim returned for faculty_state (or null when no session is open).
+async function ask({ s, me, course, sim, question, history, sessionState, fetchImpl, now = new Date() }) {
+  const q = String(question || '').trim().slice(0, 1500);
+  if (!q) return { status: 400, body: { error: 'question_required' } };
+  if (!enabled(sim.id)) return { status: 404, body: { error: 'helper_not_available', message: 'The helper is not available for this simulation yet.' } };
+  const a = await allowance(s, me, sim.id);
+  const stop = blocked(a, 'for this simulation'); if (stop) return stop;
+  const page = onePagerFor(sim.id, sim.detail);
+  const anon = sessionState ? anonymise(sessionState) : { data: null, names: {} };
+  // Everything the sim sent its faculty pages except the teaching material (that goes in the cached system prompt).
+  const session = anon.data ? compact(Object.fromEntries(Object.entries(anon.data).filter(([k]) => k !== 'kit'))) : null;
+  const system = systemPrompt(sim, page, sessionState && compact(anonymise({ participants: sessionState.participants, kit: sessionState.kit }).data.kit));
+  const context = session ? `The open session, students shown as labels:\n${JSON.stringify(session).slice(0, MAX_CONTEXT_CHARS)}\n\n` : 'No session is open on the instructor’s screen.\n\n';
+  const messages = [...historyTurns(history), { role: 'user', content: context + 'Question: ' + q }];
+  return answer({ s, me, course, usageId: sim.id, sessionCode: sessionState && sessionState.session ? sessionState.session.code : null,
+    system, messages, q, a, names: anon.names, fetchImpl, now });
+}
+
+// How the faculty section works, for questions asked outside a sim's own pages.
+const FACULTY_GUIDE = [
+  'The faculty section of RapidSims:',
+  '- Your classes: the list of classes. Each class has a title, a term and the number of students expected (a forecast, not a limit).',
+  '- Class home: the class link students use to join (one link covers every simulation in the class, so nobody joins twice), the students and their access, and the simulations in the class. Simulations can be added to a class there.',
+  '- Student access: give a student access once their registration is settled. Payment happens outside RapidSims, so the instructor turns access on. A student without access can see what is coming but cannot open anything.',
+  '- Each simulation in the class has four pages in the left menu: Sessions (start a session when the class is ready; students join the open session by themselves from their own page), Past sessions (every session’s results, newest first), Rehearse (play as practice students before class, worth doing once before teaching with it) and Play it yourself (opens in a new tab, as a student sees it).',
+  '- During a session: Students, Results and Debrief tabs. The debrief runs from the instructor’s screen.',
+  '- Every faculty page has Ask Claude. On a simulation’s pages it answers about that simulation with its teaching material and the open session.'
+].join('\n');
+
+function generalPrompt(courseInfo, catalogue) {
+  const inClass = new Set((courseInfo && courseInfo.sims || []).map(x => x.id));
+  return [
+    'You are the faculty helper for RapidSims, short business-school decision simulations. You help instructors choose simulations, set up their classes and find their way around the faculty pages.',
+    'Answer only about RapidSims, its simulations and teaching with them. For anything else, say briefly that you can help with RapidSims.',
+    'Answer the question in your first sentence. Then add only what the instructor needs to act on it.',
+    'Keep it short: at most about 150 words, in two or three short paragraphs or one short list (start list lines with "- ").',
+    'Use the words the instructor sees on the faculty pages. Never mention field names, codes or ids.',
+    'For detailed questions about one simulation (a student’s result, the debrief, what really happens), suggest opening that simulation’s Sessions page and asking there.',
+    'Never reveal how a simulation turns out; describe each one as its one-pager does.',
+    '',
+    FACULTY_GUIDE,
+    '',
+    '## The RapidSims catalogue (one-pagers)',
+    ...catalogue.map(c => `### ${c.title}${inClass.has(c.id) ? ' (in this class)' : ''}\n${inClass.has(c.id) ? c.text : c.text.split('\n## ')[0]}`)
+  ].join('\n');
+}
+
+// One question about the class or RapidSims in general (Class home, Your classes and the class-wide pages).
+// courseInfo: { title, term, students, withAccess, sims: [{ id, title }] } or null. catalogue: [{ id, title, text }].
+async function askGeneral({ s, me, course, courseInfo, catalogue, question, history, fetchImpl, now = new Date() }) {
+  const q = String(question || '').trim().slice(0, 1500);
+  if (!q) return { status: 400, body: { error: 'question_required' } };
+  if (!process.env.ANTHROPIC_API_KEY) return { status: 404, body: { error: 'helper_not_available', message: 'The helper is not available yet.' } };
+  const a = await allowance(s, me, GENERAL);
+  const stop = blocked(a, 'about your classes'); if (stop) return stop;
+  const system = generalPrompt(courseInfo, catalogue);
+  const context = courseInfo ? `The class on the instructor’s screen: ${JSON.stringify({ title: courseInfo.title, term: courseInfo.term, students: courseInfo.students,
+    studentsWithAccess: courseInfo.withAccess, simulations: (courseInfo.sims || []).map(x => x.title) })}\n\n` : 'The instructor is on their list of classes.\n\n';
+  const messages = [...historyTurns(history), { role: 'user', content: context + 'Question: ' + q }];
+  return answer({ s, me, course, usageId: GENERAL, sessionCode: null, system, messages, q, a, names: {}, fetchImpl, now });
+}
+
+module.exports = { ALL_SIMS, GENERAL, FACULTY_GUIDE, MODEL, PRICE, LIMITS, CEILING_USD, PILOT_SIMS, enabled, anonymise, compact, allowance, ask, askGeneral, generalPrompt, usd };

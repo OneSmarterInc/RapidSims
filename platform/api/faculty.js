@@ -92,6 +92,26 @@ module.exports = async (req, res) => {
         if (me.role !== 'faculty' && me.role !== 'admin') return res.status(403).json({ error:'wrong_role' });
         const H = require('../lib/assist.js'), M = require('../lib/midland-sessions.js');
         const simId = String(b.simId || '');
+        // Questions about the class or RapidSims in general (Your classes, Class home and the class-wide pages).
+        if (!simId || simId === H.GENERAL) {
+          const course = b.courseId ? await ownCourse(s, me.id, String(b.courseId)) : null;
+          if (b.courseId && !course) return res.status(404).json({ error:'no_such_course' });
+          if (b.action === 'assist_status') return res.status(200).json({ available: !!process.env.ANTHROPIC_API_KEY, general: true,
+            allowance: process.env.ANTHROPIC_API_KEY ? await H.allowance(s, me, H.GENERAL) : null });
+          const { onePagerFor } = require('../lib/one-pager');
+          const catalogue = (await s`SELECT id, title, detail FROM sims WHERE published = true ORDER BY number NULLS LAST, title`)
+            .map(x => ({ id: x.id, title: x.title, text: (onePagerFor(x.id, x.detail) || {}).text || '' })).filter(x => x.text);
+          let courseInfo = null;
+          if (course) {
+            const sims = await s`SELECT si.id, si.title FROM course_sims cs JOIN sims si ON si.id = cs.sim_id WHERE cs.course_id = ${course.id} ORDER BY si.number NULLS LAST`;
+            const n = (await s`SELECT count(*)::int AS students, count(*) FILTER (WHERE paid)::int AS paid FROM enrolments WHERE course_id = ${course.id} AND NOT dropped`)[0] || {};
+            courseInfo = { title: course.title, term: course.term, students: n.students || 0, withAccess: n.paid || 0, sims };
+          }
+          try {
+            const r = await H.askGeneral({ s, me, course, courseInfo, catalogue, question: b.question, history: b.history });
+            return res.status(r.status).json(r.body);
+          } catch (e) { return res.status(e.status || 502).json({ error:'helper_unavailable', message: 'The helper could not answer just now. Try again in a minute.' }); }
+        }
         const course = me.role === 'admin' && !b.courseId ? null : await ownCourse(s, me.id, String(b.courseId || ''));
         if (b.courseId && !course) return res.status(404).json({ error:'no_such_course' });
         const sim = course ? (await s`SELECT si.* FROM course_sims cs JOIN sims si ON si.id=cs.sim_id WHERE cs.course_id=${course.id} AND cs.sim_id=${simId}`)[0]
