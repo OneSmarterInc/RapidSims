@@ -11,11 +11,19 @@ const sources = [
   'sim08/config/content.js', 'sim09/config/content.js', 'sim10/data/config.js',
   'sim-plus-01/lib/meta.js', 'simplus02/lib/meta.js'
 ];
+// The faculty one-pager lives in the sim's own folder (ONE-PAGER.md), stamped with the catalogue revision it was
+// reviewed for. platform/tools/one-pager-check.js keeps the stamp and the sim in step.
+function onePager(file) {
+  const page = path.join(__dirname, '../..', file.split('/')[0], 'ONE-PAGER.md');
+  if (!fs.existsSync(page)) return null;
+  const raw = fs.readFileSync(page, 'utf8'), stamp = /^<!-- Reviewed for: (.+?) -->\n/.exec(raw);
+  return { reviewedFor: stamp ? stamp[1] : null, text: raw.replace(/^<!--[^]*?-->\n/, '').trim() };
+}
 function snapshot() {
   return Object.fromEntries(sources.map(file => {
     const module = require(path.join(__dirname, '../..', file));
     const m = module.META || module;
-    return [m.id || m.simId, { tagline: m.tagline, description: m.description, detail: m.detail }];
+    return [m.id || m.simId, { tagline: m.tagline, description: m.description, detail: m.detail, onePager: onePager(file) }];
   }));
 }
 if (require.main === module) {
@@ -31,4 +39,4 @@ if (require.main === module) {
     console.log(`Updated public catalogue source for all ${sources.length} simulations.`);
   }
 }
-module.exports = { sources, snapshot };
+module.exports = { sources, snapshot, onePager };

@@ -84,6 +84,10 @@
       "tryIt": "Try the complete simulation before assigning it to students.",
       "momentsIntro": "",
       "roomIntro": "These are the people whose views you will consider during the simulation."
+    },
+    "onePager": {
+      "reviewedFor": "disaster-v3-2026-09",
+      "text": "# RapidSim 01 · Disaster or Breach?\n\nTwenty minutes of play, then the debrief. Each student plays on their own device.\n\n## The situation\n\nIt's two in the morning at Northbeam Data Services, which runs the data platforms behind about forty enterprise clients: insurers, claims processors and a couple of regional banks. A claims report wouldn't reconcile just before midnight, and by one o'clock two more applications were throwing corruption errors that came straight back after a restart. Your students are the VP of Operations, and the incident call is already open.\n\n## Why it's hard\n\nA failing storage array and an intruder look the same at this hour. Four people are on the call, each competent and each with something to lose: the infrastructure director, the head of security, the storage vendor and the client lead with a board call at eight. Students question any of them, and the facts they need are spread across the call. Each person offers the part that helps them and keeps the part that hurts.\n\n## What students take away\n\nThe sim is about sequencing under irreversibility. One move restores service fast; another keeps options open at a cost of hours. Students decide which matters more before they know what they're dealing with, and the debrief shows how the same move reads as decisive or reckless depending on a fact nobody could confirm at the time.\n\n## Running it\n\nStudents lock a reading and an action at three points in the night, each with what would change their mind. Results show each student's three positions and where they ended up. You can hold each student's debrief until you release it. The class debrief runs from your screen and carries most of the teaching, so plan on an hour in total. It fits an operations, security or leadership session and works for any background. How would your students explain their call to the board at eight?"
     }
   },
   "rapid-02-relay": {
@@ -171,6 +175,10 @@
       "tryIt": "Try the complete simulation before assigning it to students.",
       "momentsIntro": "",
       "roomIntro": "These are the people whose views you will consider during the simulation."
+    },
+    "onePager": {
+      "reviewedFor": "relay-v3-2026-09",
+      "text": "# RapidSim 02 · What Did It Tell Them?\n\nTwenty minutes of play, then the debrief. Each student plays on their own device; general business background is all it takes.\n\n## The situation\n\nCalder Sealing Systems makes industrial seals, and its customers ask a support assistant called Relay for specifications. Six weeks ago Relay gave a customer a figure from a superseded datasheet, the parts went into service, and they've been running ever since. Your students are the VP of Customer Operations, and this morning somebody noticed.\n\n## Why it's hard\n\nTwo competent people are exposed in opposite directions. The director of technical publications owns the documents Relay reads; the head of customer platforms owns how Relay was set up. Each is right about their own part, so each holds their ground. A vendor representative and a junior support engineer fill out the call, and the chief commercial officer weighs in from above. A quick cleanup is on offer, and its cost is something students have to find for themselves.\n\n## What students take away\n\nIt's an AI incident, and the lesson reaches past AI: what to preserve before you fix something, and how responsibility splits when an answer comes from several people's decisions at once. The story branches on what students do early, so the debrief can put very different third acts side by side.\n\n## Running it\n\nStudents question the characters directly while the clock runs and lock their reading at set points. Results show each student's choices and where they ended up, and the class debrief runs from your screen. It sits beside a unit on AI governance, customer operations or information quality, or stands alone. Plan on an hour with the debrief. When an AI gives a wrong answer, whose answer was it?"
     }
   },
   "rapid-03-midland": {
@@ -271,6 +279,10 @@
       "preparation": "Read the briefing packet before the session.",
       "output": "A one-sentence reason, two annual budgets, and two final reflections.",
       "durationNote": "About 30 minutes of play, plus discussion."
+    },
+    "onePager": {
+      "reviewedFor": "midland-v2-2026-09",
+      "text": "# RapidSim 03 · Midland Equipment\n\nTwenty minutes of play, an hour with the debrief. Individual or team, chosen when you start the session.\n\n## The situation\n\nMidland Equipment is a mid-sized HVAC company, and your students run its technology. They have nine million dollars a year to spread across five budget lines over two years. What they buy in year one arrives in year two, and a third year runs entirely on what they bought in both.\n\n## Why it's hard\n\nYear one locks in before any result is visible. Four of the five lines carry a yearly cap, and the closing lesson shows what that cap stands for. Every line has a real case behind it, and the numbers are tuned so each allocation buys one thing at the cost of another. Students who try to cover everything find out quickly that the budget asks for a choice.\n\n## What students take away\n\nInfrastructure has a lead time. The decision that matters is made years before the moment that reveals it. Students leave understanding why technology leaders sound cautious about spending that looks optional this year, and they see their own priorities in the numbers.\n\n## Running it\n\nIn team play you split the class into teams and each team chooses a lead who enters its decisions. Results show every allocation year by year, and the debrief lets you put two or three side by side and ask what each gave up. Rehearse uses three practice students on one team. It fits a week on IT infrastructure or architecture, or budgeting in a management course. What would your students cut first, and would they still cut it knowing about year three?"
     }
   },
   "rapid-04-whose-number": {
@@ -334,6 +346,10 @@
           "what": "The definitions, and who wrote each one."
         }
       ]
+    },
+    "onePager": {
+      "reviewedFor": "sim04-v4-class-link",
+      "text": "# RapidSim 04 · Whose Number Is Right?\n\nAbout twenty-five minutes. Individual or team, any number of teams, even one.\n\n## The situation\n\nRidgeway Dispatch sells scheduling and invoicing software to trade businesses on three subscription tiers. The board wants one number: customer retention for the year. Each student or team gets the same forty-account roster and a reporting guide, calculates the figure and commits to it. Then the whole class sees every number at once.\n\n## Why it's hard\n\nThe arithmetic is quick, and students who are good with spreadsheets finish fast. The hard part comes after they commit, when they explain their number to a class that may hold a different one. Students expect careful people with shared data to agree, and the sim puts that expectation in front of everyone.\n\n## What students take away\n\nA business metric is a decision someone made before it's a number anyone calculates. Students leave able to ask the right question whenever two reports disagree, before arguing about whose spreadsheet is wrong. It's short, and it changes how people read a dashboard.\n\n## Running it\n\nStudents join from the class link; you choose team or individual play, split the class with Auto split, then start the clock. Results show each number against its own working sheet. The debrief shows every number, the two furthest apart, the definitions behind them and a worked calculation, and you open the review questions when you're ready. It fits a unit on data, metrics or business intelligence, and it's short enough to open a class on something else. How many numbers in your own program's reports would pass the same test?"
     }
   },
   "rapid-05-approve": {
@@ -399,6 +415,10 @@
       ],
       "durationNote": "About 30 minutes of play, plus discussion.",
       "momentsIntro": ""
+    },
+    "onePager": {
+      "reviewedFor": "approve-v2-2026-09",
+      "text": "# RapidSim 05 · Would You Approve This?\n\nFive timed rounds plus the debrief. Individual or team.\n\n## The situation\n\nLoopwell is a fitness app, and your students are its product manager. Over five rounds the team brings them a new way to use customer data, one feature at a time. Each request is reasonable, each has a business case, and each touches one customer, Dana Okafor. Students approve or decline as the clock moves.\n\n## Why it's hard\n\nEach request looks sound on its own, and that's the point. Declining has a visible cost every round, a line naming what Dana and the business lose. If a round runs out before students decide, the feature ships, as it usually does in a real company. Students judge each step on its own while the data underneath keeps adding up.\n\n## What students take away\n\nPrivacy harm often comes from a run of sensible decisions, each approved by someone who saw only their own piece. Students see what the combined data lets the company know about Dana, from Dana's side of the screen, and the debrief connects that to reviewing data use as a whole.\n\n## Running it\n\nAn untimed walkthrough shows students how the rounds work before the clock starts. You open each round from the session bar and close it when the class is done. In team play every member votes privately and the majority decides. Results show each student's ending, and the debrief covers the endings, the round that split the class and what shipped. It fits a unit on data ethics, privacy or product management. Where in your students' future jobs will they be the one approving round three?"
     }
   },
   "rapid-06-switch": {
@@ -463,6 +483,10 @@
       ],
       "tryIt": "Try the complete activity before assigning it to students.",
       "momentsIntro": ""
+    },
+    "onePager": {
+      "reviewedFor": "switch-v2-2026-09",
+      "text": "# RapidSim 06 · Do We Switch?\n\nA ten-minute decision plus the debrief. Individual or team.\n\n## The situation\n\nA regional retailer's card payments are down, and every minute costs sales at the registers. The company paid for a backup arrangement for exactly this kind of day. Your students decide whether to fail over to it now or hold where they are. They have a briefing pack, a clock and a store network waiting on them.\n\n## Why it's hard\n\nSwitching feels responsible, because that's what the backup is for. Holding feels like standing still while the registers are down. Everything students need for a sound call is in the briefing, fine print included, alongside plenty that's beside the point. Holding takes a one-line reason, and a clock that runs out is recorded as no decision.\n\n## What students take away\n\nStudents learn what a backup actually buys and how to check before trusting it: read the arrangement, then the label. They also practise committing to a call with a reason attached, a habit worth more than any single right answer.\n\n## Running it\n\nOne ten-minute clock runs for the whole class. In team play the first member to press decides for the team, which starts a good conversation by itself. The Live screen, opened from the session bar, shows the class's decisions on the projector. The debrief walks back through the briefing together, line by line. It fits a unit on IT infrastructure, risk or business continuity. Who in your students' organisations will have read the fine print on the backup?"
     }
   },
   "rapid-07-bought": {
@@ -527,6 +551,10 @@
       ],
       "tryIt": "Try the complete activity before assigning it to students.",
       "momentsIntro": ""
+    },
+    "onePager": {
+      "reviewedFor": "bought-v3-2026-09",
+      "text": "# RapidSim 07 · Would You Have Bought It?\n\nA ten-minute decision clock, then a staged reveal and the debrief. Individual or team.\n\n## The situation\n\nIt's autumn 2000, and your students run the largest video rental chain in the country. A small company that rents DVDs by mail has offered itself for fifty million dollars. It lost about thirty million on five million of revenue last year and pulled its stock offering in July. Students read the briefing, hear from four advisers, and decide to buy or decline.\n\n## Why it's hard\n\nEvery figure comes from the companies' own filings, with the names withheld. The advisers split: two say decline, one says buy, one says wait a year, and each makes a case a sensible executive would accept. Students write a one-sentence reason before they commit, and the decision binds. Some will think they recognise the situation, and the sim asks them to decide on the evidence.\n\n## What students take away\n\nThe sim separates what was knowable then from what hindsight makes obvious. Each student's reason stays pinned at the top of every reveal stage, word for word, as the years play out. The learning is in watching a reasonable argument age.\n\n## Running it\n\nYou close the decisions from the session bar, then release 2002, 2005 and 2010 in order. In team play members vote privately and the majority decides. The Live screen shows how the class split, and the debrief puts two contrasting reasons side by side. It fits a strategy session, an introduction to information systems and business models, or any class on disruption. How many of your students would have bought it, and how many would say so before the reveal?"
     }
   },
   "rapid-08-later": {
@@ -592,6 +620,10 @@
       ],
       "durationNote": "Allow about 25 minutes for the activity, plus class discussion.",
       "momentsIntro": ""
+    },
+    "onePager": {
+      "reviewedFor": "later-v2-2026-09",
+      "text": "# RapidSim 08 · Eighteen Months Later\n\nA timed selection round, a reveal and the debrief. Best played in teams.\n\n## The situation\n\nA veterinary practice with several clinics needs a new scheduling system. Three vendors are on the shortlist, and all three look sound on paper. Students put six questions to the vendors' representatives before the clock runs out, and every question goes to all three. Then they pick a vendor and commit to a go-live plan.\n\n## Why it's hard\n\nSix questions go fast, and most students spend the first few on features and price because a demo invites it. The vendors answer what they're asked. Some things about each option surface only with the right question, and some come from putting two partial answers together. The go-live plan shapes what happens next as much as the product does.\n\n## What students take away\n\nThe reveal jumps eighteen months ahead and shows how adoption went at the clinics. Students see that a system's success depends on what they asked before buying and how they rolled it out, as well as which vendor they chose, and they learn how to spend a limited number of questions in any evaluation.\n\n## Running it\n\nTeams share their six questions, vote privately on the vendor, and the majority decides. You can pause the clock and open the next part from the session bar. Results show each team's outcome and plan, and the debrief shows outcomes before the questions that led to them. Each student gets a short written account of their own outcome. It fits a unit on systems acquisition, implementation or vendor management. What would your students ask first if they had only six?"
     }
   },
   "rapid-09-money-land": {
@@ -657,6 +689,10 @@
       ],
       "durationNote": "About 20 minutes before the historical reveals and discussion.",
       "momentsIntro": ""
+    },
+    "onePager": {
+      "reviewedFor": "money-land-v2-2026-09",
+      "text": "# RapidSim 09 · Where Does the Money Land?\n\nA statement, an allocation round, a staged reveal and the debrief. Individual or team.\n\n## The situation\n\nIt's June 2000, and your students manage a fund. Forrester and IDC are forecasting enormous growth in business-to-business trading over the internet, and those are the real published figures. Five real companies are on the table, each with its real financials and its name withheld. Students decide where the fund's money goes.\n\n## Why it's hard\n\nMost students accept the forecast, reasonably, since the direction turned out right. The harder question is who captures the value when the growth arrives. Before allocating a dollar, students state where they think the value will land and why, and that statement locks. They can hold cash, by naming where the value goes instead.\n\n## What students take away\n\nGetting the direction of a technology shift right is a different skill from knowing who profits from it. Students leave able to separate the two questions and argue the second with evidence. The reveal holds each locked statement up against what happened.\n\n## Running it\n\nYou move the session along from the session bar: open the statements, open the fund, close it, then release 2002, 2004 and 2010; the company names come out at the end. Positions are valued the way a shareholder experienced them, through mergers and other events. Results show each fund against its own statement, and a facilitator note helps with the debrief. It fits a unit on IT and strategy, e-commerce or technology investing. If your students were right about the boom, where did they think the money would go?"
     }
   },
   "rapid-10-bubble": {
@@ -721,6 +757,10 @@
       "output": "A verdict for each selected case, supporting figures and reasons, and evidence that could change the verdict.",
       "durationNote": "Plan about 45 minutes; timing depends on the case count, mode, and discussion.",
       "momentsIntro": ""
+    },
+    "onePager": {
+      "reviewedFor": "sim10-v3",
+      "text": "# RapidSim 10 · Infrastructure or Bubble?\n\nA reading and a call, a staged reveal and the debrief. Individual or team.\n\n## The situation\n\nYour students are advisers, and a client wants a straight answer about one company. They get two quarters of its real financial statements with the name removed. It builds long-lived physical assets, and its competitors are building in parallel. Students decide whether it's laying down genuine infrastructure or riding a bubble.\n\n## Why it's hard\n\nThe statements show revenue two ways, the company's headline figures and the standard accounting figures, side by side. Both are real, and they tell different stories. The call is binary: students cite the line that decided it and say what evidence would change their mind.\n\n## What students take away\n\nStudents learn to read past the headline number to what the business earns and spends, and to commit to a call while naming its weak point. When the reveal arrives, the line they cited matters more than whether the call was right.\n\n## Running it\n\nBefore Start you choose one company or two (two make an instructive pair), and you can give students longer to read. In team play each member makes a private call, then the team writes one answer. You move each part along from the session bar, and the Live screen shows the class's calls. The debrief puts opposite calls on the same line side by side. It fits a unit on IT investment cycles, financial analysis or the economics of infrastructure. How would your students tell the difference in a company they're reading about this week?"
     }
   },
   "rapidsimplus-01": {
@@ -803,6 +843,10 @@
           "value": "Individual"
         }
       ]
+    },
+    "onePager": {
+      "reviewedFor": "claims-interview-v2",
+      "text": "# RapidSim+ 01 · Why Don't They Have Any Patience?\n\nAbout seventy minutes, extended format. Each student plays on their own device, and a run can span two class days.\n\n## The situation\n\nWexford Benefit Administrators processes dental claims for employers' benefit plans and is replacing its claims system. The vendor needs a verified account of how claims arrive and reach the first review, and the chart on file is incomplete. Your students are the process analyst. They watch the review desk for ten minutes, then interview three employees, Ray, Terry and Ruth, in fixed fifteen-minute appointments.\n\n## Why it's hard\n\nEvery question costs time, and broad questions cost the most. Each person knows part of the story, and how they answer depends on how they're asked; one question can make a source stop volunteering anything while staying perfectly polite. The cause sits between what two different people say, and students have to put it together.\n\n## What students take away\n\nThis is a sim about process discovery and question formulation. Students learn to interview for how work really flows, to notice where it waits, and to back each recommendation with something they actually heard. They complete the process chart and file a four-step report the vendor will configure against.\n\n## Running it\n\nStudents wait until you start the session, then each plays their own run; a run carries over to the next class day until you close the session. Results show each student's interviews, with the kind of each question and the moment Ruth opened up or stopped volunteering, plus their chart and report. The seven-slide debrief starts from the review desk and ends with four lessons drawn from your class. It fits a unit on systems analysis, business process management or requirements gathering. How many of your students would have asked to watch the work before asking about it?"
     }
   },
   "rapidsimplus-02": {
@@ -843,6 +887,10 @@
         }
       ],
       "tryIt": "Negotiate a tariff in a live class team and compare its consequences when demand arrives and when it misses."
+    },
+    "onePager": {
+      "reviewedFor": "wire-v3",
+      "text": "# RapidSim+ 02 · Who Pays for the Wire?\n\nExtended format, about sixty-five minutes of play. Teams of four, face to face. Graduate level (MBA, MS).\n\n## The situation\n\nNew data centres want electricity, and a utility has begun a $1.2 billion transmission build to serve them. If the demand never arrives, the wire still has to be paid for. Each team of four takes the four seats in a regulatory proceeding: the utility, a data-centre developer, industrial energy users and a consumer advocate. Each seat has its own named person and a private brief with a floor it can't cross.\n\n## Why it's hard\n\nThe argument happens out loud, the way a settlement conference does. The software holds a shared term sheet with five terms and a running log, and a term counts only when all four seats sign it. The money terms lock together. Anything left unsigned at the deadline is set by the Commission, and each open term extends a connection freeze that costs every seat.\n\n## What students take away\n\nStudents learn how contract terms move risk between parties, that a deal needs something for every seat, and how a known fallback changes the bargaining. The debrief plays each team's terms forward into two futures, demand arriving and demand missing, and ends with the real proceeding behind the sim.\n\n## Running it\n\nStudents read an untimed walkthrough, then you split the class into teams of four on the Teams tab; extra students share a seat as co-counsel. You move the session from the session bar: briefing, opening statements, negotiation, with ten more minutes once if needed. Staff notices in the instructor notes nudge a stalled team. The Live screen shows each team's progress, and Rehearse uses four practice students, one per seat. It fits a graduate unit on negotiation, energy policy, regulation or investment under uncertainty. What would your students give up to avoid the Commission's version?"
     }
   }
 }
