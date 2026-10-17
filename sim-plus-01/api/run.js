@@ -126,12 +126,15 @@ module.exports = async (req, res) => {
     if (inSession(req.launch)) {
       // The class's open session; otherwise the last one this student joined, so a filed report stays readable after close.
       const lastKey = `kit:student:${req.launch.course || ''}:${req.launch.sub}`;
-      const code = String(b.code || '').toUpperCase().trim() || await KA.entryCode(req.launch) || ((await store.getRaw(lastKey)) || {}).code || '';
+      const asked = String(b.code || '').toUpperCase().trim(), pointed = await KA.entryCode(req.launch);
+      let code = asked || pointed || ((await store.getRaw(lastKey)) || {}).code || '';
       sess = code ? await store.getSession(code) : null;
+      // A link whose session is gone falls back to the class's open session (or this practice student's own).
+      if (!sess && pointed && pointed !== code) { code = pointed; sess = await store.getSession(code); }
       const pid = `platform:${req.launch.sub}`;
       // A practice student belongs to the practice session that lists them; a class student to a class session.
       const practice = KA.isPracticeSub(req.launch.sub);
-      const reason = !code ? 'no_session_code' : !sess ? 'session_not_found' : !sess.kit ? 'not_a_kit_session'
+      const reason = !code ? `no_session_code:${practice ? 'practice' : 'class'}` : !sess ? `session_not_found:${asked || '-'}:${pointed || 'none'}` : !sess.kit ? 'not_a_kit_session'
         : sess.courseId !== (req.launch.course || null) ? 'other_class'
         : practice ? (!sess.practice ? 'not_a_practice_session' : !(await store.getParticipant(sess.code, pid)) ? 'not_on_practice_roster' : '')
         : sess.practice ? 'practice_session' : '';
