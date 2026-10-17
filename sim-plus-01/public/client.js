@@ -11,7 +11,8 @@ const CHART_LABELS={
  log:{purpose:'Purpose',receiver:'Who receives it'},
  review:{step:'What this step is',owner:'Owner',receiver:'Who receives it',catches:'What it catches that nothing downstream would',dependsOn:'What it depends on that is not written down anywhere'}
 };
-function urlParam(name){const m=(location.search+location.hash).match(new RegExp('[?#&]'+name+'=([^&]+)'));return m?decodeURIComponent(m[1]):null}
+// The query and the hash are read separately, so ?session=CODE#lt=… gives CODE alone (#84, #89).
+function urlParam(name){for(const part of [location.search,location.hash]){const m=part.match(new RegExp('[?#&]'+name+'=([^&#]+)'));if(m)return decodeURIComponent(m[1])}return null}
 function launchToken(){return urlParam('lt')||urlParam('launch')||''}
 function isFaculty(){return brief?.faculty===true}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
