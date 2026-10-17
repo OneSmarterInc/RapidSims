@@ -8,7 +8,7 @@
 
 /* Ask about this sim: the faculty helper. */
 .fs-helper-open{position:fixed;right:20px;bottom:96px;z-index:40;background:#1f2a33;color:#fff;border:0;border-radius:20px;padding:10px 16px;font:600 13px system-ui,sans-serif;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.18)}
-.fs-helper-panel{position:fixed;right:20px;bottom:96px;z-index:40;width:min(420px,calc(100vw - 32px));max-height:min(70vh,640px);display:flex;flex-direction:column;gap:8px;background:#fff;border:1px solid #d9dfe4;border-radius:10px;padding:14px;box-shadow:0 8px 28px rgba(0,0,0,.2);font:14px/1.5 system-ui,sans-serif}
+.fs-helper-panel{position:fixed;right:20px;bottom:24px;z-index:40;width:min(420px,calc(100vw - 32px));height:min(82vh,860px);display:flex;flex-direction:column;gap:8px;background:#fff;border:1px solid #d9dfe4;border-radius:10px;padding:14px;box-shadow:0 8px 28px rgba(0,0,0,.2);font:14px/1.5 system-ui,sans-serif}
 .fs-helper-head{display:flex;justify-content:space-between;align-items:center}.fs-helper-log{overflow:auto;flex:1;min-height:80px}
-.fs-helper-q{font-weight:600;margin:10px 0 4px}.fs-helper-a{background:#f4f6f8;border-radius:8px;padding:8px 10px}.fs-helper-err{color:#b42318;margin:0}
+.fs-helper-q{font-weight:600;margin:10px 0 4px}.fs-helper-a{background:#f4f6f8;border-radius:8px;padding:8px 10px}.fs-helper-a p{margin:0 0 8px}.fs-helper-a p:last-child,.fs-helper-a ul:last-child,.fs-helper-a ol:last-child{margin-bottom:0}.fs-helper-a ul,.fs-helper-a ol{margin:0 0 8px;padding-left:20px}.fs-helper-err{color:#b42318;margin:0}
 .fs-helper-form{display:flex;gap:8px;align-items:flex-end}.fs-helper-form textarea{flex:1;resize:vertical}
