@@ -21,8 +21,8 @@ assert.match(js, /id="j-\$\{r\.id\}"[^>]*minlength="15"/);
 assert.match(js, /meaningful characters/);
 assert.match(js, /form\.requestSubmit\(\)/);
 
-// Generic starters are participant-safe but appear only before the student's first question.
-assert.match(js, /starters=\(state\.windowIndex===0&&state\.conversation\.length===0\)\?\(brief\.starters\|\|\[\]\):\[\]/);
+// Generic starters are participant-safe and appear at the start of each interview, until the first question (#86).
+assert.match(js, /starters=\(state\.conversation\.length===0\)\?\(brief\.starters\|\|\[\]\):\[\]/);
 assert.match(js, /data-starter/);
 assert.match(js, /input\.value=starters\[Number\(btn\.dataset\.starter\)\]/, 'clicking a starter must populate rather than submit');
 assert.doesNotMatch(js, /starters=brief\.starters\|\|\[\]/, 'starters must not remain visible after the first question');

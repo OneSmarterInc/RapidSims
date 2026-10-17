@@ -9,13 +9,19 @@ const UNMATCHED = { bucket: 'UNMATCHED', cost: 60 };
  * Lowercase, collapse whitespace, strip terminal punctuation, and
  * normalise curly apostrophes so /doesn'?t/ style patterns hold.
  */
+// Common typing slips, corrected before matching so a typo is not charged as an unclear question (#87).
+const TYPOS = { waht: 'what', wht: 'what', whta: 'what', teh: 'the', hte: 'the', hwo: 'how', yuo: 'you', yoru: 'your', adn: 'and',
+  thier: 'their', recieve: 'receive', recieves: 'receives', recieved: 'received', wich: 'which', becuase: 'because', becasue: 'because',
+  "waht's": "what's", dose: 'does', doesnt: "doesn't", dont: "don't", whos: "who's", whats: "what's", happend: 'happened', happends: 'happens',
+  proces: 'process', procces: 'process', claimes: 'claims', recieving: 'receiving' };
 function normalise(raw) {
   return String(raw || '')
     .toLowerCase()
     .replace(/[\u2018\u2019\u02BC]/g, "'")
     .replace(/[\u201C\u201D]/g, '"')
     .replace(/\s+/g, ' ')
-    .trim();
+    .trim()
+    .replace(/[a-z']+/g, w => TYPOS[w] || w);
 }
 
 /**

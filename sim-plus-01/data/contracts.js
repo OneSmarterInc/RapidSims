@@ -63,8 +63,8 @@ const RAY = {
     ],
     UNMATCHED: [
       "I can only really speak to intake — how claims arrive, how I sort them, and when I release the batches.",
-      "That isn't something I handle. If it happens after I take the batch downstairs, Terry or Ruth would know better.",
-      "I'm not sure from this end. Ask me about the mail, faxes, vendor files, clearinghouse claims, or release times."
+      "Could you put that another way? I can tell you how claims arrive, how I sort them, and when I release the batches.",
+      "Once a batch goes downstairs, Terry and Ruth know it better. From here I can tell you about the mail, faxes, vendor files, clearinghouse claims and release times."
     ]
   }
 };
@@ -123,8 +123,8 @@ const TERRY = {
     ],
     UNMATCHED: [
       "I don't have that part of it. I can tell you about the receipt log, the batches, and the provider calls I answer.",
-      "Not from this desk, no. Once the batch leaves me, Ruth sees more of it than I do.",
-      "I'm not certain. If you mean the log or what happens when providers call, I can walk you through that."
+      "Could you put that another way? I keep the receipt log, handle the batches and answer provider calls.",
+      "Once the batch leaves me, Ruth sees more of it. If you mean the log or the provider calls, I can walk you through that."
     ]
   }
 };
@@ -171,9 +171,9 @@ const RUTH = {
         "Some claims take longer than others. That's the nature of it."
       ],
       UNMATCHED: [
-        "I couldn't say. That's not something I'd see from here.",
+        "I couldn't say from here. Ask me about what reaches this desk, what I check, or where it goes next.",
         "That sits outside first-pass review. Ask me about what reaches this desk, what I check, or where it goes next.",
-        "I don't have a reliable answer for that from this part of the process."
+        "I'd rather not guess at that. I can tell you what reaches this desk and what I check."
       ]
     },
     OPEN: {
@@ -216,9 +216,9 @@ const RUTH = {
       ],
       AMBIGUOUS_PRESSURE: ["The repeats. Everything else moves."],
       UNMATCHED: [
-        "That's not something I'd see from here. Ray may know if it concerns intake.",
+        "Ray would know that if it concerns intake. Here I can tell you what arrives, what I check, and what leaves this desk.",
         "I can't verify that from first-pass review. I can tell you what arrives here, what I check, and what leaves this desk.",
-        "I wouldn't want to guess. That part is outside what I can see from this desk."
+        "I'd rather not guess at that. Ask me about what arrives here or what I check, and I can answer properly."
       ]
     },
     CLOSED: {
