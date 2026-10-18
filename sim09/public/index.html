@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="kit/theme.js?v=20261018a" data-place="bottom-left"></script>
 <script id="account-entry-redirect">
 (() => {
   const q = new URLSearchParams(location.search);
@@ -162,6 +163,14 @@ p.body{color:var(--soft);margin-bottom:14px}
   .alloc .line{grid-template-columns:1fr;gap:8px}.alloc .ctl{justify-content:flex-start}
   .hist li{grid-template-columns:1fr}.hist li .val{text-align:left}
 }
+:root[data-theme="light"]{--night:#FAF8F3;--panel:#FFFFFF;--raise:#F2EFE8;--line:#DCD6CA;--line2:#C4BCAE;--bone:#1C2230;--soft:#384050;--dim:#5B6373;--dimmer:#636B7C;--amber:#A85A00;--amberDeep:#D9B27A;--rose:#C25A6E}
+:root[data-theme="light"] .btn.pri{color:#FFFFFF}
+:root[data-theme="light"] .btn.pri:hover{background:#8F4C00}
+:root[data-theme="light"] .note.bad{color:#8E2F43}
+:root[data-theme="light"] .confirm{background:rgba(168,90,0,.06)}
+:root[data-theme="light"] .steps span.now{color:#FFFFFF}
+:root[data-theme="light"] .picks label:has(input:checked){background:rgba(168,90,0,.07)}
+:root[data-theme="light"] .slip{background:#F2E9D3;border:1px solid #DDD0B4;box-shadow:0 8px 22px rgba(60,48,30,.10)}
 </style>
 </head>
 <body>

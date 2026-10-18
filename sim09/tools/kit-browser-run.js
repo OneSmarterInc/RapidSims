@@ -90,7 +90,7 @@ const token = (sub, name, role) => { const body = Buffer.from(JSON.stringify({ k
     for (const [sub, name] of [['ana', 'Ana Lopez'], ['ben', 'Ben Ode']]) {
       st[sub] = await open(sub);
       await st[sub].goto(`${origin}/sim09/?guest=1#lt=${encodeURIComponent(token(sub, name, 'student'))}`);
-      await st[sub].waitForFunction(() => /you're in/i.test(document.body.innerText));
+      await st[sub].waitForFunction(() => /you're in/i.test((document.body?.innerText || "")));
       ok(st[sub].url().includes('session=' + code), `${name} lands in the class session from the class link`);
     }
     await fac.evaluate(() => FacultySession.page.refresh());
@@ -126,11 +126,11 @@ const token = (sub, name, role) => { const body = Buffer.from(JSON.stringify({ k
     await fac.screenshot({ path: path.join(artifacts, '03-results.png'), fullPage: true });
 
     const ana = st.ana;
-    await ana.waitForFunction(() => /think about it/i.test(document.body.innerText), null, { timeout: 15000 });
+    await ana.waitForFunction(() => /think about it/i.test((document.body?.innerText || "")), null, { timeout: 15000 });
     ok(true, 'Four questions follow the 2010 stage');
     await ana.fill('#rv1', 'Buyers kept the savings.'); await ana.fill('#rv2', 'AI in accounting.');
     await ana.locator('#rvgo').click();
-    await ana.waitForFunction(() => document.body.innerText.includes('Sent to your instructor'));
+    await ana.waitForFunction(() => (document.body?.innerText || "").includes('Sent to your instructor'));
     ok(true, 'The student answers the review after 2010');
     await ana.screenshot({ path: path.join(artifacts, '04-student-2010.png'), fullPage: true });
 
@@ -147,7 +147,7 @@ const token = (sub, name, role) => { const body = Buffer.from(JSON.stringify({ k
 
     const live = await open('live');
     await live.goto(`${origin}/sim09/${liveHref.replace(/#lt=.*/, '')}#lt=${encodeURIComponent(facLT)}`);
-    await live.waitForFunction(c => document.body.innerText.includes(c), code);
+    await live.waitForFunction(c => (document.body?.innerText || "").includes(c), code);
     ok(!/\broom\b/i.test(await live.locator('body').innerText()), 'The Live screen opens this session, with no "room"');
     await live.screenshot({ path: path.join(artifacts, '11-live-screen.png'), fullPage: true });
 

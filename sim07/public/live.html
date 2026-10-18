@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script src="kit/theme.js?v=20261018a" data-place="bottom-right"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Would You Have Bought It? — Live screen</title>
@@ -27,6 +28,10 @@ table{border-collapse:collapse;font:clamp(16px,1.3vw,24px) var(--mono)}th,td{pad
 .prompts{display:grid;grid-template-columns:repeat(3,1fr);gap:2vw}.prompts div{border-top:2px solid var(--amber);padding-top:1.4vh}.prompts b{display:block;font-weight:500;margin-bottom:.8vh}
 .err{color:#FFB4A0}
 @media (max-width:800px){.cols,.prompts{grid-template-columns:1fr}}
+:root[data-theme="light"]{--ground:#FAF8F3;--panel:#FFFFFF;--line:#DCD6CA;--ink:#1C2230;--dim:#5B6373;--amber:#A85A00;--paper:#F2E9D3;--paper-ink:#23201A}
+:root[data-theme="light"] .split{border-color:#C4BCAE}
+:root[data-theme="light"] .memo{border:1px solid #DDD0B4}
+:root[data-theme="light"] .err{color:#8E2F43}
 </style>
 </head>
 <body>
