@@ -31,7 +31,7 @@ const DEFAULTS = {
 // The fields an administrator can rewrite, in the order they appear on the page.
 const FIELDS = [
   { key: 'tagline',      label: 'One line',                 hint: 'Under the title, on the list and at the top of the page.',
-    eg: 'Twenty minutes in a room where nobody knows what is wrong yet.' },
+    eg: 'Twenty minutes on a call where nobody knows what is wrong yet.' },
   { key: 'description',  label: 'The situation',            hint: 'The opening paragraph, on the list and at the top of the page.', rows: 3,
     eg: 'Data corruption is spreading across client applications at two in the morning.' },
   { key: 'activity', label: 'What you will do', hint: 'The actions students take during the simulation.', rows: 3 },
@@ -50,7 +50,7 @@ const FIELDS = [
   { key: 'tangle',       label: 'What makes it hard',       hint: 'The problem, without the answer.', rows: 3,
     eg: 'Two explanations, identical symptoms, and fixing one destroys the evidence for the other.' },
   { key: 'turn',         label: 'Why this activity helps', hint: 'How the activity supports the learning goal.', rows: 3,
-    eg: 'Two people in the room are blamed by opposite explanations. Both are good at their jobs.' },
+    eg: 'Two people on the call are blamed by opposite explanations. Both are good at their jobs.' },
   { key: 'roomIntro',    label: 'Introducing the people',   hint: 'Above the people in this case.', rows: 3 },
   { key: 'momentsIntro', label: 'Introducing the steps',    hint: 'Above the steps in this activity.', rows: 3 },
   { key: 'after',        label: 'Afterwards',               hint: 'What the debrief does.', rows: 3 },

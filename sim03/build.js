@@ -137,7 +137,7 @@ for (const marker of ['30 MIN','allocationConfirmation','usefulOpeningView','yea
 if (S.META.minutes !== 30) refuse('Increment 2 catalogue duration is not 30 minutes');
 if (index.includes('That imbalance was intentional')) refuse('simulation-design language leaked into the debrief');
 if (index.includes('calibrationGap') || index.includes('unresolved_calibration')) refuse('resolved Year 3 calibration scaffolding remains in the student UI');
-if (!instructor.includes('Data without room to run it')) refuse('instructor Year 3 distribution is missing data_no_room label');
+if (!instructor.includes('Data without the capacity to run it')) refuse('instructor Year 3 distribution is missing data_no_room label');
 for (const marker of ['MAX $${C.lineMaximum}M / YEAR','The business model','function year2BreakdownHTML(','Year 1 + Year 2 split','advocate-reminder','How to set your Year 1 budget'])
   if (!index.includes(marker)) refuse('Increment 2 visibility follow-up marker missing: ' + marker);
 for (const marker of ['Year 2 brought two tests.','Tom wants to sell a new service: fixing units before they fail.','Tom asks you to look back on your three years.'])

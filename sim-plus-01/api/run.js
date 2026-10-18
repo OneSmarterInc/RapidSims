@@ -170,7 +170,7 @@ module.exports = async (req, res) => {
         'Anything on the chart that you cannot verify'
       ],
       chart: [
-        { id: 'arrival', title: 'Claim arrives', detail: 'Post · fax to outside conversion vendor · fax converted here · clearinghouse', purpose: 'Intake', owner: 'Mail room', timing: 'Releases 09:00 and 14:00' },
+        { id: 'arrival', title: 'Claim arrives', detail: 'Post · fax to outside conversion vendor · fax converted here · clearinghouse', purpose: 'Intake', owner: 'Mail desk', timing: 'Releases 09:00 and 14:00' },
         { id: 'log', title: 'Receipt log', detail: 'All non-electronic claims posted to a spreadsheet before onward routing', purpose: null, owner: 'Log desk', timing: 'Approx. 6 hours/day' },
         { id: 'gap', title: 'Not documented', detail: 'A step exists; no detail was recorded', purpose: null, owner: null, timing: null },
         { id: 'adjudication', title: 'Adjudication', detail: 'Out of scope', purpose: null, owner: null, timing: null }

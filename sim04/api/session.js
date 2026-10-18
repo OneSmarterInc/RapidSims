@@ -156,7 +156,7 @@ module.exports = async (req, res) => {
       for (let attempt = 0; attempt < 10; attempt++) {
         const c = codeOf();
         let session = room.createSession({ code: c, owner: who.name || 'Instructor', ownerKey: who.key || null,
-          mode: 'team', groupSize: 1, name: 'Practice room', now: Date.now() });
+          mode: 'team', groupSize: 1, name: 'Practice session', now: Date.now() });
         Object.assign(session, { platformAuth: !!who.platform, ownerId: who.platform ? who.id : null,
           courseId: who.courseId || null, practice: true, solo: true });
         session = room.join(session, pid, who.email || 'instructor@practice.room', Date.now());

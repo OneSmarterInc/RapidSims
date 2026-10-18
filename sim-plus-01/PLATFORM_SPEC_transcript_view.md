@@ -175,7 +175,7 @@ words. Not a score.
 
 **Comparison** — two sessions side by side, timelines aligned by phase.
 Faculty asked for this implicitly every time they have described
-debriefing a room: the teaching move is showing one transcript against
+debriefing a class: the teaching move is showing one transcript against
 another. Worth building in the first version rather than the second.
 
 ---

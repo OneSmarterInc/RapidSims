@@ -1,7 +1,7 @@
 # RapidSim 06 — Do We Switch?
 
 Card payments are failing across Harlow Home & Hardware's twelve stores. Twelve reports arrive
-over ten minutes, the same report at the same moment for the whole room, and each student
+over ten minutes, the same report at the same moment for the whole class, and each student
 (or team) may switch to the backup provider or commit to staying, each with a one-line reason.
 The reveal shows that both providers ran over one upstream carrier.
 
@@ -13,7 +13,7 @@ That standalone run has no faculty owner and sends no platform completion.
 
 Faculty invitation links bypass the standalone access-code gate. A platform class
 invitation still uses the student's platform account and course entitlement, then
-joins the instructor's room. Decisions remain in that room and platform-launched
+joins the instructor's session. Decisions remain in that session and platform-launched
 students report completion to the course. Failed completion callbacks can retry.
 
 ## Layout

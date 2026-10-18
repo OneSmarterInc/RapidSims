@@ -6,7 +6,7 @@ const LESSONS = [
   { head: 'Technology spending takes time to pay off.', text: 'What you fund this year decides what the company can do two or three years from now.' },
   { head: 'Some capabilities take years to build.', text: 'Each line takes only so much a year. Money that arrives late buys less of it.' },
   { head: 'Each executive is right about one part of the company.', text: 'The technology leader’s job is to fund the whole company.' },
-  { head: 'Fund the line nobody asks for.', text: 'Four executives argued for their own lines. Nobody argued for Capacity, the computing room to use the data. Only you speak for it, and in Year 3 it decided whether the data could become a service.' }
+  { head: 'Fund the line nobody asks for.', text: 'Four executives argued for their own lines. Nobody argued for Capacity, the computing power to use the data. Only you speak for it, and in Year 3 it decided whether the data could become a service.' }
 ];
 const QUESTIONS = [
   'What does a dollar you spend this year buy two years from now?',
@@ -22,7 +22,7 @@ const BAND = {
   strong: { label: 'Strong', cls: 'g', phrase: 'Sells failure prediction to customers' },
   middle: { label: 'Middle', cls: 'y' },
   pilot: { label: 'Pilot', cls: 'y', phrase: 'A pilot on the newest units' },
-  data_no_room: { label: 'Data without room', cls: 'o', phrase: 'Field data with nowhere to run it' },
+  data_no_room: { label: 'Data without capacity', cls: 'o', phrase: 'Field data with nowhere to run it' },
   weak: { label: 'Limited', cls: 'l', phrase: 'Too little field history to predict' }
 };
 const SHOW_ORDER = { strong: 0, pilot: 1, data_no_room: 2, weak: 3 };
@@ -76,7 +76,7 @@ function model(input) {
     const mk = (line, have, need, target) => ({ line, have, need, gap: Math.max(1, need - have), target, text: `${money(Math.max(1, need - have))} more ${LINE_LABEL[line]} → ${target}` });
     if (b === 'strong') return { line: 'connect', have: c.connect, need: c.connect, text: 'Top result reached', top: true };
     if (b === 'data_no_room') return mk('capacity', c.capacity, capStrong, 'Strong');
-    if (b === 'pilot') return mk('connect', c.connect, strongLine, c.capacity >= capStrong ? 'Strong' : 'data without room');
+    if (b === 'pilot') return mk('connect', c.connect, strongLine, c.capacity >= capStrong ? 'Strong' : 'data without capacity');
     return mk('connect', c.connect, pilotLine, 'Pilot');
   };
 
@@ -191,14 +191,14 @@ function model(input) {
   const roomNoData = rows.filter(r => r.c.capacity >= capStrong && r.c.connect < strongLine);
   const zero = rows.filter(r => r.c.capacity === 0).length;
   const q4Head = dnr.length ? `${esc(group(dnr))} built the data and had <em class="o">nowhere to run it</em>.`
-    : strongRows.length ? `${esc(group(strongRows))} built the data and <em class="g">the room to run it</em>.`
+    : strongRows.length ? `${esc(group(strongRows))} built the data and <em class="g">the computing power to run it</em>.`
     : roomNoData.length ? (roomNoData.length === 1 && !isAll(roomNoData) ? `${esc(roomNoData[0].name)} paid for Capacity, but not for <em class="connect">the data to use it</em>.`
       : `${esc(group(roomNoData))} paid for Capacity. ${n === 2 ? 'Neither' : 'None'} built <em class="connect">the data to use it</em>.`)
-    : `No ${unit} built the data or the room for Year 3.`;
-  const q4Evidence = `Capacity got ${money(totals.capacity)} of ${money(grand)}.${zero ? ` ${cap1(word(zero))} ${plural(zero)} gave it nothing.` : ''}${dnr.length ? ` ${esc(group(dnr))} had the data and no room to run it.` : roomNoData.length ? ` ${esc(group(roomNoData))} paid for it; Connect was the missing piece.` : ''}`;
+    : `No ${unit} built the data or the computing power for Year 3.`;
+  const q4Evidence = `Capacity got ${money(totals.capacity)} of ${money(grand)}.${zero ? ` ${cap1(word(zero))} ${plural(zero)} gave it nothing.` : ''}${dnr.length ? ` ${esc(group(dnr))} had the data and no computing power to run it.` : roomNoData.length ? ` ${esc(group(roomNoData))} paid for it; Connect was the missing piece.` : ''}`;
   out.slides.push({ key: 'q4', kicker: `Question 4 of 4 · ${QUESTIONS[3]}`, headline: q4Head, lesson: 3, evidence: q4Evidence,
     sub: `Year 3 Strong needed both: ${money(strongLine)} of Connect for the data, and ${money(capStrong)} of Capacity to run it.`,
-    ask: 'In your own company, who speaks for the computing room? Who should?',
+    ask: 'In your own company, who speaks for computing power? Who should?',
     body: { kind: 'two', max: 2 * cap, strongLine, capStrong,
       rows: rows.slice().sort((a, b) => DATA_RANK[b.bands.y3] - DATA_RANK[a.bands.y3] || a.name.localeCompare(b.name, undefined, { numeric: true }))
         .map(r => ({ name: r.name, connect: r.c.connect, capacity: r.c.capacity, band: r.bands.y3, mark: r.bands.y3 === 'data_no_room' })) } });
@@ -228,7 +228,7 @@ function model(input) {
 
   // D7 · lessons with this class's evidence
   out.slides.push({ key: 'lessons', kicker: 'The four lessons · as students see them at the end', headline: 'What Midland teaches, <em>shown by this class</em>.',
-    body: { kind: 'lessons', items: LESSONS.map((l, i) => ({ head: l.head, text: i === 1 ? `Each line takes at most ${money(cap)} a year. Money that arrives late buys less of it.` : i === 3 ? 'Nobody argued for Capacity, the computing room to use the data. Only you speak for it.' : l.text,
+    body: { kind: 'lessons', items: LESSONS.map((l, i) => ({ head: l.head, text: i === 1 ? `Each line takes at most ${money(cap)} a year. Money that arrives late buys less of it.` : i === 3 ? 'Nobody argued for Capacity, the computing power to use the data. Only you speak for it.' : l.text,
       evidence: [q1Evidence, q2Evidence, q3Evidence, q4Evidence][i], tone: ['ev-connect', 'ev-l', 'ev-features', 'ev-capacity'][i] })),
       closing: 'Your budget decided what Midland was ready for when the future arrived.' } });
   return out;
@@ -262,7 +262,7 @@ function bodyHTML(s, ui) {
   }
   if (b.kind === 'two') {
     const bar = (v, need, cls) => `<span class="md-tcell"><span class="md-ttrack"><span class="md-tfill ${cls}" style="width:${pct(v, b.max)}"></span><span class="md-goal" style="left:${pct(need, b.max)}"></span></span><b>${money(v)}</b><i class="${v >= need ? 'md-ok' : 'md-no'}" aria-label="${v >= need ? 'enough' : 'short'}">${v >= need ? '✓' : '✗'}</i></span>`;
-    return `<div class="md-two"><div class="md-trow md-thead"><span></span><span class="connect">Connect · the data<i>Sam asked for it · needs ${money(b.strongLine)}</i></span><span class="capacity">Capacity · the room<i>Nobody asked · needs ${money(b.capStrong)}</i></span><span>Year 3</span></div>
+    return `<div class="md-two"><div class="md-trow md-thead"><span></span><span class="connect">Connect · the data<i>Sam asked for it · needs ${money(b.strongLine)}</i></span><span class="capacity">Capacity · computing power<i>Nobody asked · needs ${money(b.capStrong)}</i></span><span>Year 3</span></div>
       ${b.rows.map(r => `<div class="md-trow${r.mark ? ' md-mark-o' : ''}"><b class="md-rname">${esc(r.name)}</b>${bar(r.connect, b.strongLine, 'connect')}${bar(r.capacity, b.capStrong, 'capacity')}${chip(r.band)}</div>`).join('')}</div>`;
   }
   if (b.kind === 'buyers') {

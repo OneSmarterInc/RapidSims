@@ -16,7 +16,7 @@ Our version opened on a bordered box reading YOUR ASSIGNMENT. Everything
 in between was missing.
 
 The beat worth most is the handwritten scrawl. It is proof that a person
-stood in the mail room with a pencil, and it is the beat named at the
+stood at the mail desk with a pencil, and it is the beat named at the
 outset of this design: somebody has to follow the process before anyone
 can talk about it. Showing the participant what that output looks like,
 in someone else's hand, immediately before asking them to do their own
@@ -93,13 +93,13 @@ Then the artifact:
    L. Marchetti, platform config.   Tues am.
   ─────────────────────────────────────────────────────────
 
-   MAIL ROOM — w/ Ray
+   MAIL DESK — w/ Ray
      post arrives 8:00 + 11:30, stacks on table
      fax server running all day, prints on arrival
      releases 09:00 and 14:00 ONLY. nothing between.
      ~300 post / ~400 fax out to conversion vendor /
        ~150 fax done here / ~350 clearinghouse
-     clearinghouse never comes through this room at all
+     clearinghouse never comes through here at all
 
      ?? some faxes go OUT to the vendor, some done here
         asked twice, no rule. ASK SOMEONE ELSE
@@ -212,7 +212,7 @@ their own.
 ## The batch
 
 Twenty claims, deterministic, identical for every participant so a
-faculty member can debrief a whole room against one shared observation.
+faculty member can debrief a whole class against one shared observation.
 
 | | |
 |---|---|
@@ -269,7 +269,7 @@ being right is the point: the number they wrote is accurate, it is what
 the vendor configures against, and it describes seven and a half minutes
 of an eighty-minute batch.
 
-Ask the room what they saw at claims four, eleven and seventeen. Some
+Ask the class what they saw at claims four, eleven and seventeen. Some
 will have noticed. Almost nobody will have asked Ruth about it.
 
 

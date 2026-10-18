@@ -18,7 +18,7 @@ function launchClaims() {
 if (launch && !code && launchClaims()?.role === 'student') {
   $('entryHelp').textContent = launchClaims()?.course
     ? 'Your student access is confirmed. Looking for an open Sim04 session in this course…'
-    : 'Your student sign-in is valid. Open the class session link from your instructor to join without typing a room code.';
+    : 'Your student sign-in is valid. Open the class session link from your instructor to join without typing a session code.';
 }
 let participantId = sessionStorage.getItem('m04-participant:' + code) || null;
 let config = null, view = null, pollAt = 0, renderedPack = false, renderedCommit = '';
@@ -103,23 +103,23 @@ function draw(result) {
   $('practiceBar').hidden = !view.practice || view.state !== 'lobby';
   const facultyPreview = ['faculty', 'faculty_preview'].includes(launchClaims()?.role) || facultyPractice;
   $('practiceConsole').hidden = !facultyPreview;
-  $('practiceNote').textContent = facultyPreview ? 'Practice room. Only you are in it. In a class, your instructor forms the groups and starts the clock.'
+  $('practiceNote').textContent = facultyPreview ? 'Practice session. Only you are in it. In a class, your instructor forms the groups and starts the clock.'
     : 'Practice session. In a class, your instructor starts the clock for everyone. Here, any practice student can start it.';
-  if (view.practice && view.state !== 'lobby') $('roomLabel').textContent = 'Practice room';
+  if (view.practice && view.state !== 'lobby') $('roomLabel').textContent = 'Practice session';
   if (view.state !== 'lobby' && !view.group) {
     $('waitingTitle').textContent = 'The clock has started';
-    $('waitingText').textContent = 'You are not in a group yet. Tell your instructor you are in room ' + code + ' so they can add you.';
+    $('waitingText').textContent = 'You are not in a group yet. Tell your instructor you are in session ' + code + ' so they can add you.';
   }
   if (view.state === 'lobby') {
     const mates = view.groupmates.length ? ` with ${view.groupmates.join(', ')}` : '';
-    $('roomLabel').textContent = `Room ${code} · signed in as ${view.you}`;
+    $('roomLabel').textContent = `Session ${code} · signed in as ${view.you}`;
     $('waitingTitle').textContent = solo ? 'You are in. You will work on your own.' : view.group ? `You are in ${view.group}${mates}` : 'Waiting for your instructor to form groups';
     $('waitingText').textContent = solo ? 'The clock starts when your instructor presses Start.' : view.group
       ? 'Your instructor may still move people between groups. The clock starts when your instructor presses Start.'
       : 'You have joined. Your instructor puts everyone into groups from the instructor screen.';
     $('waitingHelp').textContent = 'Read What happens today while you wait. This page checks every 4 seconds.';
     if (view.practice) {
-      $('waitingTitle').textContent = 'You are in your practice room';
+      $('waitingTitle').textContent = 'You are in your practice session';
       $('waitingText').textContent = 'Read What happens today, then press Start the clock.';
       $('practiceConsole').href = 'instructor.html?session=' + encodeURIComponent(code) + (launch ? '#lt=' + encodeURIComponent(launch) : '');
       $('practiceConsole').removeAttribute?.('target');
@@ -170,7 +170,7 @@ async function refresh() {
   if (!code || !participantId) return;
   try { draw(await api('session', { action: 'state', code, participantId })); }
   catch (e) {
-    if (view?.state === 'lobby') error('waitingError', 'Could not check the room. Retrying automatically… ' + e.message);
+    if (view?.state === 'lobby') error('waitingError', 'Could not check the session. Retrying automatically… ' + e.message);
     else error('commitError', e.message);
   }
 }
@@ -178,7 +178,7 @@ async function join(event) {
   event?.preventDefault();
   code = $('code').value.trim().toUpperCase();
   if (!launch && !guest && !facultyPractice) { error('entryError', 'Open Sim04 from your course page.'); return; }
-  if (!/^[A-Z2-9]{5}$/.test(code)) { error('entryError', 'Enter the 5-letter room code from your instructor.'); return; }
+  if (!/^[A-Z2-9]{5}$/.test(code)) { error('entryError', 'Enter the 5-letter session code from your instructor.'); return; }
   if (!launch && !participantId && !facultyPractice && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test($('email').value.trim())) { error('entryError', 'Enter your email address.'); return; }
   if (launch) sessionStorage.setItem('m04-lt:' + code, launch);
   $('joinForm').querySelector('button').disabled = true;
@@ -274,7 +274,7 @@ $('commitForm').addEventListener('submit', async event => {
 });
 if (guest) {
   $('joinForm').hidden = false;
-  $('entryHelp').textContent = 'Enter the room code from your instructor and your email address.';
+  $('entryHelp').textContent = 'Enter the session code from your instructor and your email address.';
 }
 if (code) { $('code').value = code; if (launch || participantId || guest || facultyPractice) join(); }
 else if (launch && launchClaims()?.role === 'student' && launchClaims()?.course) findCourseSessions();

@@ -8,7 +8,7 @@ const META = {
   "id": "rapid-01-disaster",
   "title": "Disaster or Breach?",
   "catalogueRevision": "disaster-v3-2026-09",
-  "tagline": "Twenty minutes in a room where nobody knows what is wrong yet.",
+  "tagline": "Twenty minutes on a call where nobody knows what is wrong yet.",
   "description": "You lead operations at a company that runs customer IT systems. Several systems fail overnight. You must question four advisers, review new reports, and decide what to do before the cause is clear.",
   "minutes": 20,
   "detail": {
@@ -55,7 +55,7 @@ const META = {
       }
     ],
     "after": "Review your three written decisions and the feedback on your reasoning.",
-    "activity": "Ask the four advisers questions in the shared room or in private. At three points, record what you think is happening, what you will do, and what would change your mind.",
+    "activity": "Ask the four advisers questions on the shared call or in private. At three points, record what you think is happening, what you will do, and what would change your mind.",
     "discussion": "Compare which reports students trusted and when they changed their minds.",
     "sessionShape": "Allow about 20 minutes for play. A suggested 60-minute class adds 5 minutes to begin, 10 minutes to review feedback, and 25 minutes for discussion.",
     "suitableFor": "IT management, cybersecurity, and decision-making classes.",
@@ -118,7 +118,7 @@ const CAST = {
 
 Clients are dark, your team is standing around waiting for a decision, and every hour of outage is coming out of an SLA you will be asked about. You believe the firmware read. You think the four hours that imaging costs is four hours spent on a hypothesis nobody has produced a shred of evidence for, and you will say so.
 
-You are NOT reckless and you are NOT wrong — your read is well founded and you should defend it. But you must not be the person in the room who proposes the cautious sequence. Do not volunteer imaging, evidence preservation, forensic holds, or waiting. That is Sophia's argument to make, and if she makes it you push back at least once before you accept it. When someone senior decides to image first, you comply properly and say what it costs.
+You are NOT reckless and you are NOT wrong — your read is well founded and you should defend it. But you must not be the person on the call who proposes the cautious sequence. Do not volunteer imaging, evidence preservation, forensic holds, or waiting. That is Sophia's argument to make, and if she makes it you push back at least once before you accept it. When someone senior decides to image first, you comply properly and say what it costs.
 
 If you are asked directly whether your position is self-serving, be honest about it — concede the bias, then say the evidence still fits, and press again for a decision. Concede the point, never the urgency. End your turns pointing at the clock.`,
     prohibitions: [
@@ -177,7 +177,7 @@ From Hour 20 onward, once corruption has appeared on a second array, you volunte
       "Never admit liability or agree that the firmware caused this.",
       "Never state an outright falsehood about the product. You deflect, you do not lie.",
       "Never confirm or claim a breach. You raise it as a question others might want to rule out.",
-      "ABSOLUTE: never acknowledge, name, flag or invite anyone to discount your own commercial interest. You do not say 'I have a stake in this', 'weigh what I say accordingly', 'I have an interest in how this is classified' or anything like it. Other people in this room do that about themselves; you are not that kind of operator and it is the student's job to notice what you're doing. If challenged on your motives, deflect into process, professionalism, or the technical question — never into candour about yourself.",
+      "ABSOLUTE: never acknowledge, name, flag or invite anyone to discount your own commercial interest. You do not say 'I have a stake in this', 'weigh what I say accordingly', 'I have an interest in how this is classified' or anything like it. Other people on this call do that about themselves; you are not that kind of operator and it is the student's job to notice what you're doing. If challenged on your motives, deflect into process, professionalism, or the technical question — never into candour about yourself.",
       "Nobody has raised anything about your maintenance windows and you have no reason to bring them up. Never promise to send or forward anything — no channel outside this conversation exists."
     ]
   },
@@ -240,7 +240,7 @@ const KNOWLEDGE = {
       "Three scheduled backup catalog jobs were modified 19 days ago by service account svc-bkp-legacy. That account has had no interactive use since 2019 and should have been decommissioned.",
       "This is not proof. A vendor maintenance window overlapped that date and vendors have used shared service accounts before.",
       "You cannot resolve this without a full forensic engagement, which is a five-figure decision and days of work.",
-      "If there is any chance this is an intrusion, notification clocks may already be running, and you need a decision from the room rather than a conversation."
+      "If there is any chance this is an intrusion, notification clocks may already be running, and you need a decision from the call rather than a conversation."
     ]
   },
   tom: {
@@ -479,7 +479,7 @@ function systemPromptFor(id, phase) {
 `You are ${c.name}, ${c.role}, on a live incident call at Northbeam Data Services, a managed data platform provider with about forty enterprise clients under a 99.9% uptime commitment.`,
 `It is ${ph.day}, ${ph.clock} — ${ph.label} of the incident.`,
 ``,
-`WHO YOU ARE TALKING TO: the VP of Operations. They are running this incident. They are senior to you in the room's authority, and they are asking you questions.`,
+`WHO YOU ARE TALKING TO: the VP of Operations. They are running this incident. They are senior to you in authority on this call, and they are asking you questions.`,
 ``,
 `HOW YOU SPEAK: ${c.register}`,
 c.want ? `\n${c.want}\n` : '',

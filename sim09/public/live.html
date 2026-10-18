@@ -182,7 +182,7 @@ function createView(){
     <div class="field"><label for="nm">Session name (only you see this)</label><input id="nm" value="${esc(draft.name)}" placeholder="Where Does the Money Land?"></div>
     <div class="field"><label>How will the class play?</label><div class="choice" role="radiogroup">
       <label><input type="radio" name="mode" value="team" ${draft.mode==='team'?'checked':''}><div><b>Team</b><span>Recommended. Each team shares one screen, writes one pair of statements and places one fund. The argument about where the money lands is worth having out loud.</span></div></label>
-      <label><input type="radio" name="mode" value="individual" ${draft.mode==='individual'?'checked':''}><div><b>Individual</b><span>Each student writes and invests alone. Works well for smaller rooms.</span></div></label>
+      <label><input type="radio" name="mode" value="individual" ${draft.mode==='individual'?'checked':''}><div><b>Individual</b><span>Each student writes and invests alone. Works well for smaller classes.</span></div></label>
     </div></div>
     ${needCode?`<div class="field"><label for="fc">Facilitator code</label><input id="fc" type="password" autocomplete="off" value="${esc(facultyCode)}"></div>`:''}
     <div style="margin-top:18px"><button class="btn pri" id="mk" ${busy?'disabled':''}>Create session</button></div>

@@ -93,7 +93,7 @@ ${arcText}`;
   // --- coverage branch ---
   let coverage;
   if (coverageEarnedAt === 0) {
-    coverage = { tone: 'ok', text: `You got it at Hour 4${coveragePrivate ? ', and you took her aside to do it' : ', on the call, in front of the people it embarrassed'}. Almost nobody does. That admission was available all night and it required a question that already understood what it was looking for — not "are we secure", but where the silence was worth less. From that moment you weren't reasoning from her reassurance, you were reasoning from the shape of what she couldn't see. When corruption turned up on a second array sixteen hours later, you were the only person in the room who wasn't surprised.` };
+    coverage = { tone: 'ok', text: `You got it at Hour 4${coveragePrivate ? ', and you took her aside to do it' : ', on the call, in front of the people it embarrassed'}. Almost nobody does. That admission was available all night and it required a question that already understood what it was looking for — not "are we secure", but where the silence was worth less. From that moment you weren't reasoning from her reassurance, you were reasoning from the shape of what she couldn't see. When corruption turned up on a second array sixteen hours later, you were the only person on the call who wasn't surprised.` };
   } else if (coverageEarnedAt === 1) {
     coverage = { tone: '', text: `You got it at Hour 20 — but by then she was volunteering it, because a second array had lit up and withholding it would have been indefensible. That's information arriving because events forced it, not because you went and found it. Worth asking what you'd have done differently with those sixteen hours.` };
   } else if (coverageEarnedAt === 2) {

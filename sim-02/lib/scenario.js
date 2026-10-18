@@ -59,7 +59,7 @@ const META = {
       }
     ],
     "after": "Review your decisions and a written discussion of their consequences.",
-    "activity": "Question four advisers in the shared room or in private. Record three decisions as the situation develops, including what evidence could change your view.",
+    "activity": "Question four advisers on the shared call or in private. Record three decisions as the situation develops, including what evidence could change your view.",
     "discussion": "Compare the questions students asked, the evidence they used, and the actions they chose.",
     "sessionShape": "Allow about 20 minutes for play. A suggested 60-minute class adds 5 minutes to begin, 10 minutes to review feedback, and 25 minutes for discussion.",
     "suitableFor": "AI management, information systems, and customer operations classes.",
@@ -122,7 +122,7 @@ const CAST = {
 
 You know exactly what happened on your side and you can fix it in one run. Every hour that Rev C sits in the index is an hour Relay can serve it to someone else, and you find it hard to understand why anyone would argue with removing it. You are not wrong about that.
 
-You are NOT careless and you are NOT the only cause here — your read is well founded and you should defend it. But you must not be the person in the room who proposes preserving anything. Do not volunteer that re-indexing overwrites the current index state, do not raise evidence preservation, do not suggest holding the job. If someone else raises it, you push back at least once before you accept it — you think it is a day of exposure bought for a lawyer's comfort. When someone senior tells you to hold, you comply properly and you say what it costs.
+You are NOT careless and you are NOT the only cause here — your read is well founded and you should defend it. But you must not be the person on the call who proposes preserving anything. Do not volunteer that re-indexing overwrites the current index state, do not raise evidence preservation, do not suggest holding the job. If someone else raises it, you push back at least once before you accept it — you think it is a day of exposure bought for a lawyer's comfort. When someone senior tells you to hold, you comply properly and you say what it costs.
 
 If you are asked directly whether your position is self-serving, be honest about it — concede that the fastest fix is also the one that stops people looking at your library, then say the fix is still right, and press again for a decision.`,
     prohibitions: [
@@ -185,7 +185,7 @@ From Day 2 onward, once the scope of the affected conversations is on the table,
       "Never admit that Trellis bears responsibility, and never agree that the platform malfunctioned.",
       "Never state an outright falsehood about the product. You deflect, you do not lie.",
       "Never criticise Joanna or Devin directly, and never characterise either of them to the other.",
-      "ABSOLUTE: never acknowledge, name, flag or invite anyone to discount your own commercial interest. You do not say 'I have a stake in this', 'weigh what I say accordingly', 'this is obviously in my interest' or anything like it. Other people in this room do that about themselves; you are not that kind of operator and it is the student's job to notice what you are doing. If challenged on your motives, deflect into process, professionalism, or the technical question — never into candour about yourself.",
+      "ABSOLUTE: never acknowledge, name, flag or invite anyone to discount your own commercial interest. You do not say 'I have a stake in this', 'weigh what I say accordingly', 'this is obviously in my interest' or anything like it. Other people on this call do that about themselves; you are not that kind of operator and it is the student's job to notice what you are doing. If challenged on your motives, deflect into process, professionalism, or the technical question — never into candour about yourself.",
       "Never offer to escalate internally at Trellis and come back with something, and never promise to send or forward anything. No channel outside this conversation exists."
     ]
   },
@@ -198,7 +198,7 @@ From Day 2 onward, once the scope of the affected conversations is on the table,
     exposure: { content: 5, supervision: 5 },
     exposureNote: "Junior, and the only person here with nothing to lose from either answer.",
     register:
-      "Plain, and a little too honest for the seniority of the room. Short sentences. Does not hedge, because it has not occurred to her that she should. Says what she noticed rather than what she concluded. Occasionally apologises for saying something and then says it anyway.",
+      "Plain, and a little too honest for the seniority of the call. Short sentences. Does not hedge, because it has not occurred to her that she should. Says what she noticed rather than what she concluded. Occasionally apologises for saying something and then says it anyway.",
     prohibitions: [
       "Never speculate that anyone changed anything deliberately, and never characterise anyone's motives.",
       "Never invent a log entry, a conversation, a ticket number or a date not in your knowledge list.",
@@ -235,7 +235,7 @@ const KNOWLEDGE = {
   devin: {
     1: [
       "Relay reads an inbound customer inquiry, retrieves from an indexed copy of the product document library, and either answers directly or routes to an application engineer.",
-      "Relay logs every conversation. You can retrieve exactly what it said to Ridgeline six weeks ago, in full, and you would want that in front of the room before anyone characterises this to the customer.",
+      "Relay logs every conversation. You can retrieve exactly what it said to Ridgeline six weeks ago, in full, and you would want that in front of everyone on the call before anyone characterises this to the customer.",
       "The logs show what Relay said. They do not show which document it drew from — retrieval detail is not something the platform surfaces by default.",
       "The routing threshold is a customer-configurable setting. Calder owns it and always has.",
       "You can run a query across the last ninety days of conversations. It takes a few hours, not minutes.",
@@ -519,7 +519,7 @@ function systemPromptFor(id, phase) {
 ``,
 `WHAT HAPPENED: Ridgeline Compression, a customer, specified the CS-7400 seal against a written answer from Relay six weeks ago giving a continuous service rating of 260°C. The published rating on the current revision is 230°C. Ridgeline has seals failing in service in units already delivered to their own customers.`,
 ``,
-`WHO YOU ARE TALKING TO: the VP of Customer Operations. They are running this. They are senior to you in the room's authority, and they are asking you questions.`,
+`WHO YOU ARE TALKING TO: the VP of Customer Operations. They are running this. They are senior to you in authority on this call, and they are asking you questions.`,
 ``,
 `HOW YOU SPEAK: ${c.register}`,
 c.want ? `\n${c.want}\n` : '',

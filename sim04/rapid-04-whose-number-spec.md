@@ -105,7 +105,7 @@ During play every sheet is headed only "Retention definition."
 
 ### 5.4 Assignment order
 
-A, E, D, C, B, and then it cycles. Team 1 gets A, team 6 gets A again. With three teams the room sees 90.0, 69.6 and 75.0.
+A, E, D, C, B, and then it cycles. Team 1 gets A, team 6 gets A again. With three teams the class sees 90.0, 69.6 and 75.0.
 
 ## 6. Session flow
 

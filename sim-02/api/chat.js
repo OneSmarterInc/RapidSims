@@ -25,7 +25,7 @@ module.exports = async (req, res) => {
   const roomText = room.map(m => `${m.who === 'you' ? 'VP of Operations' : (S.CAST[m.who] ? S.CAST[m.who].name : m.who)}: ${m.text}`).join('\n');
 
   const messages = [
-    { role: 'user', content: `Room transcript so far:\n${roomText || '(nothing yet)'}\n\n---` },
+    { role: 'user', content: `Call transcript so far:\n${roomText || '(nothing yet)'}\n\n---` },
     { role: 'assistant', content: 'Understood. I am on the call.' }
   ];
   thread.forEach(m => messages.push({

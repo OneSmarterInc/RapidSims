@@ -20,7 +20,7 @@ const studentFacing = everything.filter(([p]) => !p.startsWith('DEBRIEF') && !/\
 
 const PLACEHOLDER = /\b(TODO|TBD|FIXME|XXX|lorem|ipsum|placeholder)\b|\?\?\?|\[\s*(insert|add|write)\b/i;
 const COURSE_OR_PLACE = /\b(MIS|ISM|3000|4400|7000|semester|quarter system|syllabus|week \d+|monday|tuesday|wednesday|thursday|friday|university|college|wright state|chapter \d+)\b/i;
-const BANNED = /\b(moat|delve|leverage|tapestry|synergy|paradigm|cutting-edge|realm|harness|unlock|game changer|garner|next-gen)\b/i;
+const BANNED = /\b(moat|delve|leverage|tapestry|synergy|paradigm|cutting-edge|realm|harness|unlock|game changer|garner|next-gen|room|rooms|bridge)\b/i;
 const RETIRED = ['rapid-03-bench', 'rapid-03-midland', 'rapid-01', 'rapid-02', 'rapidsimplus-01', 'rapid-04-whose-number', 'rapid-05-approve', 'rapid-06-switch', 'rapid-07-bought'];
 
 for (const [p, s] of everything) {

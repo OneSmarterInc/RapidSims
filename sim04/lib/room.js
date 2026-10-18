@@ -72,7 +72,7 @@ function join(session, id, email, now, name = null) {
   }
   if (!EMAIL.test(clean)) throw new Error('Enter your email address.');
   if (Object.values(next.participants).some(p => p.email === clean)) {
-    throw new Error('This email has already joined this room. Continue in the browser you joined from.');
+    throw new Error('This email has already joined this session. Continue in the browser you joined from.');
   }
   next.participants[id] = { id, email: clean, name: shortName(clean), joinedAt: now, slotId: null, reportedAt: null };
   return lateSeat(next, id);

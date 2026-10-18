@@ -19,7 +19,7 @@ clock and the catalogue copy. Change copy there, never in code.
 approved data using the inference table, so all 243 approve/decline/timeout paths
 are covered without being authored one by one.
 
-`lib/room.js` is the room: one shared clock with pause, final decisions for
+`lib/room.js` runs the session: one shared clock with pause, final decisions for
 students and teams, and the two views. Nothing is written when a round closes; a
 missing vote is read as a timeout, and a timeout ships.
 
@@ -36,7 +36,7 @@ The student sees only their own decisions and, in team mode, their own vote
 beside the team's result. Rounds reach the browser one at a time. The projector
 shows how many have decided while a round is open, never the split.
 
-Students who join after round 1 closes play, but stay out of the room totals.
+Students who join after round 1 closes play, but stay out of the class totals.
 A direct launch with no session gets a private solo run with its own clock.
 
 Direct visitors use `ACCESS_CODE` and enter a name; those private runs do not send
@@ -49,7 +49,7 @@ The lighter setting, chosen at creation, never names pregnancy anywhere.
 
 ## Before and during play
 
-Students work through an untimed four-screen walkthrough while the room fills,
+Students work through an untimed four-screen walkthrough while the class fills,
 then press "I'm ready"; the lobby shows how many have finished. Nothing is timed
 until the instructor starts. A one-minute recap precedes round 1, so play runs
 about twenty-four minutes. Late arrivals see the walkthrough with a way straight

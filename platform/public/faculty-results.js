@@ -44,7 +44,7 @@
     return answers.map((t,i)=>typeof t==='string'&&t.trim()?`<p class="fr-review"><span class="fr-q">${esc(questions[i]||'Question '+(i+1))}</span>${esc(t)}</p>`:'').join('');
   }
   // Midland's Year 3 result names and colours, as the debrief shows them.
-  const BANDS={strong:'Strong',pilot:'Pilot',middle:'Middle',data_no_room:'Data without room',weak:'Limited'};
+  const BANDS={strong:'Strong',pilot:'Pilot',middle:'Middle',data_no_room:'Data without capacity',weak:'Limited'};
   // A saved team label already reads "Team 1"; a bare number gets the word.
   const teamName=l=>{const x=String(l==null?'':l).replace(/^team:/,'');return /^team\b/i.test(x)?x:'Team '+x;};
   const firstSentence=t=>{const m=String(t||'').match(/^.*?[.!?](\s|$)/);return m?m[0].trim():String(t||'');};
