@@ -8,3 +8,25 @@
 .chip .chip-move{width:auto;min-height:0;padding:3px 6px;font-size:12px;max-width:110px}
 .status-item.example,.reveal-card.example{opacity:.78;border-style:dashed}
 .howto{border:1px solid var(--line,#2B3548);padding:14px 16px;margin:6px 0 16px}.howto .row{align-items:center;gap:12px}
+/* Light theme (kit/theme.js sets <html data-theme="light">); dark above stays the default. */
+:root[data-theme="light"]{color-scheme:light;--ground:#FAF8F3;--card:#FFFFFF;--panel:#F2EFE8;--line:#DCD6CA;--ink:#1C2230;--muted:#5B6373;--amber:#A85A00;--green:#1D6E46;--red:#8E2F43}
+:root[data-theme="light"] body{background:radial-gradient(circle at 85% 0%,#F1E8D8 0%,var(--ground) 32%),var(--ground)}
+:root[data-theme="light"] .topbar{background:#FFFFFFE6}
+:root[data-theme="light"] .card.soft{background:#F2EFE8}
+:root[data-theme="light"] .button{color:#FFFFFF}
+:root[data-theme="light"] .button.secondary{color:var(--amber)}
+:root[data-theme="light"] .button.ghost{color:var(--ink)}
+:root[data-theme="light"] input,:root[data-theme="light"] select,:root[data-theme="light"] textarea{background:#FFFFFF;border-color:#C4BCAE;color:var(--ink)}
+:root[data-theme="light"] .pill.good{border-color:#7FB79A}
+:root[data-theme="light"] .pill.warn{border-color:#D3A66E}
+:root[data-theme="light"] .definition li{background:#F2EFE8;border-left-color:#C4BCAE}
+:root[data-theme="light"] .definition li.contested{border-color:var(--amber);color:#4A2E00;background:#FBEBD3}
+:root[data-theme="light"] .tablebox{background:#FFFFFF}
+:root[data-theme="light"] th{background:#F2EFE8;color:#8A4A00}
+:root[data-theme="light"] th,:root[data-theme="light"] td{border-bottom-color:#E6E1D7}
+:root[data-theme="light"] td{color:#384050}
+:root[data-theme="light"] tbody tr:hover{background:#F6F1E6}
+:root[data-theme="light"] .tabs button{background:#F2EFE8}
+:root[data-theme="light"] .reveal-card,:root[data-theme="light"] .status-item{background:#F2EFE8}
+:root[data-theme="light"] .column.over{background:rgba(168,90,0,.06)}
+:root[data-theme="light"] .chip{background:#FFFFFF}

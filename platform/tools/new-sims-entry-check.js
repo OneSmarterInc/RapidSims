@@ -14,7 +14,8 @@ async function page(n,kind='index',url='',saved={}){
   querySelectorAll(){return []}querySelector(){return null}focus(){}addEventListener(){}
  }
  const dom={getElementById:id=>elements.get(id)||null,createElement:()=>new El(),querySelectorAll:()=>[],querySelector:()=>null};
- const html=fs.readFileSync(path.join(root,`sim${n}/public/${kind}.html`),'utf8');
+ // The theme loader (an inline kit/theme.js document.write in sim07) is not the page's own script.
+ const html=fs.readFileSync(path.join(root,`sim${n}/public/${kind}.html`),'utf8').replace(/<script>document\.write\([^\n]*kit\/theme\.js[^\n]*<\/script>/,'');
  for(const m of html.split('<script>')[0].matchAll(/\bid="([^"]+)"/g))elements.set(m[1],new El(m[1]));
  let target=new URL(url||`http://fixture/sim${n}/${kind}.html`);let redirect=null;
  const location={get pathname(){return target.pathname},get search(){return target.search},get hash(){return target.hash},replace:u=>{redirect=new URL(u,target).href},assign:u=>{redirect=new URL(u,target).href},reload(){}};

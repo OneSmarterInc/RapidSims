@@ -72,7 +72,7 @@ const token = (sub, name, role) => { const body = Buffer.from(JSON.stringify({ k
     for (const [sub, name] of [['ana', 'Ana Lopez'], ['ben', 'Ben Ode']]) {
       st[sub] = await open(sub);
       await st[sub].goto(`${origin}/sim07/#lt=${encodeURIComponent(token(sub, name, 'student'))}`);
-      await st[sub].waitForFunction(() => /starts the clock when the class is ready/i.test(document.body.innerText));
+      await st[sub].waitForFunction(() => /starts the clock when the class is ready/i.test((document.body?.innerText || "")));
       ok(st[sub].url().includes('session=' + code), `${name} lands in the class session from the class link`);
     }
     ok(!/\broom\b/i.test(await st.ana.locator('body').innerText()), 'No "room" on the student page');
@@ -95,7 +95,7 @@ const token = (sub, name, role) => { const body = Buffer.from(JSON.stringify({ k
       await pg.locator('#review').click();
       await pg.locator('#submit').click();
       await pg.locator(`[data-rec="${rec}"]`).click();
-      await pg.waitForFunction(() => /wait for your instructor/i.test(document.body.innerText));
+      await pg.waitForFunction(() => /wait for your instructor/i.test((document.body?.innerText || "")));
     };
     await decide('ana', 'buy', 'Fifty million is a small price for a business we cannot build ourselves.', 'no');
     await decide('ben', 'decline', 'They lost thirty million last year and nobody would buy their shares.', 'yes');
@@ -121,14 +121,14 @@ const token = (sub, name, role) => { const body = Buffer.from(JSON.stringify({ k
 
     // After 2010: the names, the questions, the review.
     const ana = st.ana;
-    await ana.waitForFunction(() => /think about it/i.test(document.body.innerText), null, { timeout: 15000 });
+    await ana.waitForFunction(() => /think about it/i.test((document.body?.innerText || "")), null, { timeout: 15000 });
     ok(/Netflix/.test(await ana.locator('body').innerText()), 'The 2010 stage names the companies');
     const current = await ana.$('.stage.current');
     await ana.waitForTimeout(4000);
     ok(await current.evaluate(e => e.isConnected), 'The page keeps the current stage between polls, so it fades in once');
     await ana.fill('#rv1', 'The price against our revenue.'); await ana.fill('#rv2', 'Choosing a major.');
     await ana.locator('#review-send').click();
-    await ana.waitForFunction(() => document.body.innerText.includes('Sent to your instructor'));
+    await ana.waitForFunction(() => (document.body?.innerText || "").includes('Sent to your instructor'));
     ok(true, 'The student answers the review after 2010');
     await ana.screenshot({ path: path.join(artifacts, '04-student-2010.png'), fullPage: true });
 
@@ -152,7 +152,7 @@ const token = (sub, name, role) => { const body = Buffer.from(JSON.stringify({ k
 
     const live = await open('live');
     await live.goto(`${origin}/sim07/${liveHref.replace(/#lt=.*/, '')}#lt=${encodeURIComponent(facLT)}`);
-    await live.waitForFunction(c => document.body.innerText.includes(c), code);
+    await live.waitForFunction(c => (document.body?.innerText || "").includes(c), code);
     ok(/ten years later/i.test(await live.locator('body').innerText()), 'The Live screen opens this session at 2010');
     await live.screenshot({ path: path.join(artifacts, '10-live-screen.png'), fullPage: true });
 

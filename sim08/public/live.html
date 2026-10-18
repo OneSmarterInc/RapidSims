@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="kit/theme.js?v=20261018a" data-place="bottom-right"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Live screen · Eighteen Months Later — Instructor</title>
@@ -92,6 +93,11 @@ body.present .big{font-size:120px}
 .plan{margin-top:10px;font-size:15px;color:var(--soft)}.plan b{font:500 12px var(--mono);color:var(--dim);margin-right:6px}
 .route{font-size:15px;color:var(--soft);margin-top:10px}.route b{display:block;font:500 12px var(--mono);color:var(--amber)}.route.partial b{color:#E7C88E}
 @media(max-width:900px){.grid2,.stage{grid-template-columns:1fr}.bar-row{grid-template-columns:1fr}}
+:root[data-theme="light"]{--night:#FAF8F3;--panel:#FFFFFF;--raise:#F2EFE8;--line:#DCD6CA;--line2:#C4BCAE;--bone:#1C2230;--soft:#384050;--dim:#5B6373;--dimmer:#636B7C;--amber:#A85A00;--amberDeep:#D9B27A;--rose:#C25A6E;--approve:#D3CEC2;--decline:#D98E9E;--timeout:#F0A63C}
+:root[data-theme="light"] .btn.pri{color:#FFFFFF}
+:root[data-theme="light"] .note.bad{color:#8E2F43}
+:root[data-theme="light"] .field .choice label:has(input:checked){background:rgba(168,90,0,.06)}
+:root[data-theme="light"] .qs li.hit.partial,:root[data-theme="light"] .route.partial b{color:#7A5800}
 </style>
 </head>
 <body>

@@ -43,3 +43,9 @@
 .dd-q{display:block;font:600 .65em var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-top:.6em}
 .md-head em.hw{color:var(--hw-t)}.md-head em.bo{color:var(--bo)}.md-head em.no{color:var(--l-t)}
 .md-t-both{color:var(--bo)}
+/* Light theme (kit/theme.js). The shared slide variables switch on their own; these are this sim's own colours. */
+:root[data-theme="light"] .md-root{--hw-t:#245A8A;--un:#8A93A6}
+:root[data-theme="light"] .md-root :is(.dd-hb,.dd-r-both,.md-t-both,.dd-ok),:root[data-theme="light"] .md-root .md-head em.bo{color:#1D6A5E}
+:root[data-theme="light"] .md-root :is(.dd-r-unknown,.dd-f-unknown:not(.dd-fill)){color:#454D5E}
+:root[data-theme="light"] .md-root .dd-r-breach{color:#8E2F43}
+:root[data-theme="light"] .md-root .dd-irr{background:var(--l-t);color:#FFFFFF}

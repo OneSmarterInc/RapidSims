@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script src="kit/theme.js?v=20261018a" data-place="bottom-left"></script>
 <script id="account-entry-redirect">
 (() => {
   const q = new URLSearchParams(location.search);
@@ -58,6 +59,23 @@ svg text{font-family:var(--m)}
 .kv{display:flex;justify-content:space-between;border-bottom:1px solid var(--l);padding:7px 0}.kv b{font:600 16px var(--m);color:var(--a)}
 @media(max-width:860px){.play-grid{grid-template-columns:1fr;grid-template-areas:"actions" "reports"}}
 @media(max-width:600px){header{gap:8px;padding:10px 14px}header h1{font-size:17px}.header-metrics{width:100%;justify-content:space-between;gap:8px}.metric .m{font-size:8px}.clock{font-size:15px}.tick{font-size:12px}}
+/* Light theme (kit/theme.js sets <html data-theme="light">); the dark values above stay the default. */
+:root[data-theme="light"]{--n:#FAF8F3;--p:#FFFFFF;--p2:#F2EFE8;--l:#DCD6CA;--l2:#C4BCAE;--b:#1C2230;--d:#5B6373;--dd:#5F6676;--a:#A85A00;--g:#1D6E46;--r:#8E2F43;--x:#245A8A}
+:root[data-theme="light"] .pri{color:#FFFFFF}
+:root[data-theme="light"] .notice{background:rgba(168,90,0,.06);color:#384050}
+:root[data-theme="light"] .bad{color:#8E2F43}
+:root[data-theme="light"] header{background:rgba(250,248,243,.96)}
+:root[data-theme="light"] .field input,:root[data-theme="light"] textarea{background:#FFFFFF}
+:root[data-theme="light"] .modal{background:rgba(28,34,48,.45)}
+:root[data-theme="light"] .doc{background:#FFFFFF;border:1px solid #C4BCAE}
+:root[data-theme="light"] .doc .sub,:root[data-theme="light"] .close{color:#5B6373}
+:root[data-theme="light"] .doc mark{background:#F8DDA6}
+/* The provider map is drawn in JS with dark fills; recolour it here. */
+:root[data-theme="light"] svg line[stroke="#3A4659"]{stroke:#C4BCAE}
+:root[data-theme="light"] svg rect[fill="#1D2637"]{fill:#F2EFE8;stroke:#C4BCAE}
+:root[data-theme="light"] svg rect[stroke="#CE7C8D"]{fill:rgba(194,90,110,.12);stroke:#C25A6E}
+:root[data-theme="light"] svg text[fill="#E8E4DA"]{fill:#1C2230}
+:root[data-theme="light"] svg text[fill="#E3B9C2"]{fill:#8E2F43}
 </style>
 </head>
 <body>

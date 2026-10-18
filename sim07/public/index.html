@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script>document.write('<script src="'+((location.pathname.match(/^\/sim-?\d+/)||[''])[0])+'/kit/theme.js?v=20261018a" data-place="bottom-left"><\/script>')</script>
 <script id="account-entry-redirect">
 (() => {
   const q = new URLSearchParams(location.search);
@@ -81,6 +82,16 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
 @keyframes arrive{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.stage.current{animation:none}}
 @media (max-width:560px){.choices{grid-template-columns:1fr}th{width:42%}.bar{flex-direction:column;align-items:flex-start;gap:6px}}
+:root[data-theme="light"]{--ground:#FAF8F3;--panel:#FFFFFF;--line:#DCD6CA;--ink:#1C2230;--dim:#5B6373;--amber:#A85A00;--paper:#F2E9D3;--paper-ink:#23201A}
+:root[data-theme="light"] .bar{background:rgba(250,248,243,.94)}
+:root[data-theme="light"] .clock.low{color:#B03A1E}
+:root[data-theme="light"] .btn{color:#FFFFFF}
+:root[data-theme="light"] .btn.ghost{color:var(--ink);border-color:#C4BCAE}
+:root[data-theme="light"] .err{color:#8E2F43}
+:root[data-theme="light"] .choice,:root[data-theme="light"] textarea,:root[data-theme="light"] input[type=text]{border-color:#C4BCAE}
+:root[data-theme="light"] .memo{box-shadow:0 12px 30px rgba(60,48,30,.16);border:1px solid #DDD0B4}
+:root[data-theme="light"] .echo{border:1px solid #DDD0B4}
+:root[data-theme="light"] .stage.past{opacity:.72}
 </style>
 </head>
 <body>

@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="kit/theme.js?v=20261018a" data-place="bottom-right"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Live screen · Where Does the Money Land? — Instructor</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 :root{
+  --k-ra:#F0A63C;--k-ic:#D9B77A;--k-ls:#CE7C8D;--k-ms:#8FA7C9;--k-ps:#C9C6BE;--k-cash:#5E6B80;
   --night:#0E1524;--panel:#161E2E;--line:#2B3548;--line2:#3A4659;
   --bone:#E8E4DA;--soft:#C9C6BE;--dim:#8C95A8;--dimmer:#616B7E;
   --amber:#F0A63C;--amberDeep:#8A6427;--rose:#CE7C8D;
@@ -94,6 +96,10 @@ body.present .aux{display:none!important}
 body.present main{width:calc(100% - 80px)}
 body.present .big{font-size:120px}
 @media(max-width:900px){.grid2,.pair{grid-template-columns:1fr}.values li{grid-template-columns:60px repeat(4,1fr);font-size:14px}}
+:root[data-theme="light"]{--night:#FAF8F3;--panel:#FFFFFF;--raise:#F2EFE8;--line:#DCD6CA;--line2:#C4BCAE;--bone:#1C2230;--soft:#384050;--dim:#5B6373;--dimmer:#636B7C;--amber:#A85A00;--amberDeep:#D9B27A;--rose:#C25A6E;--k-cash:#AEB7C6}
+:root[data-theme="light"] .btn.pri{color:#FFFFFF}
+:root[data-theme="light"] .note.bad{color:#8E2F43}
+:root[data-theme="light"] .field .choice label:has(input:checked){background:rgba(168,90,0,.06)}
 </style>
 </head>
 <body>
@@ -110,7 +116,7 @@ const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 const usd=n=>'$'+Number(n).toLocaleString('en-US');
 const pct=x=>Math.round(x*100)+'%';
 const fill=(t,v)=>String(t).replace(/\{(\w+)\}/g,(_,k)=>k in v?v[k]:'');
-const COLORS={RA:'#F0A63C',IC:'#D9B77A',LS:'#CE7C8D',MS:'#8FA7C9',PS:'#C9C6BE',cash:'#5E6B80'};
+const COLORS={RA:'var(--k-ra)',IC:'var(--k-ic)',LS:'var(--k-ls)',MS:'var(--k-ms)',PS:'var(--k-ps)',cash:'var(--k-cash)'};
 const PLATFORM_LAUNCH_PATH='/api/launch';
 const TOKEN_KEY='m09-faculty-lt',SESSION_KEY='m09-faculty-session';
 const incoming=new URLSearchParams(location.hash.slice(1)).get('lt')||new URLSearchParams(location.search).get('lt')||null;

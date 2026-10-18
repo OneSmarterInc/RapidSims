@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="kit/theme.js?v=20261018a" data-place="bottom-right"></script>
 <script id="account-entry-redirect">
 (() => {
   const q = new URLSearchParams(location.search);
@@ -85,6 +86,26 @@ h2{font-size:38px;line-height:1.08;font-weight:400;letter-spacing:-.02em;margin-
 .year2-history{margin:16px 0;border:1px solid var(--line);background:var(--panel)}.year2-history>summary{cursor:pointer;padding:10px 12px;font:10px var(--mono);letter-spacing:.11em;text-transform:uppercase;color:var(--amber);list-style:none}.year2-history>summary::-webkit-details-marker{display:none}.year2-history>summary:after{content:'+';float:right;color:var(--dim)}.year2-history[open]>summary:after{content:'−'}.year2-history .year2-breakdown{margin:0;border:0;border-top:1px solid var(--line)}
 .outcome-signals{display:grid;gap:7px;margin-top:10px}.outcome-signal{border-left:2px solid var(--line2);padding:8px 10px;background:rgba(255,255,255,.018);font-size:13px;line-height:1.5;color:var(--dim)}.year3-lock{display:inline-flex;margin:4px 0 8px;border:1px solid var(--line2);padding:5px 8px;font:10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}.reflection-followup{margin:-1px 0 8px;font-size:15px;color:#C9C6BE;line-height:1.5}
 
+/* ---------- light theme (kit/theme.js sets data-theme; the dark rules above stay the default) ---------- */
+:root[data-theme="light"]{--night:#FAF8F3;--panel:#FFFFFF;--panel2:#F2EFE8;--raise:#ECE7DD;--line:#DCD6CA;--line2:#C4BCAE;--bone:#1C2230;--dim:#384050;--dimmer:#5B6373;
+  --amber:#A85A00;--amber2:#8F4C00;--green:#1D6E46;--red:#8E2F43;--blue:#245A8A}
+:root[data-theme="light"] body{background-image:radial-gradient(1200px 650px at 70% -10%,rgba(168,90,0,.05),transparent 60%)}
+:root[data-theme="light"] select option{background:#FFFFFF;color:#1C2230}
+:root[data-theme="light"] header{background:rgba(250,248,243,.94)}
+:root[data-theme="light"] :is(.howto,.bridge,.copy,.voice,.budget .total,.briefing-body>p,.closing-lesson p,.reflection-followup,.card p,.room-quote,.advocate-reminder,.briefing-prep-copy,.briefing-dialog-section p,.line-guide-voice,.buyer-room-link,.exhibit p){color:#384050}
+:root[data-theme="light"] :is(.lede,.outcome p,.buyer-close,.briefing-dialog-intro,.handoff,.room-close,.notice,.cold .line,.year3-opening){color:#2A3140}
+:root[data-theme="light"] .notice.error{color:#8E2F43}
+:root[data-theme="light"] .team{color:#1F3F5E}:root[data-theme="light"] .team b{color:#245A8A}
+:root[data-theme="light"] :is(.pill.on,.pill.brief-link:hover,.room-line,.alloc-cap,.budget,.buyer-interest.qualified,.result-hero,.year3-stage,.brief-profit){border-color:#D3A15E}
+:root[data-theme="light"] .brief-profit{border-left-color:var(--amber)}
+:root[data-theme="light"] .budget .total{border-top-color:#D3A15E}
+:root[data-theme="light"] .buyer-interest.high{border-color:rgba(29,110,70,.5)}:root[data-theme="light"] .buyer-interest.low{border-color:rgba(142,47,67,.5)}
+:root[data-theme="light"] :is(.advocate-reminder,.reflection-note,.line-guide-voice,.outcome-signal){background:rgba(28,34,48,.035)}
+:root[data-theme="light"] .briefing-prep{background:var(--panel)}
+:root[data-theme="light"] .briefing-modal{background:rgba(28,34,48,.45)}
+:root[data-theme="light"] .briefing-dialog{box-shadow:0 26px 90px rgba(28,34,48,.22)}
+:root[data-theme="light"] .btn.pri{color:#FFFFFF}
+:root[data-theme="light"] .briefing-dialog-kicker{color:#8F4C00}
 </style>
 </head>
 <body>

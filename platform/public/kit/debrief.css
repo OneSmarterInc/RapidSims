@@ -159,3 +159,22 @@
   .md-lrow{grid-template-columns:3em 1fr}.md-ev{grid-column:2}
   .md-crow{grid-template-columns:7em minmax(0,1fr)}.md-ctext{grid-column:2}
 }
+
+/* Light theme (kit/theme.js sets <html data-theme="light">). Same roles, light ground; band and tint text darkened
+   to keep AA contrast on white. Sim debrief files use these variables, so they follow. */
+:root[data-theme="light"] .md-root{--bg:#FAF8F3;--panel:#FFFFFF;--panel2:#F2EFE8;--line:#DCD6CA;--line2:#C4BCAE;--ink:#1C2230;--soft:#384050;--dim:#5B6373;--amber:#A85A00;
+  --g:#2E9E66;--g-t:#1D6E46;--g-bg:rgba(46,158,102,.12);--g-bd:rgba(46,158,102,.5);
+  --y:#C9951D;--y-t:#7A5800;--y-bg:rgba(201,149,29,.14);--y-bd:rgba(201,149,29,.55);
+  --o:#D06A2B;--o-t:#9A4512;--o-bg:rgba(208,106,43,.13);--o-bd:rgba(208,106,43,.5);
+  --l:#C25A6E;--l-t:#8E2F43;--l-bg:rgba(194,90,110,.12);--l-bd:rgba(194,90,110,.5);
+  --b:#3F7FB8;--b-t:#245A8A;--b-bg:rgba(63,127,184,.12);--b-bd:rgba(63,127,184,.5);
+  --v:#7A5CC0;--v-t:#553A97;--v-bg:rgba(122,92,192,.12);--v-bd:rgba(122,92,192,.5);
+  --n:#6C7588;--n-t:#454D5E;--n-bg:rgba(108,117,136,.12);--n-bd:rgba(108,117,136,.5);
+  --run:#8A93A6;--uptime:#2F74E0;--uptime-t:#1F55AA;--capacity:#8A6BEA;--capacity-t:#5E43B8;--connect:#1FA394;--connect2:#127066;--features:#C2387F}
+:root[data-theme="light"] .md-root .md-btn.md-light{color:#FFFFFF!important}
+:root[data-theme="light"] .md-root .md-closing-ask p{color:#FFFFFF}
+:root[data-theme="light"] .md-root .md-close{background:#F2EFE8}
+:root[data-theme="light"] .md-root .md-zone-p{background:rgba(201,149,29,.10)}
+:root[data-theme="light"] .md-root .md-zone-s{background:rgba(46,158,102,.10)}
+:root[data-theme="light"] .md-root .md-dots button[aria-selected=true],:root[data-theme="light"] .md-root .md-btn.md-pri{color:#FFFFFF!important}
+:root[data-theme="light"] .md-root .md-btn.md-amber{color:#8A4A00!important}

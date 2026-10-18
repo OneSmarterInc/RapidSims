@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="kit/theme.js?v=20261018a" data-place="bottom-left"></script>
 <script id="account-entry-redirect">
 (() => {
   const q = new URLSearchParams(location.search);
@@ -211,6 +212,23 @@ p.body{color:var(--soft);margin-bottom:14px}
 .btn.sm{padding:8px 14px;font-size:13px}
 .reflect textarea{display:block;width:100%;box-sizing:border-box;margin:6px 0 14px;padding:10px 12px;font:inherit;font-size:16px;line-height:1.45;background:var(--panel2,#1D2637);color:inherit;border:1px solid var(--line2,#3A4659);border-radius:4px}
 .reflect ol{margin:8px 0 0;padding-left:20px}.reflect label{display:block;margin-top:10px}
+/* Light theme (kit/theme.js sets <html data-theme="light">); the dark values above stay the default. */
+:root[data-theme="light"]{
+  --night:#FAF8F3;--panel:#FFFFFF;--raise:#F2EFE8;--line:#DCD6CA;--line2:#C4BCAE;
+  --bone:#1C2230;--soft:#384050;--dim:#5B6373;--dimmer:#5F6676;
+  --amber:#A85A00;--amberDeep:#D3A66E;--rose:#8E2F43;
+}
+:root[data-theme="light"] .btn.pri{color:#FFFFFF}
+:root[data-theme="light"] .btn.pri:hover{background:#8A4A00}
+:root[data-theme="light"] .btn:not(.pri):hover{border-color:var(--dim)}
+:root[data-theme="light"] .confirm{background:rgba(168,90,0,.06)}
+:root[data-theme="light"] .change{background:rgba(168,90,0,.05)}
+:root[data-theme="light"] .note.bad{color:#8E2F43}
+:root[data-theme="light"] .ph-screen{background:#FCFBF8;box-shadow:inset 0 0 0 5px #ECE7DD}
+:root[data-theme="light"] .ph-bar{fill:#9AA3B2}
+:root[data-theme="light"] .ex-btn.pri{background:#E9C89A;border-color:#D3A66E}
+:root[data-theme="light"] .reflect textarea{background:#FFFFFF;border-color:#C4BCAE}
+:root[data-theme="light"] .field input,:root[data-theme="light"] .rename input{background:#FFFFFF}
 </style>
 </head>
 <body>

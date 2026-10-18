@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="kit/theme.js?v=20261018a" data-place="top-right"></script>
 <script id="account-entry-redirect">
 (() => {
   const q = new URLSearchParams(location.search);
@@ -26,6 +27,9 @@
   --bone:#E8E4DA; --dim:#8C95A8; --dimmer:#616B7E;
   --amber:#F0A63C; --amber-dim:#8A6427;
   --kate:#6FA8D6; --sophia:#CE7C8D; --tom:#9C90C6; --ben:#D9B36A; --sys:#5E9089; --priya:#C4907A;
+  --head-bg:rgba(14,21,36,.9); --float-bg:rgba(14,21,36,.85); --scrim:rgba(6,10,18,.86); --pause-bg:rgba(6,10,18,.9);
+  --keybar-bg:#1A1420; --tx-task:#D8D4CA; --tx-soft:#C4C1B9; --tx-body:#CFCCC4;
+  --on-amber:#1A1206; --amber-hi:#FFB94E; --glow:rgba(240,166,60,.055);
   --serif:'Newsreader',Georgia,'Iowan Old Style',serif;
   --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
 }
@@ -34,7 +38,7 @@ html,body{height:100%}
 body{
   background:var(--night); color:var(--bone); font-family:var(--serif);
   font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased;
-  background-image:radial-gradient(1200px 600px at 70% -10%, rgba(240,166,60,.055), transparent 60%);
+  background-image:radial-gradient(1200px 600px at 70% -10%, var(--glow), transparent 60%);
 }
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 input,textarea,select{font:inherit;color:inherit}
@@ -49,7 +53,7 @@ input,textarea,select{font:inherit;color:inherit}
 #app{height:100vh;display:flex;flex-direction:column;max-width:1500px;margin:0 auto}
 header{
   display:flex;align-items:center;gap:20px;padding:14px 56px 14px 22px;
-  border-bottom:1px solid var(--line);background:rgba(14,21,36,.9);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);background:var(--head-bg);backdrop-filter:blur(8px);
   flex-wrap:wrap;
 }
 .brand{display:flex;flex-direction:column;gap:2px;margin-right:auto}
@@ -119,7 +123,7 @@ main{flex:1;display:grid;grid-template-columns:270px 1fr;min-height:0}
   padding:13px 16px;margin-bottom:16px;display:flex;gap:13px;align-items:flex-start;
 }
 .task .tl2{font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--amber);white-space:nowrap;padding-top:3px}
-.task .tt{font-size:14.5px;line-height:1.55;color:#D8D4CA}
+.task .tt{font-size:14.5px;line-height:1.55;color:var(--tx-task)}
 
 /* starter questions */
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 0}
@@ -174,8 +178,8 @@ main{flex:1;display:grid;grid-template-columns:270px 1fr;min-height:0}
   letter-spacing:.13em;text-transform:uppercase;color:var(--dim);white-space:nowrap;transition:.13s;
 }
 .btn:hover{border-color:var(--bone);color:var(--bone)}
-.btn.pri{background:var(--amber);border-color:var(--amber);color:#1A1206;font-weight:600}
-.btn.pri:hover{background:#FFB94E;border-color:#FFB94E;color:#1A1206}
+.btn.pri{background:var(--amber);border-color:var(--amber);color:var(--on-amber);font-weight:600}
+.btn.pri:hover{background:var(--amber-hi);border-color:var(--amber-hi);color:var(--on-amber)}
 .btn:disabled{opacity:.35;cursor:not-allowed}
 .cmp-toggle{
   width:34px;height:42px;border:1px solid var(--line2);color:var(--dimmer);
@@ -194,7 +198,7 @@ main{flex:1;display:grid;grid-template-columns:270px 1fr;min-height:0}
 
 
 /* ---------- modal ---------- */
-.scrim{position:fixed;inset:0;background:rgba(6,10,18,.86);display:grid;place-items:center;padding:22px;z-index:40;overflow-y:auto}
+.scrim{position:fixed;inset:0;background:var(--scrim);display:grid;place-items:center;padding:22px;z-index:40;overflow-y:auto}
 .sheet{
   background:var(--panel);border:1px solid var(--line2);max-width:660px;width:100%;
   padding:30px 32px 26px;max-height:92vh;overflow-y:auto;
@@ -231,10 +235,10 @@ textarea.tw:focus{border-color:var(--amber-dim);outline:none}
   flex:none;line-height:1;transition:.12s;
 }
 .ibtn:hover{border-color:var(--amber);color:var(--amber)}
-.ibtn.on{border-color:var(--amber);background:var(--amber);color:#1A1206}
+.ibtn.on{border-color:var(--amber);background:var(--amber);color:var(--on-amber)}
 .guide{
   border-left:2px solid var(--amber-dim);background:rgba(240,166,60,.045);
-  padding:12px 14px;margin:0 0 12px;font-size:13.5px;line-height:1.6;color:#C4C1B9;
+  padding:12px 14px;margin:0 0 12px;font-size:13.5px;line-height:1.6;color:var(--tx-soft);
 }
 .guide p{margin-bottom:8px}
 .guide p:last-child{margin-bottom:0}
@@ -247,13 +251,13 @@ textarea.tw:focus{border-color:var(--amber-dim);outline:none}
 /* help panel */
 .faq-q{
   display:block;width:100%;text-align:left;border:1px solid var(--line);
-  padding:9px 13px;margin-bottom:6px;font-size:14px;color:#C4C1B9;transition:.12s;
+  padding:9px 13px;margin-bottom:6px;font-size:14px;color:var(--tx-soft);transition:.12s;
 }
 .faq-q:hover{border-color:var(--line2);background:var(--panel2);color:var(--bone)}
 .faq-q.on{border-color:var(--amber);color:var(--bone);background:rgba(240,166,60,.07)}
 .faq-a{
   border-left:2px solid var(--amber-dim);padding:11px 14px;margin-top:9px;
-  font-size:14px;line-height:1.6;color:#C4C1B9;background:rgba(240,166,60,.04);
+  font-size:14px;line-height:1.6;color:var(--tx-soft);background:rgba(240,166,60,.04);
 }
 
 /* ---------- brief + debrief ---------- */
@@ -262,7 +266,7 @@ textarea.tw:focus{border-color:var(--amber-dim);outline:none}
 .doc h1{font-size:40px;font-weight:300;letter-spacing:-.025em;line-height:1.1;margin:12px 0 16px}
 .doc h1 em{font-style:italic;color:var(--amber)}
 .doc h3{font-size:12px;font-family:var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--amber);font-weight:500;margin:34px 0 11px}
-.doc p{font-size:16.5px;line-height:1.68;color:#CFCCC4;margin-bottom:15px}
+.doc p{font-size:16.5px;line-height:1.68;color:var(--tx-body);margin-bottom:15px}
 .doc p b{color:var(--bone);font-weight:500}
 .rule{height:1px;background:var(--line);margin:30px 0}
 .card{border:1px solid var(--line);background:var(--panel);padding:17px 19px;margin-bottom:13px}
@@ -277,7 +281,7 @@ textarea.tw:focus{border-color:var(--amber-dim);outline:none}
 .fork .cell.hit h4{color:var(--amber)}
 .fork .cell.ghost{border-style:dashed;border-color:var(--line2);opacity:.72}
 .fork .cell h4{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--dimmer);font-weight:500;margin-bottom:7px}
-.fork .cell p{font-size:13.5px;line-height:1.5;color:#C4C1B9;margin:0}
+.fork .cell p{font-size:13.5px;line-height:1.5;color:var(--tx-soft);margin:0}
 .center{text-align:center;margin-top:34px}
 
 /* cold open timeline */
@@ -290,7 +294,7 @@ textarea.tw:focus{border-color:var(--amber-dim);outline:none}
 .tl-row.now::before{background:var(--amber);border-color:var(--amber);box-shadow:0 0 0 4px rgba(240,166,60,.14)}
 .tl-time{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;color:var(--dimmer);padding-top:4px;font-variant-numeric:tabular-nums}
 .tl-row.now .tl-time{color:var(--amber)}
-.tl-text{font-size:16px;line-height:1.6;color:#CFCCC4}
+.tl-text{font-size:16px;line-height:1.6;color:var(--tx-body)}
 .tl-text b{color:var(--bone);font-weight:500}
 
 /* cast introduction */
@@ -299,7 +303,7 @@ textarea.tw:focus{border-color:var(--amber-dim);outline:none}
 .castcard .ch{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .castcard .cn{font-size:16px;line-height:1.2}
 .castcard .cr{font-size:11.5px;color:var(--dim);margin-top:2px;line-height:1.3}
-.castcard .cw{font-size:14px;line-height:1.55;color:#C4C1B9;margin-bottom:12px}
+.castcard .cw{font-size:14px;line-height:1.55;color:var(--tx-soft);margin-bottom:12px}
 .castcard .cl{font-size:12.5px;color:var(--dimmer);line-height:1.45;font-style:italic;margin-top:7px}
 @media (max-width:860px){.castgrid{grid-template-columns:1fr}.tl-row{grid-template-columns:60px 1fr;gap:11px}}
 
@@ -318,6 +322,21 @@ textarea.tw:focus{border-color:var(--amber-dim);outline:none}
   .fork{grid-template-columns:1fr}
   .sheet{padding:24px 20px}
 }
+/* ---------- light theme (kit/theme.js sets data-theme; dark above stays the default) ---------- */
+:root[data-theme="light"]{
+  --night:#FAF8F3; --panel:#FFFFFF; --panel2:#F2EFE8; --raise:#ECE7DD;
+  --line:#DCD6CA; --line2:#C4BCAE;
+  --bone:#1C2230; --dim:#384050; --dimmer:#5B6373;
+  --amber:#A85A00; --amber-dim:#D3A15E;
+  --kate:#245A8A; --sophia:#8E2F43; --tom:#553A97; --ben:#7A5800; --sys:#1D6A5E; --priya:#9A4512;
+  --head-bg:rgba(250,248,243,.94); --float-bg:rgba(255,255,255,.94); --scrim:rgba(28,34,48,.45); --pause-bg:rgba(250,248,243,.985);
+  --keybar-bg:#FBF0F2; --tx-task:#2A3140; --tx-soft:#384050; --tx-body:#2A3140;
+  --on-amber:#FFFFFF; --amber-hi:#8F4C00; --glow:rgba(168,90,0,.05);
+}
+/* The theme switch sits under the settings cog, sized like the ? and cog buttons beside it. */
+:root body .rs-theme-btn[data-place="top-right"]{top:47px;right:13px;width:30px;height:30px;padding:0;justify-content:center;border-radius:0;
+  background:var(--float-bg);color:var(--dim);border:1px solid var(--line2);box-shadow:none;z-index:55}
+:root body .rs-theme-btn[data-place="top-right"]>span{display:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
