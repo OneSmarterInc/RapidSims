@@ -15,4 +15,9 @@ function overrideFrom(id, text, now) {
   if (!own || !clean || clean === own.text) return null;
   return { text: clean, revision: own.reviewedFor, at: now };
 }
-module.exports = { onePagerFor, overrideFrom };
+// A sim's student one-pager: its own STUDENT-ONE-PAGER.md. Students read it on their course page before they start.
+function studentPageFor(id) {
+  const own = Object.hasOwn(source, id) && source[id].studentOnePager ? source[id].studentOnePager : null;
+  return own ? { text: own.text, reviewedFor: own.reviewedFor } : null;
+}
+module.exports = { onePagerFor, overrideFrom, studentPageFor };

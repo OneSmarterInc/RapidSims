@@ -52,7 +52,7 @@
   .student-course-body{padding:18px 20px}
   .student-sim-row{display:grid;grid-template-columns:64px minmax(0,1fr) 190px;gap:18px;align-items:center;padding:15px 0;border-bottom:1px solid var(--line)}
   .student-sim-row:last-child{border-bottom:none}.student-sim-no{font:12px var(--mono);color:var(--ink3)}
-  .student-sim-title{font-size:18px;font-weight:500;margin-bottom:3px}.student-sim-tag{font-size:13.5px;color:var(--ink2);line-height:1.45}
+  .student-sim-title{font-size:18px;font-weight:500;margin-bottom:3px}.student-about{margin-top:10px}.student-about summary{cursor:pointer;font:600 12px var(--mono,ui-monospace,monospace);letter-spacing:.06em;text-transform:uppercase;color:var(--amber,#A8620D)}.student-about-body{max-width:640px;margin-top:6px}.student-about-body h4{margin:12px 0 4px;font-size:15px;font-weight:600}.student-about-body p{margin:0 0 8px;font-size:14.5px;line-height:1.55;color:var(--ink2,#3A4252)}.student-sim-tag{font-size:13.5px;color:var(--ink2);line-height:1.45}
   .student-sim-side{text-align:right}.student-sim-side .btn{margin-top:6px}
   .student-result-preview{margin-top:13px;border-left:2px solid #E8C88E;background:#FBF3E7;padding:11px 13px}
   .student-result-preview .mini{margin-bottom:5px}.student-result-preview p{font-size:13.5px;color:var(--ink2);line-height:1.45;margin:0}
@@ -194,7 +194,21 @@ function renderStudentResult(){
   document.getElementById('resultHome').onclick=back;
 }
 function openStudentResult(courseId,simId){if(navigation)return navigation.go({...studentRoute(),course:courseId,sim:simId});SV.result={courseId,simId};renderStudentResult()}
+// About this sim: the student one-pager (the situation, your role, what you'll do, what you hand in), loaded on open.
+function wireStudentAbout() {
+  app.querySelectorAll('[data-student-about]').forEach(d => d.ontoggle = async () => {
+    if (!d.open || d.dataset.loaded) return; d.dataset.loaded = '1';
+    const body = d.querySelector('.student-about-body');
+    try {
+      const r = await fetch('/api/one-pager?for=student&sim=' + encodeURIComponent(d.dataset.studentAbout), { credentials: 'same-origin' });
+      const j = r.ok ? await r.json() : null;
+      body.innerHTML = j ? j.text.split(/\n{2,}/).filter(b => !b.startsWith('# ')).map(b => b.startsWith('## ') ? `<h4>${esc(b.slice(3))}</h4>` : `<p>${esc(b).replace(/\n/g, ' ')}</p>`).join('')
+        : '<p class="hint">The description of this sim is not available right now.</p>';
+    } catch { body.innerHTML = '<p class="hint">The description of this sim is not available right now.</p>'; }
+  });
+}
 function wireStudentView() {
+  wireStudentAbout();
   const search = document.getElementById('studentSearch');
   if (search) { search.value = SV.q; search.oninput = () => { SV.q = search.value; SV.page = 1; applyStudentView(); }; }
   app.querySelectorAll('[data-student-filter]').forEach(b => b.onclick = () => { SV.filter = b.dataset.studentFilter; SV.page = 1; applyStudentView(); });
@@ -273,6 +287,7 @@ async function draw(provided) {
             <div class="student-sim-no">${RapidSimsIdentity.number(x)}</div>
             <div><div class="student-sim-title">${esc(x.title)}</div><div class="student-sim-tag">${esc(x.description || x.tagline || '')}</div>
               <div class="facts" style="margin-top:8px">${x.minutes ? `<span>about <b>${x.minutes} min</b></span>` : ''}<span><b>not marked</b></span></div>
+              <details class="student-about" data-student-about="${esc(x.id)}"><summary>About this sim</summary><div class="student-about-body"><p class="hint">Loading…</p></div></details>
               ${done?`<div class="student-result-preview"><div class="mini">Latest result · ${when(x.completed_at)}</div><p>${esc(resultText)}</p></div>`:''}
             </div>
             <div class="student-sim-side"><div>${done ? dot('ok','finished') : Number(x.played)>0 ? dot('warn','in progress') : c.paid ? dot('off','not started') : dot('off','not open')}</div>
@@ -287,8 +302,8 @@ async function draw(provided) {
     </div>
     <div id="studentPager" class="student-pager"></div>
     <div class="before">
-      <b>Before you start.</b> Twenty minutes, no pause, so pick your moment. Use a laptop or tablet, not a phone.
-      Download the transcript at the end — nothing is kept once you close the tab.
+      <b>Before you start.</b> Open About this sim to see how long it takes, your role and what you hand in.
+      A laptop or tablet works best.
     </div>`
   : `<div style="margin-top:30px">
       <h1 style="font-size:26px;font-weight:400;letter-spacing:-.02em">You are not in any courses yet</h1>

@@ -13,8 +13,9 @@ const sources = [
 ];
 // The faculty one-pager lives in the sim's own folder (ONE-PAGER.md), stamped with the catalogue revision it was
 // reviewed for. platform/tools/one-pager-check.js keeps the stamp and the sim in step.
-function onePager(file) {
-  const page = path.join(__dirname, '../..', file.split('/')[0], 'ONE-PAGER.md');
+// The student one-pager (STUDENT-ONE-PAGER.md) sits beside it, stamped the same way.
+function onePager(file, name = 'ONE-PAGER.md') {
+  const page = path.join(__dirname, '../..', file.split('/')[0], name);
   if (!fs.existsSync(page)) return null;
   const raw = fs.readFileSync(page, 'utf8'), stamp = /^<!-- Reviewed for: (.+?) -->\n/.exec(raw);
   return { reviewedFor: stamp ? stamp[1] : null, text: raw.replace(/^<!--[^]*?-->\n/, '').trim() };
@@ -23,7 +24,7 @@ function snapshot() {
   return Object.fromEntries(sources.map(file => {
     const module = require(path.join(__dirname, '../..', file));
     const m = module.META || module;
-    return [m.id || m.simId, { tagline: m.tagline, description: m.description, detail: m.detail, onePager: onePager(file) }];
+    return [m.id || m.simId, { tagline: m.tagline, description: m.description, detail: m.detail, onePager: onePager(file), studentOnePager: onePager(file, 'STUDENT-ONE-PAGER.md') }];
   }));
 }
 if (require.main === module) {
