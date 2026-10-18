@@ -153,7 +153,7 @@ async function kitAction(a, req, b, now, settle) {
 
     case 'group': {
       const o = await owned(who, code); if (o.fail) return o.fail;
-      if (o.sess.state !== 'lobby' || o.sess.tableIds.length) return out(409, { error: 'teams_locked', message: 'Tables are fixed once the session starts.' });
+      if (o.sess.state !== 'lobby' || o.sess.tableIds.length) return out(409, { error: 'teams_locked', message: 'Teams are fixed once the session starts.' });
       const assign = b.assign && typeof b.assign === 'object' ? b.assign : {};
       let error = null;
       await put(keys.roster(code), cur => {
