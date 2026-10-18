@@ -160,6 +160,16 @@ async function api(lt, action, extra = {}) {
     await fac.waitForFunction(() => document.querySelectorAll('.fs-helper-a:not(.fs-helper-typing)').length === 2);
     ok(Math.round((await fac.locator('#fsHelperQ').boundingBox()).height) === 220, 'Ask about this sim: Enter sends, and the question box keeps the size it was dragged to');
     await fac.screenshot({ path: path.join(artifacts, '10-helper.png') });
+    // Light or dark: the switch flips the theme, the choice is kept, and the student page follows it.
+    const before = await fac.evaluate(() => document.documentElement.dataset.theme);
+    await fac.locator('.rs-theme-btn').click();
+    const after = await fac.evaluate(() => document.documentElement.dataset.theme);
+    ok(['light', 'dark'].includes(before) && after !== before && await fac.evaluate(() => localStorage.getItem('rs-theme')) === after, 'Theme: the switch flips light and dark and keeps the choice');
+    const other = await fac.context().newPage(); await other.goto(`${origin}/sim-plus-01/`);
+    await other.waitForFunction(t => document.documentElement.dataset.theme === t, after);
+    await other.locator('.rs-theme-btn').waitFor();
+    ok(true, 'Theme: another RapidSims page in the same browser follows the choice and has its own switch');
+    await other.close();
     ok(errors.length === 0, 'No browser errors ' + errors.join(' | '));
     console.log(`SIMPLUS01_KIT_BROWSER_PASSED (${checks} checks). Screenshots: ${artifacts}`);
   } finally { await browser.close(); server.close(); }
