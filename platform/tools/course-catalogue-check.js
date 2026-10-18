@@ -44,6 +44,7 @@ const apiModule = { exports: {} };
 vm.runInNewContext(fs.readFileSync(path.join(root, 'api/faculty.js'), 'utf8'), {
   module: apiModule, console, require(name) {
     if (name.endsWith('/catalogue.js')) return require('../lib/catalogue.js');
+    if (name.endsWith('/trial.js')) return require('../lib/trial.js');
     if (name.endsWith('/db.js')) return { sql: () => sql };
     if (name.endsWith('/transcripts.js')) return { ensureTranscripts: async () => {} };
     if (name.endsWith('/urls.js')) return { baseUrl: () => 'https://platform.test' };

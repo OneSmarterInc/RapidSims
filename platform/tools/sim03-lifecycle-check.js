@@ -62,6 +62,8 @@ function sql(strings, ...v) {
     const c = [...state.courses.values()].find(x => x.join_code === v[0] && !x.archived);
     return Promise.resolve(c ? [c] : []);
   }
+  // Trial accounts: no class in this check belongs to a trial account.
+  if (q.includes("SELECT 1 FROM courses c JOIN users u ON u.id = c.faculty_id WHERE c.id = ? AND u.account_kind = 'trial'")) return Promise.resolve([]);
   if (q.includes('SELECT * FROM users WHERE email =')) {
     const u = [...state.users.values()].find(x => x.email === v[0]);
     return Promise.resolve(u ? [u] : []);

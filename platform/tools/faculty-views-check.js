@@ -25,7 +25,7 @@ const bodyEl = { get innerHTML(){return BODY;}, set innerHTML(v){BODY=v;}, query
 
 global.window={}; global.location={href:'',reload(){}};
 global.document={ getElementById:id=>id==='app'?app:(id==='body'?bodyEl:mk(id)), createElement:()=>mk('t'),
-  body:{appendChild(){}}, querySelector:()=>mk('x'), querySelectorAll:()=>[] };
+  body:{appendChild(){},classList:{toggle(){},add(){},remove(){}}}, querySelector:()=>mk('x'), querySelectorAll:()=>[] };
 global.fetch=async()=>({ok:true,json:async()=>({})}); global.navigator={clipboard:{writeText(){}}};
 global.confirm=()=>true; global.setTimeout=()=>0; global.prompt=()=>null;
 
@@ -67,6 +67,13 @@ REG.clear(); M.F.addSim=false; M.F.view='played';
 M.F.progress = { sim:{ id:'rapid-01-disaster', title:'Disaster or Breach?' }, course:{ id:'c1', title:'Operations Management' },
   rows:[{ name:'Ana Ruiz', email:'a@t.com', paid:true, dropped:false, starts:1, completed_at:new Date(), duration_seconds:1140, metrics:{ 'Final reading':'Both' } }] };
 M.render(); check('who has played');
+// Trial accounts: the class note in place of the class link, and the ended page.
+REG.clear(); M.F.view='course'; M.F.data.account={ kind:'trial', trial:true, ended:false, endsAt:new Date(Date.now()+5*864e5).toISOString() };
+M.F.course.enrolUrl=null; M.render(); check('a course — trial account');
+if (!LAST.includes('data-trial-class-note') || LAST.includes('id="eurl"') || LAST.includes('data-give=')) { FAILED++; console.log('  FAIL trial class page keeps the class link or Give access'); }
+REG.clear(); M.F.data.account={ kind:'trial', trial:true, ended:true, endsAt:new Date(Date.now()-864e5).toISOString(), message:'Your trial ended on October 17, 2026. To keep going, write to support@flexee.org and we\'ll move your account to full.' };
+M.render(); check('trial ended');
+if (!LAST.includes('data-trial-ended') || !LAST.includes('Your trial ended on')) { FAILED++; console.log('  FAIL ended trial message'); }
 
 console.log(FAILED ? `\n${FAILED} view(s) with an unwired button.` : '\nfaculty views: every button wired');
 process.exit(FAILED ? 1 : 0);

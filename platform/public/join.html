@@ -46,7 +46,19 @@ function askCode(msg) {
 async function start() {
   let info;
   try { info = await api('/api/student', { action:'course_lookup', joinCode: code }); }
-  catch (e) { return askCode("We don't recognise that course code. Check it with your instructor."); }
+  catch (e) {
+    // The instructor is on a trial account: the class opens to students once it is full.
+    if (e.body && e.body.error === 'class_not_open') {
+      const c = e.body.course || {};
+      app.innerHTML = `
+        <div class="eyebrow">Flexee RapidSims</div>
+        <h1>${esc(c.title || 'Your class')}</h1>
+        ${c.faculty_name ? `<p class="lede">${esc(c.faculty_name)}</p>` : ''}
+        <div class="card" data-class-not-open><p>${esc(e.body.message)}</p></div>`;
+      return;
+    }
+    return askCode("We don't recognise that course code. Check it with your instructor.");
+  }
 
   const c = info.course;
   let me = null;

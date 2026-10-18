@@ -207,6 +207,7 @@ function facTab() {
       <li>You get a one-time link, valid for fourteen days. Copy it into your own message.</li>
       <li>They open it, choose a password, and land in their own console.</li>
       <li>Until then they show as <b>invited</b>. Sent it to the wrong address? Open them and cancel the invitation, then correct the email and issue a fresh one.</li>
+      <li>A <b>trial account</b> has every published simulation for Rehearse and Play it yourself. Students join once you make the account full under <b>Trials</b>.</li>
     </ol>`) : ''}
 
     ${D.invite ? `<div class="cbox"><div style="padding:15px 16px">
@@ -217,9 +218,21 @@ function facTab() {
         <div><label class="f">Institution</label><input id="ii" type="text" placeholder="optional"></div>
         <div style="flex:0 0 auto;min-width:0;align-self:flex-end"><button class="btn pri" id="invgo">Create invitation</button></div>
       </div>
+      <div class="field trial-choice" data-trial-choice>
+        <div style="flex:0 0 auto;min-width:0"><label class="f">Account</label>
+          <div role="radiogroup" aria-label="Account" style="display:flex;gap:18px;align-items:center;min-height:38px">
+            <label style="display:inline-flex;align-items:center;gap:7px;font-size:14px;white-space:nowrap;cursor:pointer"><input type="radio" name="ikind" value="full" style="width:auto;margin:0" ${D.inviteKind === 'trial' ? '' : 'checked'}> Full account</label>
+            <label style="display:inline-flex;align-items:center;gap:7px;font-size:14px;white-space:nowrap;cursor:pointer"><input type="radio" name="ikind" value="trial" style="width:auto;margin:0" ${D.inviteKind === 'trial' ? 'checked' : ''}> Trial account</label>
+          </div></div>
+        <div style="flex:0 0 170px;min-width:170px;${D.inviteKind === 'trial' ? '' : 'display:none'}" data-trial-days-box><label class="f">Trial length (days)</label><input id="idays" type="number" min="1" max="365" value="10"></div>
+      </div>
+      <div class="hint" style="margin:0">${D.inviteKind === 'trial'
+        ? 'The trial starts today, when you create the invitation. It covers every published simulation for Rehearse and Play it yourself. Students join once you make the account full under Trials.'
+        : 'A full account runs classes with students from the start.'}</div>
       <div id="invout"></div>
       ${D.lastInvite ? `<div class="note" style="margin-top:12px">
         <b>Send this to ${esc(D.lastInvite.name)}${D.lastInvite.email ? ' at ' + esc(D.lastInvite.email) : ''}.</b>
+        ${D.lastInvite.trialEndsAt ? `This is a trial account until ${esc(longDate(D.lastInvite.trialEndsAt))}. ` : ''}
         There is no email service, so copy it into your own message. It works once and expires ${when(D.lastInvite.expiresAt)}.
         <div class="copyrow"><input id="iurl" readonly value="${esc(D.lastInvite.inviteUrl)}">
           <button class="btn" id="icopy">Copy</button><button class="btn" id="idone">Done</button></div>
@@ -227,6 +240,8 @@ function facTab() {
         <div class="copyrow"><input readonly value="${esc(location.origin + '/getting-started.html')}"></div>
       </div>` : ''}
     </div></div>` : ''}
+
+    ${trialsSection()}
 
     <div class="panel"><div class="tablewrap"><table>
       <thead><tr>
@@ -242,7 +257,7 @@ function facTab() {
             ${f.institution ? `<div class="sub">${esc(f.institution)}</div>` : ''}</td>
           <td data-l="Courses" class="meta">${f.course_titles ? esc(f.course_titles) : '<span class="dim">No courses yet</span>'}
             ${f.sim_titles ? `<div class="dim">${esc(f.sim_titles)}</div>` : ''}</td>
-          <td data-l="Status">${dot(st === 'active' ? 'ok' : st === 'invited' ? 'warn' : 'off', st)}</td>
+          <td data-l="Status">${dot(st === 'active' ? 'ok' : st === 'invited' ? 'warn' : 'off', st)}${f.account_kind === 'trial' ? ' ' + dot('warn', 'trial') : ''}</td>
           <td data-l="Released" class="num"><span class="ratio ${Number(f.paid_students) < Number(f.students) ? 'part' : ''}">${f.paid_students} <span class="of">of ${f.students}</span></span></td>
           <td data-l="Launches" class="num">${f.launches || 0}</td>
           <td data-l="Last seen" class="num">${when(f.last_seen_at)}</td>
@@ -274,7 +289,63 @@ function facTab() {
       ${foot('fac', P, 'facilitator')}
     </div>`;
 }
+/* ── trials: trial accounts, days left or ended, Extend and Make full ── */
+const longDate = t => new Date(t).toLocaleDateString(undefined, { month:'long', day:'numeric', year:'numeric' });
+function trialState(f) {
+  if (!f.trial_ends_at) return { ended:false, label:'No end date' };
+  const ms = new Date(f.trial_ends_at) - Date.now();
+  if (ms <= 0) return { ended:true, label:'Ended ' + longDate(f.trial_ends_at) };
+  const n = Math.ceil(ms / 86400000);
+  return { ended:false, label:`${n} day${n === 1 ? '' : 's'} left · until ${longDate(f.trial_ends_at)}` };
+}
+function trialsSection() {
+  const trials = (D.data.faculty || []).filter(f => f.account_kind === 'trial');
+  if (!trials.length) return '';
+  return `<div class="section trials-head"><span>Trials <span class="count">${trials.length}</span> ${helpBtn('trials')}</span></div>
+    ${explain('trials', 'Trial accounts', `<ol>
+      <li>A trial account has every published simulation for Rehearse and Play it yourself. Students join once the account is full.</li>
+      <li><b>Extend</b> adds days from today, or from the current end date if that is later.</li>
+      <li><b>Make full</b> opens the account to students. Classes, practice sessions and results carry over.</li>
+      <li>When a trial ends, the account keeps everything. Their pages ask them to write to support@flexee.org.</li>
+    </ol>`)}
+    <div class="panel trials" data-trials style="margin-bottom:18px"><div class="tablewrap"><table>
+      <thead><tr><th style="width:28%">Name</th><th>Trial</th><th class="num">Classes</th><th class="num">Last seen</th><th class="act" style="width:1%"></th></tr></thead>
+      <tbody>${trials.map(f => { const t = trialState(f); return `<tr data-trial-row="${esc(f.id)}">
+        <td data-l="Name"><div class="nm">${esc(f.name)}</div><div class="sub">${esc(f.email)}</div></td>
+        <td data-l="Trial">${dot(t.ended ? 'off' : 'warn', t.label)}</td>
+        <td data-l="Classes" class="num">${f.courses || 0}</td>
+        <td data-l="Last seen" class="num">${when(f.last_seen_at)}</td>
+        <td data-l="" class="act" style="white-space:nowrap;width:1%">
+          <button class="btn sm" data-extend="${esc(f.id)}">Extend</button>
+          <button class="btn sm pri" data-make-full="${esc(f.id)}">Make full</button>
+        </td></tr>`; }).join('')}</tbody></table></div></div>`;
+}
+function wireTrials() {
+  app.querySelectorAll('[data-extend]').forEach(b => b.onclick = async () => {
+    const v = prompt('Extend this trial by how many days?\n\nDays count from today, or from the current end date if that is later.', '7');
+    if (v === null) return;
+    const done = acting(b, 'Extending…');
+    try { await api('/api/admin', { action:'extend_trial', facultyId:b.dataset.extend, days:v.trim() }); done(); await load(); }
+    catch (e) { if (e.stale) return; done('Failed','bad'); alert(e.message); }
+  });
+  app.querySelectorAll('[data-make-full]').forEach(b => b.onclick = async () => {
+    const f = D.data.faculty.find(x => x.id === b.dataset.makeFull);
+    if (!confirm(`Make ${f ? f.name : 'this account'} a full account?\n\nStudents can then join their classes, and they can run sessions.`)) return;
+    const done = acting(b, 'Saving…');
+    try { await api('/api/admin', { action:'make_full', facultyId:b.dataset.makeFull }); done(); await load(); }
+    catch (e) { if (e.stale) return; done('Failed','bad'); }
+  });
+}
 function wireFac() {
+  wireTrials();
+  app.querySelectorAll('input[name="ikind"]').forEach(r => r.onchange = () => {
+    D.inviteKind = r.value;
+    const box = app.querySelector('[data-trial-days-box]'); if (box) box.style.display = r.value === 'trial' ? '' : 'none';
+    const hint = app.querySelector('[data-trial-choice] + .hint');
+    if (hint) hint.textContent = r.value === 'trial'
+      ? 'The trial starts today, when you create the invitation. It covers every published simulation for Rehearse and Play it yourself. Students join once you make the account full under Trials.'
+      : 'A full account runs classes with students from the start.';
+  });
   const inv = document.getElementById('inv');
   if (inv) inv.onclick = () => { D.invite = !D.invite; if (!D.invite) D.lastInvite = null; render();
     const n = document.getElementById('in'); if (n) n.focus(); };
@@ -284,9 +355,11 @@ function wireFac() {
     const out = document.getElementById('invout');
     const done = acting(go, 'Creating…'); out.innerHTML = '';
     try {
+      const kind = app.querySelector('input[name="ikind"]:checked')?.value === 'trial' ? 'trial' : 'full';
       const d = await api('/api/admin', { action:'invite_faculty', name, email,
-        institution: document.getElementById('ii').value });
-      D.lastInvite = { name, email, inviteUrl: d.inviteUrl, expiresAt: d.expiresAt };
+        institution: document.getElementById('ii').value,
+        accountKind: kind, trialDays: kind === 'trial' ? document.getElementById('idays').value : undefined });
+      D.lastInvite = { name, email, inviteUrl: d.inviteUrl, expiresAt: d.expiresAt, trialEndsAt: d.accountKind === 'trial' ? d.trialEndsAt : null };
       done(); await load();
     } catch (e) { if (e.stale) return; out.innerHTML = `<div class="hint" style="color:var(--rose)">${esc(e.message)}</div>`; done('Failed','bad'); }
   };
@@ -554,7 +627,7 @@ function catTab() {
               <li>Give them access below. If they have no account, one is made for them.</li>
               <li>You get a written message — <b>nothing is sent automatically</b>. Copy it and send it however you normally would.</li>
               <li>They open it, set a password if they are new, and sign in at <span class="mono">${esc((D.data && D.data.baseUrl) || location.origin)}</span>.</li>
-              <li>The simulation appears under <b>Simulations</b>. They press <b>Preview for 7 days</b>, then <b>Play it</b>.</li>
+              <li>The simulation appears under <b>Simulations</b>. They add it to a class, then press <b>Play it yourself</b>.</li>
               <li>They land straight in it — no access code, nothing else to type.</li>
               <li>You can revoke at any time, and grants disappear on their own when you publish.</li>
             </ol>`)}
@@ -747,7 +820,7 @@ function wireCat() {
           ? `Set your password here — the link works once:\n${d.inviteUrl}`
           : `Sign in at ${d.signInUrl} with the account you already have.`,
         '',
-        'It will be listed under Simulations. Start a preview and play it as a student would.',
+        'It will be listed under Simulations. Add it to a class, then choose Play it yourself to play it as a student would.',
         '',
         'Thanks for looking at it.'
       ].join('\n') };

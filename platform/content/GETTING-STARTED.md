@@ -22,6 +22,8 @@ Rehearse plays the simulation with practice students while you watch it from the
 
 Class home shows one class link. Send it to your students once; it covers every simulation in the class. Students who open it appear under Students. Choose Give access for each student once their registration is settled.
 
+On a trial account, Rehearse and Play it yourself are open; students can join once your account is full.
+
 ## 6. Run a session
 
 On the simulation's Sessions page, choose Start session. Students open the simulation from their own page and join the session by themselves. Follow them on the Students and Results tabs, then run the debrief from your screen. Present fills the screen for the projector.

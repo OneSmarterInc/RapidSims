@@ -281,12 +281,37 @@ async function openStudentResults(courseId, studentId) {
   render();
 }
 
+/* ── trial accounts: Rehearse and Play it yourself in every class; students join once the account is full ── */
+const trialAccount = () => F.data?.account || F.course?.account || null;
+const onTrial = () => !!trialAccount()?.trial;
+const trialEnded = () => !!trialAccount()?.ended;
+const TRIAL_CLASS_NOTE = 'Students can join once your account moves from trial to full. Until then, Rehearse and Play it yourself are open to you.';
+const TRIAL_SESSION_NOTE = 'Your trial covers Rehearse and Play it yourself. Sessions with students open when your account is full.';
+const longDate = t => new Date(t).toLocaleDateString(undefined, { month:'long', day:'numeric', year:'numeric' });
+function renderEnded() {
+  const a = trialAccount();
+  app.innerHTML = `<div class="trial-ended" data-trial-ended>
+    <div class="crumb" style="margin-top:34px">Your account</div>
+    <h1>Your trial has ended</h1>
+    <p class="lede">${esc(a.message || `Your trial ended on ${longDate(a.endsAt)}. To keep going, write to support@flexee.org and we'll move your account to full.`)}</p>
+    <p><a class="btn pri" href="mailto:support@flexee.org?subject=${encodeURIComponent('RapidSims: move my account to full')}">Write to support@flexee.org</a>
+      <a class="btn" href="/faculty.html?view=guide" style="margin-left:6px">Getting started</a></p>
+  </div>`;
+}
+function trialHomeNote() {
+  const a = trialAccount();
+  if (!a?.trial || a.ended) return '';
+  return `<div class="note trial-note" data-trial-home><b>Trial account${a.endsAt ? ` until ${esc(longDate(a.endsAt))}` : ''}.</b>
+    Every published simulation is yours to add to a class, rehearse and play yourself. Students join once your account is full.</div>`;
+}
+
 function render() {
   navigation?.record();
   if (!F.data) { app.innerHTML = F.err
     ? `<div class="crumb" style="margin-top:34px">Teaching</div><div class="head"><div><h1>Something went wrong</h1><p class="hint">${esc(F.err)}</p></div></div>`
     : '<div class="empty" style="margin-top:40px">Loading…</div>'; return; }
-  if (F.view === 'sim-results' && F.simResults) renderSimResults();
+  if (trialEnded() && F.view !== 'guide') renderEnded();
+  else if (F.view === 'sim-results' && F.simResults) renderSimResults();
   else if (F.view === 'played' && F.progress) renderPlayed();
   else if (F.view === 'student-results' && F.studentResults) renderStudentResults();
   else if (F.view === 'sim' && F.course && F.frame) renderFrame();
@@ -302,7 +327,7 @@ function render() {
 /* ── Ask Claude: on every faculty page. A sim's own pages (in the frame) carry their own panel; Rehearse and a sim's
    results answer about that sim; the rest answer about the class and RapidSims. ── */
 function assistContext() {
-  if (!F.data || F.view === 'sim') return null;
+  if (!F.data || F.view === 'sim' || trialEnded()) return null;
   const course = menuCourse();
   const simId = F.view === 'sim-results' ? F.simResults?.sim?.id : F.view === 'played' ? F.progress?.sim?.id : F.view === 'rehearse' ? rehearseSim() : '';
   return { simId: simId || '', courseId: course?.id || '' };
@@ -381,6 +406,16 @@ function frameSrc(f, courseId) {
 }
 function renderFrame() {
   const c = F.course.course, f = F.frame, key = `${c.id}|${f.sim}`;
+  // A trial account opens sessions with students once it is full; this page says so.
+  if (onTrial()) {
+    app.innerHTML = `<div class="crumb"><a data-crumb-class>${esc(c.title)}</a> › Sessions</div>
+      <div class="panel trial-sessions" data-trial-sessions style="padding:18px 20px;margin-top:14px">
+        <h2 style="margin-top:0">Sessions open on a full account</h2>
+        <p>${esc(TRIAL_SESSION_NOTE)}</p>
+        <p><a class="btn sm" data-crumb-class>Back to your class</a></p></div>`;
+    app.querySelectorAll('[data-crumb-class]').forEach(a => a.onclick = () => openCourse(c.id));
+    return;
+  }
   const existing = document.getElementById('simFrame');
   if (existing && existing.dataset.key === key) return;
   const sim = F.course.sims.find(x => x.sim_id === f.sim);
@@ -447,6 +482,7 @@ function renderHome() {
       You are signed in as an administrator, so this shows only courses <b>you</b> run — probably none.
       For everyone's, use the <a href="/admin.html">admin console</a>.
     </div>` : ''}
+    ${trialHomeNote()}
     <div class="strip">
       <div class="cell"><div class="n">${courses.length}</div><div class="l">Classes</div></div>
       <div class="cell"><div class="n">${students}</div><div class="l">Students</div></div>
@@ -525,7 +561,6 @@ function simsTab() {
     return '<div class="panel"><div class="empty">Loading…</div></div>';
   }
   const inUse = F.simsOverview;
-  const prevOf = id => (F.data.previews||[]).find(p => p.sim_id === id);
   const rows = F.data.catalogue.map(si => {
     const u = inUse.find(x => x.id === si.id);
     return Object.assign({}, si, u || {}, { inUse: !!u });
@@ -542,15 +577,14 @@ function simsTab() {
   return `
     <div class="toolbar">
       <div class="search"><input data-q="sim" type="text" placeholder="Search simulations" value="${esc(F.q.sim||'')}"></div>
-      ${helpBtn('preview')}
+      ${helpBtn('avail')}
       <div class="seg">${['All','In use','Available'].map(x =>
         `<button data-f="sim:${x}" class="${f0===x?'on':''}">${x}</button>`).join('')}</div>
     </div>
-    ${explain('preview', 'Trying one before you teach with it', `<ol>
+    ${explain('avail', 'Trying one before you teach with it', `<ol>
       <li>Anything published is here, plus any draft an administrator has given you early sight of.</li>
-      <li><b>Preview for 7 days</b> lets you play it as a student would. Nothing to install, no code to type.</li>
-      <li>Add it to a course when you have decided. The preview is about you seeing it, not your students.</li>
-      <li>A preview that has ended does not stop a course using it — add it to one and it keeps working.</li>
+      <li>Add it to a class. From the class page, <b>Play it yourself</b> opens it as a student sees it, and <b>Rehearse</b> runs it with practice students.</li>
+      <li>The eye beside each title opens its one-pager.</li>
     </ol>`)}
     <div class="panel"><div class="tablewrap"><table>
       <thead><tr><th style="width:40%">Simulation</th><th class="num">Courses</th><th class="num">Started</th><th class="num">Finished</th><th class="act"></th></tr></thead>
@@ -560,7 +594,6 @@ function simsTab() {
         <div class="hint" style="margin:6px 0 10px">${esc(F.simsFailed)}</div>
         <button class="btn sm" id="simretry">Try again</button></td></tr>`
       : shown.length ? shown.map((x, index) => {
-        const p = prevOf(x.id), live = p && daysLeft(p.expires_at) > 0;
         const plus = RapidSimsIdentity.isPlus(x);
         const prev = index > 0 ? shown[index-1] : null;
         const prevPlus = prev ? RapidSimsIdentity.isPlus(prev) : null;
@@ -577,10 +610,7 @@ function simsTab() {
           <td data-l="Started" class="num">${x.inUse ? x.started : '—'}</td>
           <td data-l="Finished" class="num">${x.inUse ? `<span class="ratio ${Number(x.finished)<Number(x.started)?'part':''}">${x.finished}</span>` : '—'}</td>
           <td data-l="" class="act">
-            ${x.inUse ? dot('ok','In use')
-              : live ? `${dot('warn','Preview · ' + daysLeft(p.expires_at) + 'd')}<a class="btn sm" style="margin-left:8px" href="/api/launch?sim=${encodeURIComponent(x.id)}">Play it</a>`
-              : p ? dot('off','Preview ended')
-              : `<button class="btn sm" data-prev="${esc(x.id)}">Preview for 7 days</button>`}
+            ${x.inUse ? dot('ok','In use') : '<span class="hint" style="margin:0">Add it to a class</span>'}
           </td>
         </tr>`;
       }).join('') : `<tr><td colspan="5" class="empty">Nothing available to you yet. Simulations appear once they are published, or when an administrator gives you early access to review one.</td></tr>`}
@@ -591,11 +621,6 @@ function simsTab() {
 function wireSims() {
   const sr = document.getElementById('simretry');
   if (sr) sr.onclick = () => { F.simsOverview = null; F.simsFailed = null; render(); };
-  app.querySelectorAll('[data-prev]').forEach(b => b.onclick = async () => {
-    const done = acting(b, 'Starting…');
-    try { await api('/api/faculty', { action:'start_preview', simId:b.dataset.prev }); done(); F.simsOverview = null; loadHome(); }
-    catch (e) { if (e.stale) return; done('Failed','bad'); }
-  });
 }
 
 /* ── one course ─────────────────────────────────────────────────────────── */
@@ -614,6 +639,7 @@ function renderCourse() {
   const notAdded = catalogue.filter(si => !sims.find(x => x.sim_id === si.id));
   const runFinishes = sims.reduce((n,x) => n + Number(x.finished_runs || 0), 0);
   const allStudents = F.course.roster.filter(r => !r.dropped).length;
+  const trial = onTrial();
 
   app.innerHTML = `
     <div class="crumb"><a id="back">Your classes</a> › ${esc(course.title)}</div>
@@ -695,7 +721,7 @@ function renderCourse() {
         const more = `<details class="faculty-more"><summary class="btn sm">More</summary><div class="faculty-more-menu">${moreItems}</div></details>`;
         return `<div class="sim faculty-sim-card">
           <div class="body">
-            <div class="faculty-sim-title-row"><div class="t">${esc(x.title)}${eye(x.sim_id, 'Preview')}</div></div>
+            <div class="faculty-sim-title-row"><div class="t">${esc(x.title)}${eye(x.sim_id, 'About')}</div></div>
             ${midland ? status : `<div class="faculty-sim-kpis">
               <div class="faculty-sim-kpi"><b>${x.started||0}</b><span>Students started</span></div>
               <div class="faculty-sim-kpi"><b>${x.finished||0}</b><span>Students finished</span></div>
@@ -715,7 +741,7 @@ function renderCourse() {
             </div>
           </div>
         </div>`;
-      }).join('') : '<div class="empty">None yet. Add one above, then share the join link with your students.</div>'}
+      }).join('') : `<div class="empty">${trial ? 'None yet. Add one above to rehearse it and play it yourself.' : 'None yet. Add one above, then share the join link with your students.'}</div>`}
     </div>
 
     <div class="section"><span>Students ${helpBtn('access')}</span>
@@ -730,10 +756,12 @@ function renderCourse() {
       <li>The note is for you: it appears beside them so a term later you can see why they were released.</li>
       <li><b>Take access away</b> stops them starting anything new; it does not undo a run already played.</li>
     </ol>`)}
-    <div class="note faculty-share">
+    ${trial ? `<div class="note faculty-share trial-class-note" data-trial-class-note>
+      <div class="faculty-share-copy"><b>Trial account.</b> ${esc(F.course.classNote || TRIAL_CLASS_NOTE)}</div>
+    </div>` : `<div class="note faculty-share">
       <div class="faculty-share-copy"><b>Students join this class with one link.</b> Send it once. It covers every simulation in the class. Students can also type the join code <span class="faculty-join-code">${esc(course.join_code)}</span></div>
       <div class="copyrow"><input id="eurl" readonly value="${esc(enrolUrl)}"><button class="btn" id="ecopy">Copy</button></div>
-    </div>
+    </div>`}
 
     ${earlier.length || F.showEarlier ? `<div class="faculty-earlier"><span>${F.showEarlier
       ? `Students from earlier sessions, and students you removed. Results stay under Results. Students from earlier sessions come back here when they open the class link or a sim again.`
@@ -741,7 +769,7 @@ function renderCourse() {
       <button class="btn sm" id="earlierBtn">${F.showEarlier ? 'Show current students' : 'Show earlier students'}</button></div>` : ''}
     <div class="toolbar faculty-roster-toolbar">
       <div class="search"><input data-q="ros" type="text" placeholder="Search this class's students" value="${esc(F.q.ros||'')}"></div>
-      ${waiting.length || F.sel.size ? `<input id="p_note" class="faculty-note-input" aria-label="Note for the students you give access (optional)" placeholder="Note (optional)">
+      ${!trial && (waiting.length || F.sel.size) ? `<input id="p_note" class="faculty-note-input" aria-label="Note for the students you give access (optional)" placeholder="Note (optional)">
       <button class="btn" id="p_sel" ${F.sel.size?'':'disabled'}>Give access to ${F.sel.size||''} selected</button>
       ${waiting.length ? `<button class="btn pri" id="p_all">Give access to all ${waiting.length}</button>` : ''}` : ''}
     </div>
@@ -761,12 +789,12 @@ function renderCourse() {
           <button class="btn sm faculty-result-btn" data-student-results="${esc(r.student_id)}">Results</button>
           ${r.archived_at ? `<button class="btn sm" data-restore="${esc(r.enrolment_id)}">Bring back</button>`
           : r.dropped ? `<button class="btn sm" data-drop="${esc(r.enrolment_id)}" data-now="1">Put back</button>`
-            : `${r.paid ? `<button class="btn sm" data-revoke="${esc(r.enrolment_id)}">Take access</button>`
+            : `${trial ? '' : r.paid ? `<button class="btn sm" data-revoke="${esc(r.enrolment_id)}">Take access</button>`
                         : `<button class="btn sm" data-give="${esc(r.enrolment_id)}">Give access</button>`}
                <button class="btn sm" data-reset-pw="${esc(r.enrolment_id)}">Reset password</button>
                <button class="btn sm" data-drop="${esc(r.enrolment_id)}" data-now="0">Remove</button>`}
         </td>
-      </tr>`).join('') : `<tr><td colspan="7" class="empty">${roster.length ? 'Nobody matches that.' : earlier.length && !F.showEarlier ? 'Students appear here when they open the class link or Midland for the next session.' : 'Nobody has joined yet. Share the link above.'}</td></tr>`}
+      </tr>`).join('') : `<tr><td colspan="7" class="empty">${roster.length ? 'Nobody matches that.' : earlier.length && !F.showEarlier ? 'Students appear here when they open the class link or Midland for the next session.' : trial ? 'Students appear here once your account is full.' : 'Nobody has joined yet. Share the link above.'}</td></tr>`}
       </tbody></table></div>
       <div class="foot">
         <span class="info">${rosterPg.total} shown · ${active.length} in this session · ${active.filter(r=>r.paid).length} can play</span>
@@ -817,7 +845,8 @@ function renderCourse() {
       done(); F.addSim = false; openCourse(course.id); }
     catch (e) { if (e.stale) return; done('Failed','bad'); }
   };
-  document.getElementById('ecopy').onclick = () => {
+  const ecopy = document.getElementById('ecopy');
+  if (ecopy) ecopy.onclick = () => {
     const f = document.getElementById('eurl'); f.select(); navigator.clipboard.writeText(f.value);
     flash(document.getElementById('ecopy'), 'Copied');
   };
@@ -1124,6 +1153,12 @@ async function restoreFaculty(params,current) {
   }
   if (view==='sim-results' && F.me?.role!=='faculty') throw Object.assign(new Error('Faculty access required'),{status:403});
   const data=await api('/api/faculty',{action:'overview'});
+  // An ended trial shows one message; Getting started stays readable.
+  if(data.account?.ended){
+    if(!current())return;
+    Object.assign(F,{data,tab:'crs',view:view==='guide'?'guide':'home',course:null,progress:null,frame:null,studentResults:null,simResults:null,simsOverview:null,err:null});
+    F.sel.clear(); return;
+  }
   const tab=params.get('tab')==='sim'?'sim':'crs';
   const simsOverview=tab==='sim' ? (await api('/api/faculty',{action:'sims_overview'})).sims || [] : null;
   // Every class view keeps the class (and its sims) so the menu shows the same items on each page.

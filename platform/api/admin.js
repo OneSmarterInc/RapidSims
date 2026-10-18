@@ -9,6 +9,7 @@ const credentials = require('../lib/credential-tokens');
 const { jsonDetail, launchUrl } = require('../lib/metadata');
 const { probeHealth } = require('../lib/health-probe');
 const { onePagerFor, overrideFrom } = require('../lib/one-pager');
+const T = require('../lib/trial.js');
 
 function body(req) {
   let b = req.body;
@@ -32,7 +33,7 @@ module.exports = async (req, res) => {
       case 'overview': {
         const faculty = await s`
           SELECT u.id, u.name, u.email, u.institution, u.created_at, u.last_seen_at, u.disabled,
-                 u.password_hash IS NOT NULL AS accepted,
+                 u.password_hash IS NOT NULL AS accepted, u.account_kind, u.trial_ends_at,
                  (SELECT count(*) FROM courses c WHERE c.faculty_id = u.id AND c.archived = false) AS courses,
                  (SELECT count(*) FROM enrolments e JOIN courses c ON c.id = e.course_id
                    WHERE c.faculty_id = u.id AND e.dropped = false) AS students,
@@ -71,7 +72,7 @@ module.exports = async (req, res) => {
       case 'faculty_detail': {
         const fid = String(b.facultyId || '');
         const person = (await s`SELECT id, name, email, institution, created_at, last_seen_at, disabled,
-                                       password_hash IS NOT NULL AS accepted
+                                       password_hash IS NOT NULL AS accepted, account_kind, trial_ends_at
                                 FROM users WHERE id = ${fid} AND role = 'faculty'`)[0];
         if (!person) return res.status(404).json({ error: 'no_such_faculty' });
         const courses = await s`
@@ -103,6 +104,11 @@ module.exports = async (req, res) => {
         const name = String(b.name || '').trim();
         const institution = String(b.institution || '').trim() || null;
         if (!email || !name) return res.status(400).json({ error: 'need_name_and_email' });
+        // Full or trial. Only a new account takes the choice; an existing one keeps its kind
+        // (Re-invite sends none), and Trials changes it with Extend or Make full.
+        const kind = b.accountKind === 'trial' ? 'trial' : 'full';
+        const trialDays = kind === 'trial' ? T.days(b.trialDays, T.DEFAULT_DAYS) : null;
+        if (kind === 'trial' && !trialDays) return res.status(400).json({ error: 'invalid_trial_days', message: 'Trial length is a whole number of days, 1 to 365.' });
 
         let uid;
         const existing = (await s`SELECT id, role FROM users WHERE email = ${email}`)[0];
@@ -111,17 +117,44 @@ module.exports = async (req, res) => {
           uid = existing.id;
         } else {
           uid = id('usr');
-          await s`INSERT INTO users (id, email, name, role, institution)
-                  VALUES (${uid}, ${email}, ${name}, 'faculty', ${institution})`;
+          // The trial clock starts now, when the invitation is created.
+          const endsAt = kind === 'trial' ? new Date(Date.now() + trialDays * T.DAY) : null;
+          await s`INSERT INTO users (id, email, name, role, institution, account_kind, trial_ends_at)
+                  VALUES (${uid}, ${email}, ${name}, 'faculty', ${institution}, ${kind}, ${endsAt})`;
         }
+        const account = (await s`SELECT account_kind, trial_ends_at FROM users WHERE id = ${uid}`)[0] || {};
 
         const expires = new Date(Date.now() + 14 * 86400000);
         const token = await credentials.issue(s, uid, 'invite', expires);
         return res.status(200).json({
           facultyId: uid,
           inviteUrl: `${baseUrl(req)}/accept.html?t=${token}`,
-          expiresAt: expires
+          expiresAt: expires,
+          accountKind: account.account_kind || 'full', trialEndsAt: account.trial_ends_at || null,
+          existing: !!existing
         });
+      }
+
+      // Trials: more days from today or from the current end, whichever is later.
+      case 'extend_trial': {
+        const uid = String(b.facultyId || '');
+        const more = T.days(b.days, T.EXTEND_DAYS);
+        if (!more) return res.status(400).json({ error: 'invalid_days', message: 'Give a whole number of days, 1 to 365.' });
+        const rows = await s`UPDATE users
+          SET trial_ends_at = GREATEST(now(), COALESCE(trial_ends_at, now())) + make_interval(days => ${more})
+          WHERE id = ${uid} AND role = 'faculty' AND account_kind = 'trial'
+          RETURNING id, trial_ends_at`;
+        if (!rows.length) return res.status(404).json({ error: 'no_such_trial' });
+        return res.status(200).json({ ok: true, trialEndsAt: rows[0].trial_ends_at });
+      }
+
+      // Trials: the account becomes full. Classes, practice sessions and results carry over.
+      case 'make_full': {
+        const uid = String(b.facultyId || '');
+        const rows = await s`UPDATE users SET account_kind = 'full', trial_ends_at = NULL
+          WHERE id = ${uid} AND role = 'faculty' RETURNING id`;
+        if (!rows.length) return res.status(404).json({ error: 'no_such_faculty' });
+        return res.status(200).json({ ok: true });
       }
 
       // Cancels any unused invitation for this person, so a link sent to the
