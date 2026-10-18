@@ -178,3 +178,25 @@ dialog::backdrop { background: #050910bb; }
 /* The run's own sections line up with the reading column (#56); while a call is made, the page is full width. */
 .play-wrap > section, .play-wrap > p.solo-bar { max-width: 1000px; margin-left: auto; margin-right: auto; }
 body.citing .play-wrap > section, body.citing .play-wrap > p.solo-bar { max-width: none; }
+
+/* Light theme (kit/theme.js sets <html data-theme="light">). Dark above stays the default; same roles on a warm light ground. */
+:root[data-theme="light"] {
+  --ground: #FAF8F3;
+  --sheet: #FFFFFF;
+  --sheet-2: #F2EFE8;
+  --rule: #DCD6CA;
+  --ink: #1C2230;
+  --muted: #5B6373;
+  --amber: #A85A00;
+  --amber-wash: rgba(168, 90, 0, 0.09);
+  --warn: #9A4512;
+}
+:root[data-theme="light"] .btn { color: #FFFFFF; }
+:root[data-theme="light"] .btn.quiet { color: var(--ink); }
+:root[data-theme="light"] .pop { box-shadow: 0 8px 30px rgba(28, 34, 48, .16); }
+:root[data-theme="light"] .saved { color: #1D6E46; }
+:root[data-theme="light"] .saved.error { color: var(--warn); }
+:root[data-theme="light"] .saved.pending { color: var(--amber); }
+:root[data-theme="light"] #reveal table.fig tr.yours td:first-child { background: #F6ECE0; }
+:root[data-theme="light"] table.fig tr.pair-first td { border-top-color: #C4BCAE; }
+:root[data-theme="light"] dialog::backdrop { background: rgba(28, 34, 48, .45); }

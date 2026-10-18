@@ -53,3 +53,21 @@
 .window-summary{display:grid;grid-template-columns:150px 1fr auto;gap:14px;align-items:center;padding:14px;border:1px solid var(--line);background:var(--night)}
 .window-summary span,.window-summary small{color:var(--dim);font-family:var(--mono)}
 @media(max-width:720px){.field-notes{padding:20px;transform:none}.field-notes .notes-head{display:grid}.observation-entry{align-items:flex-start;flex-direction:column}.window-summary{grid-template-columns:1fr}.opening-screen .actions{flex-wrap:wrap}}
+
+/* Light theme (kit/theme.js sets <html data-theme="light">). Dark above stays the default; same roles on a warm light ground. */
+:root[data-theme="light"]{--night:#FAF8F3;--panel:#FFFFFF;--panel2:#F2EFE8;--raise:#EAE6DD;--line:#DCD6CA;--line2:#C4BCAE;--bone:#1C2230;--dim:#5B6373;--dimmer:#5F6776;--amber:#A85A00;--amberDim:#C99A62;--blue:#245A8A;--rose:#8E2F43;--green:#1D6E46}
+:root[data-theme="light"] body{background-image:radial-gradient(1100px 560px at 70% -10%,rgba(168,90,0,.045),transparent 60%)}
+:root[data-theme="light"] .top{background:rgba(250,248,243,.94)}
+:root[data-theme="light"] .lede{color:#384050}
+:root[data-theme="light"] .phase.on{background:rgba(168,90,0,.08)}
+:root[data-theme="light"] .btn.pri{color:#FFFFFF}
+:root[data-theme="light"] .error{color:#8E2F43;background:rgba(194,90,110,.08)}
+:root[data-theme="light"] .task{background:rgba(168,90,0,.06)}
+:root[data-theme="light"] .schedule:hover,:root[data-theme="light"] .starter:hover{background:rgba(168,90,0,.06)}
+:root[data-theme="light"] .opening-progress span.on{background:rgba(168,90,0,.09)}
+:root[data-theme="light"] .claim-sheet{box-shadow:0 6px 20px rgba(28,34,48,.16);border:1px solid #D2CEC2}
+:root[data-theme="light"] .field-notes{box-shadow:0 10px 28px rgba(28,34,48,.14)}
+:root[data-theme="light"] .ledger-track span.alt{background:#4F86B5}
+:root[data-theme="light"] .claim-row span{color:#5A5D53}
+/* Theme switch on phones: bottom-left would sit on the interview's End button, so it moves beside the title in the top bar. */
+@media(max-width:800px){body .rs-theme-btn[data-place="bottom-left"]{left:auto;bottom:auto;top:28px;right:14px}}

@@ -27,3 +27,11 @@ tr.pick{background:var(--panel)}tr.row{cursor:pointer}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 
 .legend{font-size:14px;margin:0 0 8px}.floor{font-size:13px}.floor.within{color:var(--dim)}.floor.past{color:var(--amber)}
+
+/* Light theme (kit/theme.js sets <html data-theme="light">). Dark above stays the default; same roles on a warm light ground. */
+:root[data-theme="light"]{--ground:#FAF8F3;--panel:#FFFFFF;--line:#DCD6CA;--ink:#1C2230;--dim:#5B6373;--amber:#A85A00;--amber-dim:#F3E3CC;--bad:#8E2F43;--good:#1D6E46}
+:root[data-theme="light"] button.primary,:root[data-theme="light"] .sig.on{color:#FFFFFF}
+:root[data-theme="light"] .imposed{color:#8A4A00}
+:root[data-theme="light"] select,:root[data-theme="light"] textarea{background:#FFFFFF}
+:root[data-theme="light"] tr.pick{background:#F2EFE8}
+:root[data-theme="light"] .sig:not(.on){border-color:#C4BCAE}
