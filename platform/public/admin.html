@@ -223,6 +223,8 @@ function facTab() {
         There is no email service, so copy it into your own message. It works once and expires ${when(D.lastInvite.expiresAt)}.
         <div class="copyrow"><input id="iurl" readonly value="${esc(D.lastInvite.inviteUrl)}">
           <button class="btn" id="icopy">Copy</button><button class="btn" id="idone">Done</button></div>
+        Add the Getting started page so they know what to do first (it is also in their menu once they sign in):
+        <div class="copyrow"><input readonly value="${esc(location.origin + '/getting-started.html')}"></div>
       </div>` : ''}
     </div></div>` : ''}
 

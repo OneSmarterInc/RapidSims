@@ -1,7 +1,7 @@
 /* Faculty left menu, shared by the class pages and every sim's session pages.
    FacultyMenu.mount({ classes, course, sims, current, onNavigate }) draws it; call again to update.
    course: { id, title }   sims: [{ id, title, links:{ sessions, results, play, rehearse }, session:{ label, state, links:{ teams, results, debrief } } }]
-   current: 'classes' | 'class' | '<simId>:sessions' | '<simId>:teams' | '<simId>:results' | '<simId>:debrief' | '<simId>:all-results' | '<simId>:rehearse'
+   current: 'classes' | 'guide' | 'class' | '<simId>:sessions' | '<simId>:teams' | '<simId>:results' | '<simId>:debrief' | '<simId>:all-results' | '<simId>:rehearse'
    onNavigate(key): optional; return true when the page handles the link itself. */
 (function (global) {
 'use strict';
@@ -78,7 +78,7 @@ function html() {
     out += `<div class="rs-h">${c ? 'Other classes' : 'Your classes'}</div>`;
     for (const k of others) out += link(`class:${k.id}`, k.href, k.title);
   }
-  out += `<div class="rs-foot">${link('classes', opts.classesHref || '/faculty.html', 'Your classes')}</div>`;
+  out += `<div class="rs-foot">${link('classes', opts.classesHref || '/faculty.html', 'Your classes')}${opts.guideHref ? link('guide', opts.guideHref, 'Getting started') : ''}</div>`;
   return out;
 }
 
