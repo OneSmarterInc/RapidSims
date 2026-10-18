@@ -70,7 +70,7 @@ const MIND = 'I would need to see like-for-like revenue growing faster than capi
     for (const [sub, name] of [['ana', 'Ana Lopez'], ['ben', 'Ben Ode']]) {
       st[sub] = await open(sub);
       await st[sub].goto(`${origin}/sim10/#lt=${encodeURIComponent(token(sub, name, 'student'))}`);
-      await st[sub].waitForFunction(() => /you're in/i.test(document.body.innerText));
+      await st[sub].waitForFunction(() => /you're in/i.test((document.body?.innerText || "")));
       ok(st[sub].url().includes('play?code=' + code), `${name} lands in the class session from the class link`);
     }
     await fac.evaluate(() => FacultySession.page.refresh());
@@ -111,7 +111,7 @@ const MIND = 'I would need to see like-for-like revenue growing faster than capi
     ok(/Questions to discuss/.test(await ana.locator('#review').innerText()), 'Four questions follow the last outcome');
     await ana.fill('#rv1', 'It did: cash kept falling.'); await ana.fill('#rv2', 'Capital spending first.');
     await ana.locator('#review-send').click();
-    await ana.waitForFunction(() => document.body.innerText.includes('Review sent'));
+    await ana.waitForFunction(() => (document.body?.innerText || "").includes('Review sent'));
     ok(true, 'The student answers the review after the outcome');
     await ana.screenshot({ path: path.join(artifacts, '05-student-review.png'), fullPage: true });
 
@@ -128,7 +128,7 @@ const MIND = 'I would need to see like-for-like revenue growing faster than capi
 
     const live = await open('live');
     await live.goto(`${origin}/sim10/${liveHref.replace(/#lt=.*/, '')}#lt=${encodeURIComponent(facLT)}`);
-    await live.waitForFunction(() => document.body.innerText.includes('Company 1'));
+    await live.waitForFunction(() => (document.body?.innerText || "").includes('Company 1'));
     ok(!/\broom\b/i.test(await live.locator('body').innerText()), 'The Live screen opens this session, with no "room"');
     await live.screenshot({ path: path.join(artifacts, '12-live-screen.png'), fullPage: true });
 

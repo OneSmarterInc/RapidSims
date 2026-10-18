@@ -59,6 +59,8 @@ function token(sub, role = 'student', mode = 'play', name = sub) {
   return raw + '.' + crypto.createHmac('sha256', process.env.LAUNCH_SECRET).update(raw).digest('base64url');
 }
 let browser, checks = 0;
+const fitsPhone = async pg => { const vp = pg.viewportSize(); await pg.setViewportSize({ width: 390, height: 844 }); await pg.waitForTimeout(100);
+  const w = await pg.evaluate(() => [document.documentElement.scrollWidth, innerWidth]); await pg.setViewportSize(vp); return w[0] <= w[1]; };
 const ok = (v, m) => { assert.ok(v, m); checks++; console.log('PASS:', m); };
 (async () => {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -123,6 +125,7 @@ const ok = (v, m) => { assert.ok(v, m); checks++; console.log('PASS:', m); };
   for (const s of students) { await s.locator('[data-sign="threshold"]').waitFor(); await s.locator('[data-sign="threshold"]').click(); await s.waitForFunction(() => view.sheet.signatures.threshold.includes(view.seat)); }
   await students[0].waitForFunction(() => view.sheet.locked.threshold);
   ok(true, 'All four seats sign the threshold; it locks');
+  ok(await fitsPhone(students[0]), 'At 390px the term sheet does not scroll sideways (its table scrolls)');
   await fac.evaluate(() => FacultySession.page.refresh());
   await fac.locator('#fw-advanced summary').click();
   const notice = fac.locator('#fw-advanced-content [data-session-control^="notice__"]').first();
