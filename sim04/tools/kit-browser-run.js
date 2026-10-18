@@ -16,6 +16,8 @@ const { signBack } = require('../lib/launch.js');
 const root = path.resolve(__dirname, '..');
 const artifacts = path.resolve(process.env.ARTIFACTS || 'browser-artifacts/sim04-kit');
 const SIM = 'rapid-04-whose-number';
+const fitsPhone = async pg => { const vp = pg.viewportSize(); await pg.setViewportSize({ width: 390, height: 844 }); await pg.waitForTimeout(100);
+  const w = await pg.evaluate(() => [document.documentElement.scrollWidth, innerWidth]); await pg.setViewportSize(vp); return w[0] <= w[1]; };
 let checks = 0; const ok = (v, m) => { assert.ok(v, m); checks++; console.log('PASS:', m); };
 
 const sessions = new Map();
@@ -113,6 +115,7 @@ const token = (sub, name, role) => signBack({ kind: 'launch', run: 'lch-' + sub,
     await ana.locator('#afterCommit').waitFor({ state: 'visible' });
     ok((await ana.locator('#afterCommit').innerText()).includes('What did your definition count'), 'Four questions follow the number');
     await ana.screenshot({ path: path.join(artifacts, '03-student-after-commit.png'), fullPage: true });
+    ok(await fitsPhone(ana), 'At 390px the student page with the data tables does not scroll sideways (the tables scroll)');
     for (const [sub, n] of [['ben', '69.6'], ['cal', '80.0']]) {
       await pages[sub].fill('#number', n); await pages[sub].selectOption('#confidence', '3');
       await pages[sub].locator('#commitForm button[type=submit]').click();

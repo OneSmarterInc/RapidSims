@@ -107,7 +107,7 @@ p.body{color:var(--soft);margin-bottom:14px}
 .alloc .who small{display:block;font:12px var(--mono);color:var(--dimmer)}
 .alloc .share{height:8px;background:var(--line);position:relative}
 .alloc .share i{position:absolute;inset:0 auto 0 0;background:var(--amber)}
-.alloc .ctl{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.alloc .ctl{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px}
 .alloc .ctl b{font:500 16px var(--mono);min-width:92px;text-align:right;font-variant-numeric:tabular-nums}
 .alloc .ctl button{width:34px;height:34px;border:1px solid var(--line2);font:500 18px var(--mono)}
 .alloc .ctl button:disabled{opacity:.3;cursor:not-allowed}
@@ -146,7 +146,7 @@ p.body{color:var(--soft);margin-bottom:14px}
 .names{list-style:none;border-top:1px solid var(--line);margin-top:10px}
 .names li{display:grid;grid-template-columns:260px 1fr;gap:16px;padding:10px 0;border-bottom:1px solid var(--line)}
 .names li span{color:var(--dim)}
-.ctl .rest{width:auto;padding:0 10px;margin-left:8px;font-size:12px;white-space:nowrap}
+.alloc .ctl .rest{width:auto;padding:0 10px;margin-left:8px;font-size:12px;white-space:nowrap}
 .closing{font-size:28px;line-height:1.3;border-left:3px solid var(--amber);padding:4px 0 4px 20px;margin:30px 0 0;max-width:30ch}
 @media (prefers-reduced-motion:no-preference){.stage.fresh{animation:land .7s ease-out}}
 @keyframes land{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}

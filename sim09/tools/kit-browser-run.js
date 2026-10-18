@@ -17,6 +17,8 @@ const store = require('../lib/store.js');
 const S8 = require('../lib/scenario.js');
 const root = path.resolve(__dirname, '..');
 const artifacts = path.resolve(process.env.ARTIFACTS || 'browser-artifacts/sim09-kit');
+const fitsPhone = async pg => { const vp = pg.viewportSize(); await pg.setViewportSize({ width: 390, height: 844 }); await pg.waitForTimeout(100);
+  const w = await pg.evaluate(() => [document.documentElement.scrollWidth, innerWidth]); await pg.setViewportSize(vp); return w[0] <= w[1]; };
 let checks = 0; const ok = (v, m) => { assert.ok(v, m); checks++; console.log('PASS:', m); };
 const runsMap = new Map();
 const sessions = new Map(), people = new Map(), lists = new Map(), pointers = new Map();
@@ -150,6 +152,9 @@ const token = (sub, name, role) => { const body = Buffer.from(JSON.stringify({ k
     await live.waitForFunction(c => (document.body?.innerText || "").includes(c), code);
     ok(!/\broom\b/i.test(await live.locator('body').innerText()), 'The Live screen opens this session, with no "room"');
     await live.screenshot({ path: path.join(artifacts, '11-live-screen.png'), fullPage: true });
+    ok(await fitsPhone(live), 'At 390px the Live screen does not scroll sideways');
+    await live.goto(`${origin}/sim09/launch.html`);
+    ok(await fitsPhone(live), 'At 390px the launch page does not scroll sideways');
 
     await fac.locator('[data-session-control="close"]').click();
     await fac.waitForFunction(() => FacultySession.page.state?.session?.state === 'closed');
