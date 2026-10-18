@@ -721,7 +721,7 @@ function renderCourse() {
         const more = `<details class="faculty-more"><summary class="btn sm">More</summary><div class="faculty-more-menu">${moreItems}</div></details>`;
         return `<div class="sim faculty-sim-card">
           <div class="body">
-            <div class="faculty-sim-title-row"><div class="t">${esc(x.title)}${eye(x.sim_id, 'Preview')}</div></div>
+            <div class="faculty-sim-title-row"><div class="t">${esc(x.title)}${eye(x.sim_id, 'About')}</div></div>
             ${midland ? status : `<div class="faculty-sim-kpis">
               <div class="faculty-sim-kpi"><b>${x.started||0}</b><span>Students started</span></div>
               <div class="faculty-sim-kpi"><b>${x.finished||0}</b><span>Students finished</span></div>
