@@ -91,7 +91,7 @@ const token = (sub, name, role) => { const body = Buffer.from(JSON.stringify({ k
     for (const [sub, name] of [['ana', 'Ana Lopez'], ['ben', 'Ben Ode']]) {
       st[sub] = await open(sub);
       await st[sub].goto(`${origin}/sim06/#lt=${encodeURIComponent(token(sub, name, 'student'))}`);
-      await st[sub].waitForFunction(() => /what is going on/i.test(document.body.innerText));
+      await st[sub].waitForFunction(() => /what is going on/i.test(document.body?.innerText || ""));
       ok(st[sub].url().includes('session=' + code), `${name} lands in the class session from the class link`);
       await st[sub].locator('#skip').click();
       await st[sub].waitForFunction(() => document.body.innerText.includes('Waiting for your instructor'));

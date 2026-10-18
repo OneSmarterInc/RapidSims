@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
+<script src="kit/theme.js?v=20261018a" data-place="bottom-right"></script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Do We Switch? — Live screen</title>
@@ -29,6 +30,15 @@ h2{font-size:32px;font-weight:400;margin:0 0 10px}.muted{color:var(--d)}
 .join-big{text-align:center;padding-top:8vh}.join-big .code{font-size:14vw}.join-big p{font-size:28px}
 .deb{border-left:2px solid var(--x);padding:6px 0 6px 14px;margin:12px 0}.deb b{display:block;font:10px var(--m);letter-spacing:.12em;text-transform:uppercase;color:var(--x);margin-bottom:4px}
 .present{position:fixed;inset:0;z-index:30;background:var(--n);padding:5vh 6vw;overflow:auto}.present .kpi b{font-size:72px}.present h2{font-size:52px}.present .bars{height:40vh}
+/* Light theme (kit/theme.js sets <html data-theme="light">); the dark values above stay the default. */
+:root[data-theme="light"]{--n:#FAF8F3;--p:#FFFFFF;--p2:#F2EFE8;--l:#DCD6CA;--l2:#C4BCAE;--b:#1C2230;--d:#5B6373;--dd:#5F6676;--a:#A85A00;--g:#1D6E46;--r:#8E2F43;--x:#245A8A}
+:root[data-theme="light"] .pri{color:#FFFFFF}
+:root[data-theme="light"] .notice{background:rgba(168,90,0,.06);color:#384050}
+:root[data-theme="light"] .bad{color:#8E2F43}
+:root[data-theme="light"] .danger{border-color:#C25A6E;color:#8E2F43}
+:root[data-theme="light"] .mode.on{background:rgba(168,90,0,.06)}
+:root[data-theme="light"] .sw{background:rgba(194,90,110,.6)}:root[data-theme="light"] .st{background:rgba(63,127,184,.55)}:root[data-theme="light"] .lsw:before{background:rgba(194,90,110,.75)}:root[data-theme="light"] .lst:before{background:rgba(63,127,184,.7)}
+:root[data-theme="light"] .field input{background:#FFFFFF}
 </style>
 </head>
 <body>
