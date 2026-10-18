@@ -147,11 +147,11 @@ function showBanner() {
   // A refused sign-in link has its own page; the banner is for an unreachable server or a missing code.
   if (BAD_LAUNCH || document.getElementById('keybar')) return;
   const needCode = NEEDS_CODE && !BAD_LAUNCH;
-  const bar = el(`<div id="keybar" style="position:fixed;left:0;right:0;bottom:0;z-index:60;border-top:1px solid var(--sophia);background:#1A1420;padding:12px 18px">
+  const bar = el(`<div id="keybar" style="position:fixed;left:0;right:0;bottom:0;z-index:60;border-top:1px solid var(--sophia);background:var(--keybar-bg);padding:12px 18px">
     <div style="max-width:1100px;margin:0 auto">
       <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:7px">
         <span style="font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--sophia)">${needCode ? 'Access code needed' : 'Call unreachable'}</span>
-        <span style="font-size:13px;color:#C4C1B9;line-height:1.5">${needCode
+        <span style="font-size:13px;color:var(--tx-soft);line-height:1.5">${needCode
           ? 'Enter the code you were given and the characters will come live.'
           : 'The server didn\'t answer. Anything you\'ve already done is still here.'}</span>
       </div>
@@ -472,7 +472,7 @@ function openCommit() {
       <button class="ibtn ${first ? 'on' : ''}" data-g="what" type="button" aria-label="What is this">i</button>
     </div>
     <p class="lede">Three things, and the third one matters most.</p>
-    <div style="border-left:2px solid var(--amber);padding:9px 13px;margin:0 0 20px;background:rgba(240,166,60,.06);font-size:13.5px;line-height:1.55;color:#D8D4CA">
+    <div style="border-left:2px solid var(--amber);padding:9px 13px;margin:0 0 20px;background:rgba(240,166,60,.06);font-size:13.5px;line-height:1.55;color:var(--tx-task)">
       This locks when you submit, and it <b>moves the incident forward</b> — you won't be able to question anyone about this moment again. Finish on the call before you commit.
     </div>
     <div class="guide" id="g-what" style="display:${first ? 'block' : 'none'}">${GUIDE.what}</div>
@@ -766,11 +766,11 @@ function renderHeld() {
 
 function renderPausedOverlay() {
   if (document.getElementById('pausebar')) return;
-  const bar = el(`<div id="pausebar" style="position:fixed;inset:0;z-index:70;background:rgba(6,10,18,.9);display:grid;place-items:center;padding:24px">
+  const bar = el(`<div id="pausebar" style="position:fixed;inset:0;z-index:70;background:var(--pause-bg);display:grid;place-items:center;padding:24px">
     <div style="max-width:460px;text-align:center">
       <div class="eyebrow" style="margin-bottom:10px">The facilitator has frozen the clock</div>
       <div style="font-size:30px;font-weight:300;letter-spacing:-.02em;margin-bottom:12px">Hold on.</div>
-      <p style="color:#CFCCC4;font-size:16px;line-height:1.6">Nothing is lost and the incident hasn't moved. Talk to the room — this will lift on its own.</p>
+      <p style="color:var(--tx-body);font-size:16px;line-height:1.6">Nothing is lost and the incident hasn't moved. Talk to the room — this will lift on its own.</p>
     </div>
   </div>`);
   document.body.appendChild(bar);
@@ -848,7 +848,7 @@ function mountHelp() {
   if (document.getElementById('helpbtn')) return;
   const b = el(`<button id="helpbtn" aria-label="How this works" title="How this works" style="
     position:fixed;top:11px;right:49px;z-index:55;width:30px;height:30px;
-    border:1px solid var(--line2);background:rgba(14,21,36,.85);color:var(--dim);
+    border:1px solid var(--line2);background:var(--float-bg);color:var(--dim);
     font-family:var(--mono);font-size:13px;line-height:1;display:grid;place-items:center">?</button>`);
   document.body.appendChild(b);
   b.onclick = openHelp;
@@ -864,7 +864,7 @@ function mountSettings() {
   if (document.getElementById('cog')) return;
   const cog = el(`<button id="cog" aria-label="Settings" style="
     position:fixed;top:11px;right:13px;z-index:55;width:30px;height:30px;
-    border:1px solid var(--line2);background:rgba(14,21,36,.85);color:var(--dim);
+    border:1px solid var(--line2);background:var(--float-bg);color:var(--dim);
     font-family:var(--mono);font-size:13px;line-height:1;display:grid;place-items:center">⚙</button>`);
   document.body.appendChild(cog);
   cog.onclick = openSettings;
