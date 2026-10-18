@@ -1,6 +1,13 @@
 const { sql, id } = require('../lib/db.js');
 const A = require('../lib/auth.js');
 const { supportsSessions } = require('../lib/session-sims.js');
+const T = require('../lib/trial.js');
+
+// A class whose instructor is on a trial account takes no students yet.
+const closedToStudents = async (s, courseId) =>
+  (await s`SELECT 1 FROM courses c JOIN users u ON u.id = c.faculty_id WHERE c.id = ${courseId} AND u.account_kind = 'trial'`).length > 0;
+const classClosed = (res, course) => res.status(403).json({ error: 'class_not_open', message: T.JOIN_CLOSED,
+  course: course ? { title: course.title, faculty_name: course.faculty_name || null } : undefined });
 
 function body(req) {
   let b = req.body;
@@ -26,16 +33,18 @@ module.exports = async (req, res) => {
         const code = String(b.joinCode || '').toUpperCase().trim();
         const rows = !code && b.courseId && await supportsSessions(s, String(b.simId || ''))
           ? await s`
-              SELECT c.title, c.term, c.join_code, u.name AS faculty_name, u.institution
+              SELECT c.title, c.term, c.join_code, u.name AS faculty_name, u.institution, u.account_kind
               FROM courses c JOIN users u ON u.id = c.faculty_id
               JOIN course_sims cs ON cs.course_id = c.id
               WHERE c.id = ${String(b.courseId)} AND cs.sim_id = ${String(b.simId)} AND c.archived = false`
           : await s`
-              SELECT c.title, c.term, c.join_code, u.name AS faculty_name, u.institution
+              SELECT c.title, c.term, c.join_code, u.name AS faculty_name, u.institution, u.account_kind
               FROM courses c JOIN users u ON u.id = c.faculty_id
               WHERE c.join_code = ${code} AND c.archived = false`;
         if (!rows.length) return res.status(404).json({ error: 'no_such_course' });
-        return res.status(200).json({ course: rows[0] });
+        const { account_kind, ...course } = rows[0];
+        if (account_kind === 'trial') return classClosed(res, course);
+        return res.status(200).json({ course });
       }
 
       // Creates the account if needed, then enrols. One step, because a student
@@ -48,6 +57,7 @@ module.exports = async (req, res) => {
 
         const course = (await s`SELECT * FROM courses WHERE join_code = ${code} AND archived = false`)[0];
         if (!course) return res.status(404).json({ error: 'no_such_course' });
+        if (await closedToStudents(s, course.id)) return classClosed(res, course);
         if (!email || !name) return res.status(400).json({ error: 'need_name_and_email' });
         if (pw.length < 8) return res.status(400).json({ error: 'weak_password', message: 'Use at least 8 characters.' });
 
@@ -92,6 +102,7 @@ module.exports = async (req, res) => {
         const code = String(b.joinCode || '').toUpperCase().trim();
         const course = (await s`SELECT * FROM courses WHERE join_code = ${code} AND archived = false`)[0];
         if (!course) return res.status(404).json({ error: 'no_such_course' });
+        if (await closedToStudents(s, course.id)) return classClosed(res, course);
         const already = (await s`SELECT id, dropped FROM enrolments WHERE course_id = ${course.id} AND student_id = ${me.id}`)[0];
         if (already?.dropped) return res.status(403).json({ error: 'instructor_approval_required' });
         if (already) await s`UPDATE enrolments SET archived_at = NULL, archived_session = NULL WHERE id = ${already.id} AND archived_at IS NOT NULL`;

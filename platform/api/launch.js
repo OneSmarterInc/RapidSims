@@ -6,8 +6,8 @@ const A = require('../lib/auth.js');
 const { launchToken } = require('../lib/launch.js');
 const escapeHtml = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-function deny(res, wants, title, message) {
-  if (wants === 'json') return res.status(403).json({ error: 'not_entitled', title, message });
+function deny(res, wants, title, message, back = { href: '/', label: 'Back to your courses' }, error = 'not_entitled') {
+  if (wants === 'json') return res.status(403).json({ error, title, message });
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   return res.status(403).send(`<!DOCTYPE html><html><head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,11 +15,12 @@ function deny(res, wants, title, message) {
     <div class="narrow">
       <div class="eyebrow">Flexee RapidSims</div>
       <h1>${escapeHtml(title)}</h1><p class="lede">${escapeHtml(message)}</p>
-      <p><a href="/">Back to your courses</a></p>
+      <p><a href="${escapeHtml(back.href)}">${escapeHtml(back.label)}</a></p>
     </div></body></html>`);
 }
 
 const { sessionSupported } = require('../lib/session-sims.js');
+const T = require('../lib/trial.js');
 
 module.exports = async (req, res) => {
   const q = req.query || {};
@@ -86,6 +87,18 @@ module.exports = async (req, res) => {
       }
     }
 
+    // Trial accounts: an ended trial opens nothing; a running trial opens a session page
+    // only for its own practice session (Rehearse's "See the faculty view").
+    const account = T.trialOf(me);
+    if (account.ended) return deny(res, wants, T.ENDED_TITLE, account.message, { href: '/faculty.html', label: 'Back to your classes' }, 'trial_ended');
+    if (account.trial && mode === 'session') {
+      const course = courseId ? (await s`SELECT * FROM courses WHERE id = ${courseId} AND faculty_id = ${me.id}`)[0] : null;
+      const M = require('../lib/midland-sessions.js');
+      const allowed = course && M.KIT_SIMS[sim.id] && await T.practiceSessionMatches({ me, course, sim, session, practiceStatus: M.practiceStatus });
+      if (!allowed) return deny(res, wants, T.SESSION_TITLE, T.SESSION_MESSAGE,
+        { href: course ? `/faculty.html?view=course&course=${encodeURIComponent(course.id)}` : '/faculty.html', label: course ? 'Back to your class' : 'Back to your classes' }, 'trial_account');
+    }
+
     let asRole = null;
 
     if (me.role === 'admin') {
@@ -111,7 +124,7 @@ module.exports = async (req, res) => {
           'The seven days are up. Add this simulation to a course to keep using it.');
       }
       if (!asRole) return deny(res, wants, 'Not on your list yet',
-        'Start a preview from your dashboard, or add this simulation to one of your courses.');
+        'Add this simulation to one of your classes to open it.');
 
     } else {
       // student

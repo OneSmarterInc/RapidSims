@@ -224,3 +224,9 @@ CREATE TABLE IF NOT EXISTS assist_usage (
 
 CREATE INDEX IF NOT EXISTS assist_usage_user_sim_idx ON assist_usage(user_id, sim_id, created_at);
 CREATE INDEX IF NOT EXISTS assist_usage_created_idx ON assist_usage(created_at);
+
+-- Trial accounts: an administrator invites a facilitator as full or trial. A trial
+-- has every published simulation for Rehearse and Play it yourself; students join
+-- once the account is full. The clock starts when the invitation is created.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS account_kind TEXT NOT NULL DEFAULT 'full';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMPTZ;

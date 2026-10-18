@@ -199,4 +199,8 @@ module.exports = [
 `CREATE INDEX IF NOT EXISTS assist_usage_user_sim_idx ON assist_usage(user_id, sim_id, created_at)`,
 
 `CREATE INDEX IF NOT EXISTS assist_usage_created_idx ON assist_usage(created_at)`,
+
+`ALTER TABLE users ADD COLUMN IF NOT EXISTS account_kind TEXT NOT NULL DEFAULT 'full'`,
+
+`ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMPTZ`,
 ];

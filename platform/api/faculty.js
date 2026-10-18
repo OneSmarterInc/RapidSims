@@ -2,6 +2,7 @@ const { sql, id, joinCode } = require('../lib/db.js');
 const { ensureTranscripts } = require('../lib/transcripts.js');
 const A = require('../lib/auth.js');
 const { present } = require('../lib/catalogue.js');
+const T = require('../lib/trial.js');
 
 function body(req) {
   let b = req.body;
@@ -42,6 +43,13 @@ module.exports = async (req, res) => {
 
   const b = body(req);
   const s = sql();
+  // A trial account: everything except students joining and sessions with students.
+  // An ended trial answers every action with one message; nothing is deleted.
+  const account = T.trialOf(me);
+  if (account.ended) {
+    if (b.action === 'overview') return res.status(200).json({ courses: [], catalogue: [], previews: [], baseUrl: baseUrl(req), me: A.publicUser(me), account });
+    return res.status(403).json({ error: 'trial_ended', title: T.ENDED_TITLE, message: account.message, account });
+  }
 
   try {
     switch (String(b.action || '')) {
@@ -165,7 +173,7 @@ module.exports = async (req, res) => {
           ORDER BY c.created_at DESC`;
         const catalogue = await visibleSims(s, me.id);
         const previews = await s`SELECT * FROM previews WHERE user_id = ${me.id}`;
-        return res.status(200).json({ courses, catalogue, previews, baseUrl: baseUrl(req), me: A.publicUser(me) });
+        return res.status(200).json({ courses, catalogue, previews, baseUrl: baseUrl(req), me: A.publicUser(me), account });
       }
 
       // Every simulation this person is using, across all their courses, with
@@ -292,9 +300,12 @@ module.exports = async (req, res) => {
           WHERE e.course_id = ${course.id}
           ORDER BY e.dropped, (e.archived_at IS NOT NULL), u.name`;
         const catalogue = await visibleSims(s, me.id);
+        // A trial class has no class link yet: students join once the account is full.
         return res.status(200).json({
-          course, sims, roster, catalogue,
-          enrolUrl: `${baseUrl(req)}/join.html?c=${course.join_code}`
+          course, sims, roster, catalogue, account,
+          studentsOpen: !account.trial,
+          classNote: account.trial ? T.CLASS_NOTE : null,
+          enrolUrl: account.trial ? null : `${baseUrl(req)}/join.html?c=${course.join_code}`
         });
       }
 
@@ -411,6 +422,7 @@ module.exports = async (req, res) => {
       // Marks individuals, or the whole course at once. This is the entitlement
       // switch — payment happens outside the system and lands here.
       case 'set_paid': {
+        if (account.trial) return res.status(403).json({ error: 'trial_account', message: T.CLASS_NOTE });
         const course = await ownCourse(s, me.id, String(b.courseId || ''));
         if (!course) return res.status(404).json({ error: 'no_such_course' });
         const paid = !!b.paid;

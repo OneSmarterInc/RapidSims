@@ -46,6 +46,8 @@ const query = async (strings, ...v) => {
     return c && !c.archived && (!q.includes('cs.sim_id =') || v[1] === sim.id) ? [{...c, faculty_name:'Teacher'}] : [];
   }
   if (q.startsWith('SELECT * FROM courses WHERE join_code')) return [...courses.values()].filter(c => c.join_code === v[0] && !c.archived);
+  // Trial accounts: no class in this fixture belongs to a trial account.
+  if (q.startsWith('SELECT 1 FROM courses c JOIN users u ON u.id = c.faculty_id WHERE c.id = ? AND u.account_kind')) return [];
   if (q.startsWith('SELECT id FROM enrolments') || q.startsWith('SELECT id, dropped FROM enrolments')) return enrolments.filter(e => e.course_id === v[0] && e.student_id === v[1]);
   if (q.startsWith('INSERT INTO enrolments ')) { enrolments.push({id:v[0], course_id:v[1], student_id:v[2], paid:false, dropped:false}); return []; }
   if (q.startsWith('UPDATE enrolments SET dropped')) { enrolments.find(e => e.id === v[0]).dropped=false; return []; }
