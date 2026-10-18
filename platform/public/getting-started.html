@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Getting started · Flexee RapidSims</title>
+<link rel="stylesheet" href="/app.css?v=20261018b">
+<style>body{background:#F4F4F2;margin:0}.gs-top{padding:18px 22px;font:500 18px Georgia,serif}.gs-top i{color:#A8620D}main{padding:0 16px 40px;display:flex;flex-direction:column;align-items:center}.guide-page{background:#fff;border:1px solid #E4E4E0;width:min(760px,100%);box-sizing:border-box}.guide-actions{width:min(760px,100%)}.gs-in{display:inline-block;margin-left:10px}</style>
+</head><body>
+<div class="gs-top">Flexee <i>RapidSims</i></div>
+<main><div class="panel guide-page" id="guide"><p class="hint">Loading…</p></div>
+<div class="guide-actions"><button class="btn sm" type="button" onclick="window.print()">Print or save as PDF</button><a class="btn sm gs-in" href="/faculty.html">Sign in</a></div></main>
+<div class="narrow"><div class="foot-note">
+  <span>&copy; 2026 Flexee LLC. All rights reserved.</span>
+  <span><a href="mailto:support@flexee.org">support@flexee.org</a></span>
+</div></div>
+<script>
+// The public copy of Getting started, for invitation emails (the same text as the faculty menu's page).
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+fetch('/api/guide').then(r=>r.ok?r.json():null).then(d=>{document.getElementById('guide').innerHTML=d?String(d.text).split(/\n{2,}/).map(b=>b.startsWith('# ')?`<h1>${esc(b.slice(2))}</h1>`:b.startsWith('## ')?`<h3>${esc(b.slice(3))}</h3>`:`<p>${esc(b).replace(/\n/g,' ')}</p>`).join(''):'<p class="hint">Getting started is not available right now.</p>'});
+</script></body></html>

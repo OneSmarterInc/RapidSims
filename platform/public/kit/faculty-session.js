@@ -108,7 +108,7 @@ function renderNav(){
   if(!window.FacultyMenu&&BASE&&!document.getElementById('rs-menu-script')){const sc=document.createElement('script');sc.id='rs-menu-script';sc.src=(facultyDashboard||'/faculty.html').replace(/faculty\.html.*$/,'')+'faculty-menu.js';sc.onload=()=>renderNav();document.head.appendChild(sc)}
   if(!window.FacultyMenu||!course)return;
   const dash=facultyDashboard||'/faculty.html',tab=sessionTab();
-  FacultyMenu.mount({classesHref:dash,current:code?`${SIM_ID}:${tab==='manage'?'teams':tab||'teams'}`:`${SIM_ID}:sessions`,
+  FacultyMenu.mount({classesHref:dash,guideHref:dash+'?view=guide',current:code?`${SIM_ID}:${tab==='manage'?'teams':tab||'teams'}`:`${SIM_ID}:sessions`,
     course:{id:course,title:classTitle||'Class',href:courseHref},
     sims:[{id:SIM_ID,title:SIM.title,links:{sessions:'#sessions',results:`${dash}?view=sim-results&course=${encodeURIComponent(course)}&sim=${SIM_ID}`,
       rehearse:`${dash}?view=rehearse&course=${encodeURIComponent(course)}`,play:`/api/launch?sim=${SIM_ID}&course=${encodeURIComponent(course)}`},

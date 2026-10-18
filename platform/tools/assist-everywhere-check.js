@@ -62,6 +62,8 @@ process.env.ANTHROPIC_API_KEY = 'test-key'; process.env.LAUNCH_SECRET = 'assist-
       const url = new URL(req.url, 'http://localhost');
       if (url.pathname.startsWith('/api/')) { let raw = ''; for await (const part of req) raw += part; const b = raw ? JSON.parse(raw) : {};
         if (b.action === 'me') { res.setHeader('content-type', 'application/json'); return res.end(JSON.stringify({ user: { id: 'f1', role: 'faculty', name: 'Teacher' } })); }
+        if (url.pathname === '/api/guide') { const out = { statusCode: 200, headers: {}, setHeader(k, v) { this.headers[k] = v; }, status(c) { this.statusCode = c; return this; }, json(d) { this.body = d; return this; } };
+          await require('../api/guide.js')({ method: 'GET', url: req.url }, out); res.writeHead(out.statusCode, { 'content-type': 'application/json' }); return res.end(JSON.stringify(out.body)); }
         if (url.pathname !== '/api/faculty') { res.writeHead(404, { 'content-type': 'application/json' }); return res.end('{}'); }
         const out = await call(b); res.writeHead(out.statusCode, { 'content-type': 'application/json' }); return res.end(JSON.stringify(out.body)); }
       const file = path.resolve(__dirname, '../public', url.pathname.slice(1));
@@ -85,6 +87,12 @@ process.env.ANTHROPIC_API_KEY = 'test-key'; process.env.LAUNCH_SECRET = 'assist-
       check((await page.locator('.fs-helper-a b').innerText()) === 'One link', 'Class home: the answer shows, with its formatting');
       check(/28 of 30 questions left this month for questions about your classes/.test(await page.locator('.fs-helper-panel').innerText()), 'Class home: general questions left this month');
       await page.screenshot({ path: path.resolve(process.env.ARTIFACTS || 'browser-artifacts', 'assist-class-home.png') }).catch(() => {});
+      // Getting started: in the menu on every faculty page, and readable at once.
+      await page.locator('#rs-menu a[data-rs-key="guide"]').click();
+      await page.locator('[data-guide] h1').waitFor();
+      check(/Getting started with Flexee RapidSims/.test(await page.locator('[data-guide] h1').innerText()) && await page.locator('[data-guide] h3').count() >= 8, 'Getting started opens from the menu, with its eight steps');
+      check(/view=guide/.test(page.url()) && await page.locator('#rs-menu a[data-rs-key="guide"][aria-current="page"]').count() === 1, 'Getting started has its own address and is marked in the menu');
+      await page.screenshot({ path: path.resolve(process.env.ARTIFACTS || 'browser-artifacts', 'getting-started.png'), fullPage: true }).catch(() => {});
       await page.goto(base + '/faculty.html?view=rehearse&course=c1&sim=rapid-01-disaster');
       await page.waitForFunction(() => document.querySelector('.fs-helper-open')?.textContent === 'Ask Claude about this sim');
       check(true, 'Rehearse: Ask Claude about this sim');

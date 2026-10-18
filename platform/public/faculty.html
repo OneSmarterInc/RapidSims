@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Your classes — Flexee RapidSims</title>
 <link rel="stylesheet" href="/sim-detail.css">
-<link rel="stylesheet" href="/app.css?v=20261017g">
+<link rel="stylesheet" href="/app.css?v=20261018b">
 <script src="/sim-identity.js"></script>
 <script src="/sim-detail.js"></script>
 <script src="/render-transcript.js?v=2"></script>
 <script src="/portal-navigation.js"></script>
-<script src="/faculty-menu.js?v=20261015c"></script>
+<script src="/faculty-menu.js?v=20261018b"></script>
 <link rel="stylesheet" href="/faculty-results.css?v=20261015d">
 <script src="/faculty-results.js?v=20261015c"></script>
 <script src="/kit/assist-panel.js?v=20261017o"></script>
@@ -290,6 +290,7 @@ function render() {
   else if (F.view === 'played' && F.progress) renderPlayed();
   else if (F.view === 'student-results' && F.studentResults) renderStudentResults();
   else if (F.view === 'sim' && F.course && F.frame) renderFrame();
+  else if (F.view === 'guide') renderGuide();
   else if (F.view === 'rehearse' && F.course) renderRehearse();
   else if (F.view === 'course' && F.course) renderCourse();
   else renderHome();
@@ -337,14 +338,15 @@ function drawMenu() {
   const sims = c && F.course?.course?.id === c.id ? F.course.sims : [];
   // Every class page shows each kit sim's open session in the menu, not only Class home.
   if (c && F.view !== 'course') for (const x of sims || []) if (isKit(x.sim_id) && staleStatus(c.id, x.sim_id)) loadSessionStatus(c.id, x.sim_id);
-  const current = F.view === 'home' ? 'classes' : F.view === 'rehearse' ? `${rehearseSim()}:rehearse` : F.view === 'sim-results' ? `${F.simResults?.sim?.id}:all-results`
+  const current = F.view === 'guide' ? 'guide' : F.view === 'home' ? 'classes' : F.view === 'rehearse' ? `${rehearseSim()}:rehearse` : F.view === 'sim-results' ? `${F.simResults?.sim?.id}:all-results`
     : F.view === 'sim' && F.frame ? `${F.frame.sim}:${F.frame.session ? (F.frame.tab || 'teams') : 'sessions'}` : 'class';
-  FacultyMenu.mount({ classes, classesHref:'/faculty.html', current,
+  FacultyMenu.mount({ classes, classesHref:'/faculty.html', guideHref:'/faculty.html?view=guide', current,
     course: c ? { id:c.id, title:c.title, href:`/faculty.html?view=course&course=${encodeURIComponent(c.id)}` } : null,
     onNavigate: (key) => {
       const [sim, what] = key.split(':');
       // Class pages change in the main area; the menu stays put.
       if (key === 'classes') { navigation.go({ view:'home' }, false); return true; }
+      if (key === 'guide') { navigation.go({ view:'guide', course:c ? c.id : null }, false); return true; }
       if (sim === 'class' && what) { navigation.go({ view:'course', course:what }, false); return true; }
       if (c && key === 'class') { navigation.go({ view:'course', course:c.id }, false); return true; }
       if (c && what === 'all-results') { navigation.go({ view:'sim-results', course:c.id, sim }, false); return true; }
@@ -416,6 +418,25 @@ async function loadSessionStatus(courseId, simId) {
 }
 
 /* ── home ───────────────────────────────────────────────────────────────── */
+// Getting started: what a new faculty member does first (platform/content/GETTING-STARTED.md, via /api/guide).
+function guideHtml(text) {
+  const inline = x => esc(x).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+  return String(text || '').split(/\n{2,}/).map(b => b.startsWith('# ') ? `<h1>${inline(b.slice(2))}</h1>`
+    : b.startsWith('## ') ? `<h3>${inline(b.slice(3))}</h3>`
+    : /^- /.test(b) ? `<ul>${b.split('\n').map(l => `<li>${inline(l.replace(/^- /, ''))}</li>`).join('')}</ul>`
+    : `<p>${inline(b).replace(/\n/g, ' ')}</p>`).join('');
+}
+function renderGuide() {
+  app.innerHTML = `<div class="crumb" style="margin-top:34px">Getting started</div>
+    <div class="panel guide-page" data-guide><p class="hint">Loading…</p></div>
+    <div class="guide-actions"><button class="btn sm" type="button" data-guide-print>Print or save as PDF</button></div>`;
+  app.querySelector('[data-guide-print]').onclick = () => window.print();
+  const box = app.querySelector('[data-guide]');
+  fetch('/api/guide', { credentials: 'same-origin' }).then(r => r.ok ? r.json() : null)
+    .then(d => { if (F.view === 'guide') box.innerHTML = d ? guideHtml(d.text) : '<p class="hint">Getting started is not available right now.</p>'; })
+    .catch(() => { box.innerHTML = '<p class="hint">Getting started is not available right now.</p>'; });
+}
+
 function renderHome() {
   const { courses } = F.data;
   const students = courses.reduce((n,c) => n + Number(c.enrolled||0), 0);
@@ -471,7 +492,7 @@ function coursesTab() {
         <td data-l="Students" class="num">${c.enrolled}</td>
         <td data-l="Can play" class="num"><span class="ratio ${Number(c.paid) < Number(c.enrolled) ? 'part' : ''}">${c.paid} <span class="of">of ${c.enrolled}</span></span></td>
         <td data-l="" class="act"><button class="btn pri sm" data-open="${esc(c.id)}">Open</button></td>
-      </tr>`).join('') : `<tr><td colspan="5" class="empty">${F.data.courses.length ? 'Nothing matches that.' : 'No classes yet. Create one, then add a simulation to it.'}</td></tr>`}
+      </tr>`).join('') : `<tr><td colspan="5" class="empty">${F.data.courses.length ? 'Nothing matches that.' : 'No classes yet. Create one, then add a simulation to it. <a href="/faculty.html?view=guide" data-open-guide>Getting started</a> walks you through the first class.'}</td></tr>`}
       </tbody></table></div>
       <div class="foot"><span class="info">${pg.total} class${pg.total===1?'':'es'}</span>${pagerControls('crs', pg.page, pg.pages)}</div>
     </div>
@@ -1095,10 +1116,10 @@ function facultyRoute() {
 }
 async function restoreFaculty(params,current) {
   const courseId=PortalNavigation.id(params,'course'), simId=PortalNavigation.id(params,'sim'), studentId=PortalNavigation.id(params,'student');
-  let view=['home','course','played','student-results','sim-results','sim','rehearse'].includes(params.get('view')) ? params.get('view') : courseId ? 'course' : 'home';
+  let view=['home','guide','course','played','student-results','sim-results','sim','rehearse'].includes(params.get('view')) ? params.get('view') : courseId ? 'course' : 'home';
   // A practice student's last page links back with ?practice=1: that is the Rehearse page.
   if (view==='course' && params.get('practice')==='1') view='rehearse';
-  if (view!=='home' && (!courseId || (['played','sim-results','sim'].includes(view) && !simId) || (view==='student-results' && !studentId))) {
+  if (view!=='home' && view!=='guide' && (!courseId || (['played','sim-results','sim'].includes(view) && !simId) || (view==='student-results' && !studentId))) {
     throw Object.assign(new Error('Incomplete link'),{status:404});
   }
   if (view==='sim-results' && F.me?.role!=='faculty') throw Object.assign(new Error('Faculty access required'),{status:403});
@@ -1106,7 +1127,7 @@ async function restoreFaculty(params,current) {
   const tab=params.get('tab')==='sim'?'sim':'crs';
   const simsOverview=tab==='sim' ? (await api('/api/faculty',{action:'sims_overview'})).sims || [] : null;
   // Every class view keeps the class (and its sims) so the menu shows the same items on each page.
-  const course=view==='home'?null:view==='sim-results'&&F.course?.course?.id===courseId?F.course:await api('/api/faculty',{action:'course_detail',courseId});
+  const course=view==='home'||(view==='guide'&&!courseId)?null:view==='sim-results'&&F.course?.course?.id===courseId?F.course:await api('/api/faculty',{action:'course_detail',courseId});
   const progress=view==='played'?await api('/api/faculty',{action:'sim_progress',courseId,simId}):null;
   const studentResults=view==='student-results'?await api('/api/faculty',{action:'student_results',courseId,studentId}):null;
   const lists=PortalNavigation.lists(params,['crs','sim','ros','studentResults','played','simResults']);
