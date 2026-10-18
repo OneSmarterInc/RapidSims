@@ -29,7 +29,7 @@ global.fetch=async()=>({ok:true,json:async()=>({})});global.navigator={clipboard
 global.confirm=()=>true;global.setTimeout=()=>0;global.prompt=()=>null;
 
 const CAT=[{ id:'rapid-01-disaster', number:1, title:'Disaster or Breach?', minutes:20,
-  tagline:'Twenty minutes in a room where nobody knows what is wrong yet.',
+  tagline:'Twenty minutes on a call where nobody knows what is wrong yet.',
   description:'It is two in the morning and customer systems are breaking.',
   detail:{ world:'IT operations', seat:'VP of Operations', clock:'02:14 to Day 3', teaches:'What to do first',
     tangle:'Both possible causes look identical.', turn:'Two people are blamed by opposite answers.',
@@ -57,12 +57,12 @@ M.F.looking='rapid-01-disaster'; M.drawLook();
 const s = SHEET ? SHEET.innerHTML : '';
 console.log('  the panel opens              :', s ? 'yes' : 'MISSING');
 console.log('  shows what makes it hard     :', /Both possible causes look identical/.test(s) ? 'yes' : 'no');
-console.log('  shows the room               :', /Kate Sullivan/.test(s) ? 'yes' : 'no');
+console.log('  shows the people             :', /Kate Sullivan/.test(s) ? 'yes' : 'no');
 console.log('  shows the three moments      :', /Hour 4/.test(s) ? 'yes' : 'no');
 console.log('  hides the preview request    :', /Request a preview/.test(s) ? 'NO — should be hidden' : 'yes');
 console.log('  has a way out                :', /id="lookClose"/.test(s) ? 'yes' : 'MISSING');
 
 const missing = [];
 if (!/data-look="rapid-01-disaster"/.test(LAST+BODY)) missing.push('the eye');
-if (!SHEET || !/Kate Sullivan/.test(SHEET.innerHTML)) missing.push('the room');
+if (!SHEET || !/Kate Sullivan/.test(SHEET.innerHTML)) missing.push('the people');
 if (missing.length) { console.error('\n'+'missing: '+missing.join(', ')); process.exit(1); }

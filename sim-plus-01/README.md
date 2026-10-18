@@ -87,7 +87,7 @@ what the vendor configures against; the root cause is what reveals
 whether anything was understood, and it is never machine-graded.
 
 Harm fires from the review row alone. `cannot_assess` is correct on the
-vendor row and a dodge everywhere else, since those are rooms the
+vendor row and a dodge everywhere else, since those are areas the
 participant had full access to.
 
 ## Reasoned vs lucky

@@ -12,8 +12,8 @@ function largestLine(c){ let key=ORDER[0]; for(const k of ORDER.slice(1)) if(c[k
 function dollars(n){ return `$${Math.max(0,Number(n)||0)}M`; }
 
 function year3Sentence(c,band){
-  if(band==='strong') return `By Year 3, your $${c.connect}M in Connect and $${c.capacity}M in Capacity worked together: Midland had both field history and room to turn predictive service into something it could actually sell.`;
-  if(band==='data_no_room') return `By Year 3, your $${c.connect}M in Connect had created the field history, but $${c.capacity}M in Capacity left too little room to run the model reliably at scale.`;
+  if(band==='strong') return `By Year 3, your $${c.connect}M in Connect and $${c.capacity}M in Capacity worked together: Midland had both field history and the computing power to turn predictive service into something it could actually sell.`;
+  if(band==='data_no_room') return `By Year 3, your $${c.connect}M in Connect had created the field history, but $${c.capacity}M in Capacity left too little computing power to run the model reliably at scale.`;
   if(band==='pilot') return `By Year 3, your $${c.connect}M in Connect and $${c.capacity}M in Capacity got Midland to a promising pilot, but not yet to a predictive-service business.`;
   if(band==='weak') return `By Year 3, your $${c.connect}M in Connect had built too little usable field history for prediction to become a real capability.`;
   return '';
@@ -44,13 +44,13 @@ function primaryNearMiss(c,y3,heat,competitor,t){
   if(![ys,cap,yp,hs,hm,cs,cp].every(Number.isFinite))return '';
   if(y3==='data_no_room') return `${dollars(cap-c.capacity)} more in Capacity would have turned the working demo into a capability Midland could run at scale.`;
   if(y3==='weak') return `${dollars(Math.max(0,yp-c.connect))} more in Connect would have reached the Year 3 pilot.`;
-  if(y3==='pilot') return `${dollars(Math.max(0,ys-c.connect))} more in Connect would have moved Midland out of the pilot; with Capacity at ${dollars(c.capacity)}, the next outcome would have been ${c.capacity>=cap?'the full predictive-service capability':'data without room to run it'}.`;
+  if(y3==='pilot') return `${dollars(Math.max(0,ys-c.connect))} more in Connect would have moved Midland out of the pilot; with Capacity at ${dollars(c.capacity)}, the next outcome would have been ${c.capacity>=cap?'the full predictive-service capability':'data without the capacity to run it'}.`;
   if(competitor==='weak') return `${dollars(Math.max(0,cp-c.connect))} more in Connect would have given Midland a credible competitor pilot.`;
   if(competitor==='middle') return `${dollars(Math.max(0,cs-c.connect))} more in Connect would have let Midland match the competitor outright.`;
   if(heat==='weak') return `${dollars(Math.max(0,hm-c.uptime))} more in Uptime would have avoided the four-day dispatch outage.`;
   if(heat==='middle') return `${dollars(Math.max(0,hs-c.uptime))} more in Uptime would have kept dispatch fully online.`;
   const candidates=[
-    {n:c.capacity-cap+1,text:`${dollars(c.capacity-cap+1)} less in Capacity would have left the same field history without enough room to run reliably.`},
+    {n:c.capacity-cap+1,text:`${dollars(c.capacity-cap+1)} less in Capacity would have left the same field history without enough computing power to run reliably.`},
     {n:c.connect-cs+1,text:`${dollars(c.connect-cs+1)} less in Connect would have reduced Midland’s competitor response to a pilot.`},
     {n:c.uptime-hs+1,text:`${dollars(c.uptime-hs+1)} less in Uptime would have pushed the heat wave into the degraded-dispatch outcome.`}
   ].filter(x=>Number.isFinite(x.n)&&x.n>0).sort((a,b)=>a.n-b.n);
@@ -64,7 +64,7 @@ function tradeSentence(c,t){
     return `Renata’s Uptime line received $${c.uptime}M — at least twice the level that held dispatch in the heat wave — while Sam’s Connect line received $${c.connect}M. The extra resilience came with less field visibility.`;
   }
   if(Number.isFinite(ys)&&Number.isFinite(cap)&&c.connect>=ys&&c.capacity<cap){
-    return `Sam’s Connect line received $${c.connect}M while Capacity received $${c.capacity}M. Midland bought the field history and not enough room to use it at scale.`;
+    return `Sam’s Connect line received $${c.connect}M while Capacity received $${c.capacity}M. Midland bought the field history and not enough computing power to use it at scale.`;
   }
   if(c.features>=4&&c.connect<=2){
     return `Tom’s Features line received $${c.features}M while Sam’s Connect line received $${c.connect}M. Midland bought more that people could point at and less of the field visibility needed to respond later.`;
@@ -124,7 +124,7 @@ function buildClosingLesson(y1,y2,outcomes,thresholds){
       {head:'Technology spending takes time to pay off.',text:'What you fund this year decides what the company can do two or three years from now.'},
       {head:'Some capabilities take years to build.',text:`The $${Number((thresholds&&thresholds.perLineCap)??3)}M yearly limit on each line stands for that time. Money arriving later buys less of it.`},
       {head:'Each executive is right about one part of the company.',text:'The technology leader’s job is to fund the whole company.'},
-      {head:'Fund the line nobody asks for.',text:'Four executives argued for their own lines. Nobody argued for Capacity, the computing room to use the data. Only you speak for it, and in Year 3 it decided whether the data could become a service.'}
+      {head:'Fund the line nobody asks for.',text:'Four executives argued for their own lines. Nobody argued for Capacity, the computing power to use the data. Only you speak for it, and in Year 3 it decided whether the data could become a service.'}
     ].map((t,i)=>({...t,question:questions[i]||''})),
     paragraphs:[
       'You made two years of choices before you knew which tests would come. Good technology planning works that way: you decide which capabilities Midland will already have when the future arrives.',

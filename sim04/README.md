@@ -6,7 +6,7 @@ handover. `node test/gate-data.test.js` checks those source materials.
 
 ## Flow
 
-Classroom play. Students join the instructor's room with their email (taken from
+Classroom play. Students join the instructor's session with their email (taken from
 their RapidSims account, or typed on the direct route) and wait under Unassigned,
 reading the untimed "What happens today" introduction. The instructor sets a group
 size, presses Divide randomly, and drags people between groups (a Move menu does
@@ -16,7 +16,7 @@ instructor's Start begins the clock. Faculty use personal codes (`FACULTY_CODES`
 `Name:code` pairs); a shared `FACULTY_CODE` is refused and fails `/api/health`.
 The detailed flow:
 
-1. A facilitator creates a room, explicitly choosing team or individual mode
+1. A facilitator creates a session, explicitly choosing team or individual mode
    and at least three groups. The clock defaults to 25 minutes.
 2. Participants use the signed platform invitation. In team mode, joiners are
    placed in the smallest group automatically; the facilitator can move them
@@ -34,14 +34,14 @@ The detailed flow:
 5. The private calculation check is `/private-check.html?session=ROOMCODE`.
    The console footer links to it; open it privately on the instructor's device.
    Signed faculty access travels in the URL fragment when opening a new tab.
-   Completing the room reports launched participants to the platform; the instructor can retry a
+   Completing the session reports launched participants to the platform; the instructor can retry a
    failed callback.
 
 For direct access, students enter `ACCESS_CODE` and then the five-character
-room code created by the instructor. A standalone invitation link carries the
-room code but still asks for the student access code. Instructors use the link
+session code created by the instructor. A standalone invitation link carries the
+session code but still asks for the student access code. Instructors use the link
 on the access page and enter `FACULTY_CODE` (or one of `FACULTY_CODES`) once to
-create or reopen a room. A student access code does not grant instructor access.
+create or reopen a session. A student access code does not grant instructor access.
 Signed platform launches go directly to the appropriate student or instructor
 view without a separate direct-access code.
 

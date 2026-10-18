@@ -22,7 +22,7 @@ or two partial ones among the questions spent. The report is the authored cell
 for vendor × (found, right plan). Ties and missing votes resolve by rule: the
 board picks the cheaper vendor; a plan tie funds nothing.
 
-`lib/room.js` is the room: one shared clock with pause, per-run question
+`lib/room.js` runs the session: one shared clock with pause, per-run question
 budgets, private votes, the student view and the staged projector. Nothing is
 written when a phase closes; the vendor and plan are computed from the votes on
 record whenever they are read.

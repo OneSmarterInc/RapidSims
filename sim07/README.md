@@ -13,7 +13,7 @@ Deploy as its own Vercel project with **Root Directory = `sim07`**. Self-registe
 - `/demo` — faculty-only walkthrough: no decision timer; immediate Next part controls
 - `index.html` — student: briefing, four advisers, binding decision, recognition question, reveal
 - `instructor.html` — presenter (private laptop): create session, clock, release stages, pick two responses
-- `projector.html` — room display: aggregates only; never names or participant ids
+- `projector.html` — class display: aggregates only; never names or participant ids
 
 ## Endpoints
 - `GET /api/config` — pre-reveal copy only (access-guarded)

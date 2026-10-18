@@ -16,8 +16,8 @@ self-registers as `rapid-09-money-land`, unpublished.
 | Path | What it is |
 |---|---|
 | `config/content.js` | Every word a student or instructor sees, every figure and its source. Edit here, then `npm test`. |
-| `lib/engine.js` | Pure: phases, the wall, the cash rule, fund values, display rounding, room aggregates. |
-| `lib/room.js` | The room: shared clock, units (a student or a team), student and projector views, controls. |
+| `lib/engine.js` | Pure: phases, the wall, the cash rule, fund values, display rounding, class aggregates. |
+| `lib/room.js` | The session: shared clock, units (a student or a team), student and projector views, controls. |
 | `lib/scenario.js` | `publicConfig()`: only what is safe before play. No stages, no names, no prices. |
 | `api/session.js` | create, faculty_state, faculty_enrolments, group, control, solo, join, state, statements, allocate, advance. |
 | `public/` | `launch.html` router, `index.html` student view, `instructor.html` console and projector. |
@@ -37,11 +37,11 @@ Cash is allowed only when the destination pick names someone other than the five
 statements cannot hold cash. Every dollar must be placed, in $50,000 steps.
 
 Allocation is final. History is held after allocation closes until the
-instructor releases it, one stage at a time, to the whole room. No stage text,
+instructor releases it, one stage at a time, to the whole class. No stage text,
 value or name reaches a browser before its release.
 
 The student sees only their own unit. The projector shows nothing about
-positions until allocation has closed; then it shows the room's money, the
+positions until allocation has closed; then it shows the class's money, the
 destination picks, the most concentrated bet beside the most spread one, any unit
 whose money contradicts its own destination, and the statements one at a time.
 
@@ -74,6 +74,6 @@ across its plausible range.
   and a briefing that stops stating the rules.
 - `engine-check.js` covers phases, the wall, the cash rule for every pick, fund
   arithmetic, the agreed displayed values and the aggregates.
-- `session-check.js` drives the real handlers through an individual room, a
-  team room and a solo run against an in-memory compare-and-set store, and
+- `session-check.js` drives the real handlers through an individual session, a
+  team session and a solo run against an in-memory compare-and-set store, and
   checks that no unreleased history leaks.

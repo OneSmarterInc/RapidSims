@@ -46,7 +46,7 @@ check(by('lessons').body.items.map(x => x.evidence), [
   'Team 3 put $0 into Connect in Year 1. $2M was the line for a clean district report, and Year 3 showed the gap.',
   'After Year 1, Team 3 could no longer reach Strong.',
   'Every team paid Dale first. Three teams sided with Sam, and one with Tom.',
-  'Capacity got $4M of $72M. Two teams gave it nothing. Team 4 had the data and no room to run it.'
+  'Capacity got $4M of $72M. Two teams gave it nothing. Team 4 had the data and no computing power to run it.'
 ], 'D7 evidence comes from the class');
 
 // The Oct 15 retest: two teams, both Limited. The slides say what is true of that class.
@@ -60,7 +60,7 @@ check([strip(by2('q1').headline), by2('q1').sub], ['Both teams put $1M into Conn
 check(strip(by2('q2').headline), 'After Year 1, both teams could no longer reach Strong.', 'D2 groups the class');
 check(by2('q2').note, 'Both teams could still reach a Pilot ($3M) in Year 2 and stopped at $2M.', 'D2 names the reachable Pilot');
 check(strip(by2('q3').headline), 'Both teams gave Sam the least, and Sam’s line decided Year 3.', 'D3 names the starved line that decided Year 3');
-check(strip(by2('q4').headline), 'Both teams paid for Capacity. Neither built the data to use it.', 'D4 for room without data');
+check(strip(by2('q4').headline), 'Both teams paid for Capacity. Neither built the data to use it.', 'D4 for capacity without data');
 check(strip(by2('buyers').headline), 'Corven came for field data, and found too little at both teams.', 'D5 for no Corven interest');
 check(JSON.stringify(m2).includes('Weak'), false, 'The result is called Limited everywhere');
 

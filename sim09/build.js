@@ -38,10 +38,10 @@ for (const f of kitFiles) {
   const text = read(f);
   for (const s of secret) if (s && text.includes(s)) refuse(`${f} contains scenario content: "${s.slice(0, 50)}"`);
   if (REAL_NAMES.test(text)) refuse(`${f} names a real company`);
-  if (/\b(room|bridge)\b/i.test(text.replace(/\.room\b|\broom:/g, ''))) refuse(`${f} uses "room" or "bridge"; say "class" or "session"`);
+  if (/\b(rooms?|bridge)\b/i.test(text.replace(/\.room\b|\broom:/g, ''))) refuse(`${f} uses "room" or "bridge"; say "class" or "session"`);
   if (f.endsWith('.js')) { try { new vm.Script(text); } catch (e) { refuse(`${f} does not parse: ${e.message}`); } }
 }
-for (const [name, html] of Object.entries(pages)) if (/\broom\b/i.test(html.replace(/\.room\b|\broom:/g, ''))) refuse(`${name} page uses "room"; say "class" or "session"`);
+for (const [name, html] of Object.entries(pages)) if (/\b(rooms?|bridge)\b/i.test(html.replace(/\.room\b|\broom:/g, ''))) refuse(`${name} page uses "room" or "bridge"; say "class" or "session"`);
 for (const m of ['x-access-code', "sessionStorage.setItem('m09-access'", "sessionStorage.removeItem('m09-access'", '/api/config']) {
   if (!pages.launcher.includes(m)) refuse('access gate missing: ' + m);
 }

@@ -102,7 +102,7 @@ ${arcText}`;
   if (ladderEarnedAt === 0) {
     ladder = { tone: 'ok', text: `You got it at Hour 1${ladderPrivate ? ', and you took him aside to do it' : ', in front of the people it embarrassed'}. Almost nobody does. That admission was available from the first minute and it required a question that already understood what it was looking for — not "did anything change", but what the change was for. From that moment you were not reasoning about a document error, you were reasoning about why a question stopped reaching a person. Everything that arrived later confirmed something you already knew.` };
   } else if (ladderEarnedAt === 1) {
-    ladder = { tone: '', text: `You got it at Hour 7, once the scope was on the table and nine other conversations were in the room. That is information arriving because the numbers forced it, not because you went and found it. Worth asking what you would have done differently with those six hours.` };
+    ladder = { tone: '', text: `You got it at Hour 7, once the scope was on the table and nine other conversations were on the call. That is information arriving because the numbers forced it, not because you went and found it. Worth asking what you would have done differently with those six hours.` };
   } else if (ladderEarnedAt === 2) {
     ladder = { tone: '', text: `It reached you on the second morning, too late to have changed anything you decided. The threshold had been sitting there since week three of Q3, and it was answerable on the first question anyone asked him.` };
   } else {
@@ -112,7 +112,7 @@ ${arcText}`;
   // --- preservation branch ---
   let preservation;
   if (preservedAt === 0) {
-    preservation = { tone: 'ok', text: `You moved to preserve the index at Hour 1, before anyone had mentioned that anything ran on a schedule. Nobody in that room volunteered it and the person who knew was junior enough not to be asked. When counsel wrote asking what your system told their engineer, you could answer. That is the sharpest single thing available in this exercise.` };
+    preservation = { tone: 'ok', text: `You moved to preserve the index at Hour 1, before anyone had mentioned that anything ran on a schedule. Nobody on that call volunteered it and the person who knew was junior enough not to be asked. When counsel wrote asking what your system told their engineer, you could answer. That is the sharpest single thing available in this exercise.` };
   } else if (preservedAt === 1) {
     preservation = { tone: 'ok', text: `You held the index at Hour 7, which was in time. The evidence survived and the question counsel asked was answerable. Worth noticing what it took to get there — either you asked how content reached Relay, or somebody told you what the fastest fix would cost.` };
   } else if (preserved) {

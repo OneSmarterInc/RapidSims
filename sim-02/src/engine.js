@@ -192,7 +192,7 @@ function showBanner() {
   };
 }
 
-// who answers in the room
+// who answers on the call
 function responders(text) {
   const t = text.toLowerCase();
   const named = CAST_ORDER.filter(id => t.includes(CAST[id].name.split(' ')[0].toLowerCase()));
@@ -241,7 +241,7 @@ function railHTML() {
     </button>`;
   }).join('');
   return `<nav class="rail">
-    <h2>The room</h2>
+    <h2>The call</h2>
     <button class="who ${S.channel === 'room' ? 'on' : ''}" data-ch="room">
       <div class="who-top"><div class="av" style="color:var(--sys);border-color:#5E908955">⌘</div>
       <div><div class="who-name">Incident call</div><div class="who-role">Everyone is listening</div></div></div>
@@ -280,7 +280,7 @@ function playHTML() {
     <section class="stage">
       <div class="chan">
         ${priv
-          ? `<span class="priv mono">Private</span><span class="lab">One to one with ${esc(c.name)} — the room can't hear this</span>
+          ? `<span class="priv mono">Private</span><span class="lab">One to one with ${esc(c.name)} — the others on the call can't hear this</span>
              <button class="back" data-ch="room">← Back to the call</button>`
           : `<span class="lab">Incident call · ${esc(ph.heading)}</span>
              ${S.playing ? '' : '<button class="back" id="commit-open">Record position &amp; advance →</button>'}`}
@@ -296,7 +296,7 @@ function playHTML() {
         <div class="crow">
           <textarea id="input" rows="1" ${S.playing ? 'disabled' : ''} placeholder="${S.playing
             ? 'The call is talking…'
-            : (priv ? `Say anything to ${esc(c.name.split(' ')[0])} — the room can't hear you` : 'Type anything you\'d actually ask this room…')}"></textarea>
+            : (priv ? `Say anything to ${esc(c.name.split(' ')[0])} — the others on the call can't hear you` : 'Type anything you\'d actually ask the call…')}"></textarea>
           <button class="btn" id="send" ${S.playing ? 'disabled' : ''}>Send</button>
           <button class="cmp-toggle ${S.composerOpen ? '' : 'shut'}" id="cmp-toggle"
             title="${S.composerOpen ? 'Collapse this panel' : 'Show examples and guidance'}"
@@ -323,7 +323,7 @@ function playHTML() {
             ? 'You joined at 09:40. Catching up on what you missed.'
             : (priv
               ? 'What would they say here that they wouldn\'t say on the call?'
-              : 'Pick a name from the room panel to take them aside — they say different things in private.')}</span>
+              : 'Pick a name from the people panel to take them aside — they say different things in private.')}</span>
           ${S.playing
             ? `<button class="btn" id="skip">Skip ahead</button>`
             : `<button class="btn pri" id="commit-open2">Record position · ${esc(ph.label)}</button>`}
@@ -633,7 +633,7 @@ function buildTranscript() {
     if (!S.threads[id].length) return;
     L.push('');
     L.push('='.repeat(60));
-    L.push('PRIVATE — ' + CAST[id].name.toUpperCase() + ' (the room could not hear this)');
+    L.push('PRIVATE — ' + CAST[id].name.toUpperCase() + ' (the others on the call could not hear this)');
     L.push('='.repeat(60));
     S.threads[id].forEach(m => {
       if (m.who === 'system') return;
@@ -654,7 +654,7 @@ function buildTranscript() {
   });
   L.push('');
   L.push('Threshold disclosure obtained: ' + (S.ladderEarnedAt === null ? 'never'
-    : PHASES[S.ladderEarnedAt].label + (S.ladderEarnedPrivately ? ' (privately)' : ' (in the room)')));
+    : PHASES[S.ladderEarnedAt].label + (S.ladderEarnedPrivately ? ' (privately)' : ' (on the call)')));
   L.push('Index state preserved: ' + (S.preservedAt === null ? 'no'
     : PHASES[S.preservedAt].label + (S.preservedByTalk ? ' (instructed in conversation)' : ' (recorded as an action)')));
   if (S.preservedQuote) L.push('  on the strength of: "' + S.preservedQuote + '"');
@@ -789,7 +789,7 @@ function renderHeld() {
   app.innerHTML = `<div class="doc"><div class="doc-in">
     <div class="eyebrow">Day 2 · positions locked</div>
     <h1>That's your <em>three</em>.</h1>
-    <p>You've committed to everything you're going to commit to. Your facilitator is holding the debrief until the room has talked — which is deliberate, because the conversation is better while nobody knows who was right.</p>
+    <p>You've committed to everything you're going to commit to. Your facilitator is holding the debrief until the class has talked — which is deliberate, because the conversation is better while nobody knows who was right.</p>
     <p>While you wait: what's the one question you wish you'd asked, and who would you have asked it of?</p>
     <p style="color:var(--dimmer);font-size:14px;margin-top:26px">This page will move on by itself. Don't reload it.</p>
   </div></div>`;
@@ -801,7 +801,7 @@ function renderPausedOverlay() {
     <div style="max-width:460px;text-align:center">
       <div class="eyebrow" style="margin-bottom:10px">The facilitator has frozen the clock</div>
       <div style="font-size:30px;font-weight:300;letter-spacing:-.02em;margin-bottom:12px">Hold on.</div>
-      <p style="color:var(--tx-body);font-size:16px;line-height:1.6">Nothing is lost and the incident hasn't moved. Talk to the room — this will lift on its own.</p>
+      <p style="color:var(--tx-body);font-size:16px;line-height:1.6">Nothing is lost and the incident hasn't moved. Talk with the class — this will lift on its own.</p>
     </div>
   </div>`);
   document.body.appendChild(bar);
@@ -813,7 +813,7 @@ const FAQ = [
   ['Am I choosing from those example questions?',
    'No. The box takes anything you type. The examples underneath are only there if you\'re stuck — your own words usually get better answers.'],
   ['How do I talk to someone privately?',
-   'Click their name in the room panel on the left. That opens a one-to-one the rest of the room can\'t hear, and people say different things there. Use the link at the top to come back.'],
+   'Click their name in the people panel on the left. That opens a one-to-one the rest of the call can\'t hear, and people say different things there. Use the link at the top to come back.'],
   ['What happens when I record a position?',
    'It locks, and the incident moves to the next moment. You can\'t come back to this hour or edit what you wrote, so ask everything you want to ask first.'],
   ['When should I record it, then?',
@@ -978,7 +978,7 @@ function openSettings() {
   sheet.querySelector('#sk-scripted').onclick = () => { goOffline(true); sheet.remove(); refreshCog(); };
 }
 
-// ---------- opening: story → the room → the rules ----------
+// ---------- opening: story → the call → the rules ----------
 function topOfDoc(){ const d = app.querySelector('.doc'); if (d) d.scrollTop = 0; }
 
 function renderBrief() {
@@ -1003,7 +1003,7 @@ function briefStory() {
       <div class="tl-row now"><div class="tl-time">09:40</div><div class="tl-text">You join a call that started forty minutes ago, where four people already have opinions, and where the first thing you'll be asked is what to tell the customer.</div></div>
     </div>
 
-    <p>You are walking in on the middle of something. That's not an accident of the design — it's the job. Almost nobody senior arrives at the start, and the assumptions the room made in the first forty minutes are the ones you'll have to notice and undo.</p>
+    <p>You are walking in on the middle of something. That's not an accident of the design — it's the job. Almost nobody senior arrives at the start, and the assumptions the call made in the first forty minutes are the ones you'll have to notice and undo.</p>
 
     ${LESSON_QUESTIONS.length ? `<div class="card" style="margin:24px 0"><div class="ct">Four questions to keep in mind</div>
       <p style="margin:6px 0 10px">You will come back to these in the class debrief.</p>
@@ -1036,7 +1036,7 @@ function briefRoom() {
 
   app.innerHTML = `<div class="doc"><div class="doc-in">
     <div class="eyebrow">09:40 · four people already talking</div>
-    <h1>The room</h1>
+    <h1>Who's on the call</h1>
     <p>Everyone here is competent and nobody is lying to you. Read what each of them stands to lose, because it's going to shape what they tell you this morning — and it will do that without any of them noticing it happening.</p>
     <div class="castgrid">${cards}</div>
     <p>There's a fifth voice: <b>Alan Voss</b>, the Chief Commercial Officer, who owns the customer relationship and has Ridgeline's commercial lead waiting on a call. He makes no technical decision. He wants one sentence he can say.</p>
@@ -1049,14 +1049,14 @@ function briefRules() {
   app.innerHTML = `<div class="doc"><div class="doc-in">
     <div class="eyebrow">The thing you're actually being tested on</div>
     <h1>Two stories, and each one <em>blames</em> somebody</h1>
-    <p>By the time you join, one explanation is already in the room. A superseded revision of the datasheet is still sitting in the document library, so Relay retrieved a real number from a real document and reported it accurately. That story ends this evening with a re-index.</p>
+    <p>By the time you join, one explanation is already on the call. A superseded revision of the datasheet is still sitting in the document library, so Relay retrieved a real number from a real document and reported it accurately. That story ends this evening with a re-index.</p>
     <p>The other explanation is that the question should never have gone to Relay at all. A continuous rating question is exactly the kind of thing an application engineer used to answer, and at some point it stopped reaching one. That story has a governance conversation attached to it.</p>
     <p>Each explanation indicts a different person on that call. You just read who. So you'll be taking expert judgment from two people whose exposure runs in opposite directions, and both of them will find the reading that doesn't end with their name on it more persuasive than they otherwise would. That isn't a character flaw. It's what happens to anyone under threat, and it will happen to you too.</p>
     <p><b>And the fastest fix destroys the evidence.</b> Relay searches an index that's rebuilt from the library on a schedule. Correct the library, and what Relay was actually serving six weeks ago stops existing — at the same moment a customer's lawyer starts asking what your system told their engineer. Meanwhile every hour you wait is another hour of parts going into service against a number you now know is wrong.</p>
     <p>We're telling you upfront because this isn't a test of whether you notice. It's a test of what you do about it. One warning: discounting for interest is not the same as ignoring the interested party. The person with the most to lose may still be right, and dismissing them for being exposed is its own way of getting this wrong.</p>
 
     <h3>How it runs</h3>
-    <p>Three moments — Hour 1, Hour 7, and the following morning. Between them you can question anyone on the call, and you can pull any of them aside into a private channel the others can't hear. Nobody in that room knows the full answer, because at Hour 1 nobody would.</p>
+    <p>Three moments — Hour 1, Hour 7, and the following morning. Between them you can question anyone on the call, and you can pull any of them aside into a private channel the others can't hear. Nobody on that call knows the full answer, because at Hour 1 nobody would.</p>
     <p>At each moment you record a position: <b>what you think is happening</b>, <b>the one action you're taking now</b>, and <b>the evidence that would change your mind</b>. Ask everything you want to ask before you do it, because recording moves things forward and you can't return to that hour. All three come back to you at the end.</p>
     <p>So when do you commit? Not when you feel certain — certainty isn't coming, and you can wait all day for it while parts ship. Commit when you've stopped learning things. If the last two answers haven't changed your read, you have what this hour is going to give you.</p>
 
@@ -1105,7 +1105,7 @@ function renderDebrief(D) {
   const priv = D.privateCount;
 
   app.innerHTML = `<div class="doc"><div class="doc-in">
-    <div class="eyebrow">Debrief · hold until the room has committed</div>
+    <div class="eyebrow">Debrief · hold until the class has committed</div>
     <h1>${D.resolution.headline}</h1>
     ${D.resolution.paras.map(t => `<p>${esc(t)}</p>`).join('')}
 
@@ -1133,7 +1133,7 @@ function renderDebrief(D) {
     <p>${esc(D.preservation.intro || '')}</p>
     <p class="verdict ${D.preservation.tone}" style="font-size:15.5px">${esc(D.preservation.text)}</p>
     <p>${priv
-      ? `You went off the call ${priv === 1 ? 'once' : priv === 2 ? 'twice' : priv + ' times'}. People say different things when the room isn't listening, and knowing when to take someone off the call is most of this job.`
+      ? `You went off the call ${priv === 1 ? 'once' : priv === 2 ? 'twice' : priv + ' times'}. People say different things when the rest of the call isn't listening, and knowing when to take someone off the call is most of this job.`
       : 'You never took anyone aside. Everything you heard, you heard in front of the people it would cost. That is the single cheapest thing you left on the table.'}</p>
 
     ${D.arc ? `<div class="rule"></div><h3>Taken together</h3><p>${esc(D.arc)}</p>` : ''}

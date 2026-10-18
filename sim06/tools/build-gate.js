@@ -3,7 +3,7 @@
 // violation in test/gate.test.js, so a rule that stops matching real content fails the tests.
 
 const PLACEHOLDER = /\b(TODO|TBD|XXX|FIXME|PLACEHOLDER|lorem ipsum)\b|\[their text\]/i;
-const BANNED = /\b(moat|delve[sd]?|leverage|realm|harness|unlock|tapestry|synergy|paradigm|cutting-edge|game changer|garner|next-gen)\b/i;
+const BANNED = /\b(moat|delve[sd]?|leverage|realm|harness|unlock|tapestry|synergy|paradigm|cutting-edge|game changer|garner|next-gen|room|rooms|bridge)\b/i;
 const INSTITUTIONAL_WORDS = /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday|semester|university|college|chapter|syllabus)\b/i;
 const COURSE_CODE = /\b[A-Z]{2,4}\s?\d{4}\b/; // case-sensitive: "MIS 3000", not "to 2026"
 const INSTITUTIONAL = { test: s => INSTITUTIONAL_WORDS.test(s) || COURSE_CODE.test(s), match: s => s.match(INSTITUTIONAL_WORDS) || s.match(COURSE_CODE) };

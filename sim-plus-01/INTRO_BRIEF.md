@@ -74,7 +74,7 @@ earlier engagement, some months old.
     │                          │
     │  · post                  │
     │  · fax → outside         │      Purpose ............ intake
-    │        conversion vendor │      Owner .............. mail room
+    │        conversion vendor │      Owner .............. mail desk
     │  · fax → converted here  │      Timing ............. releases
     │  · clearinghouse         │                           09:00, 14:00
     └────────────┬─────────────┘

@@ -254,7 +254,7 @@ const COMPANIES = [
   }
 ];
 
-// Staged reveal. The instructor releases one stage at a time to the whole room.
+// Staged reveal. The instructor releases one stage at a time to the whole class.
 // Each stage shows the student's own two statements first, then this.
 const REVEAL = {
   yourStatements: 'What you wrote in June 2000',

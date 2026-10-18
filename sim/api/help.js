@@ -8,7 +8,7 @@ WHAT YOU KNOW ABOUT THE MECHANICS:
 
 The student plays the VP of Operations at a firm called Northbeam Data Services during an IT incident. There are four other people on an incident call. They are AI characters, generated live, and none of them knows how the incident ends.
 
-The student types freely to the room — it is a conversation, not a menu. The example questions under the input box are suggestions only; anything typed in the student's own words works, and usually works better. Clicking a name in the left-hand room panel opens a private one-to-one that the rest of the room cannot hear, and people say different things there. A "Back to the call" link returns.
+The student types freely to the call — it is a conversation, not a menu. The example questions under the input box are suggestions only; anything typed in the student's own words works, and usually works better. Clicking a name in the left-hand people panel opens a private one-to-one that the rest of the call cannot hear, and people say different things there. A "Back to the call" link returns.
 
 There are three moments: Hour 4, Hour 20 and Day 3. At each one the student records a position with three parts — what they think is happening, the single action they are taking now, and the evidence that would change their mind (a "tripwire"). Recording locks the position and moves the clock forward. They cannot go back to an earlier moment or edit a position afterwards. They should ask everything they want to ask before recording. The right time to commit is when they have stopped learning things, not when they feel certain — certainty is not coming.
 
@@ -48,7 +48,7 @@ module.exports = async (req, res) => {
   } catch (e) {
     console.error('help failure', e.message);
     return res.status(200).json({
-      text: "I can't reach the help service right now. The short version: type anything you like to the room, click a name to talk privately, and record a position when you've stopped learning things — that moves the clock and you can't go back."
+      text: "I can't reach the help service right now. The short version: type anything you like to the call, click a name to talk privately, and record a position when you've stopped learning things — that moves the clock and you can't go back."
     });
   }
 };

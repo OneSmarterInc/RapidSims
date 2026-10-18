@@ -61,7 +61,7 @@ The older single `FACULTY_CODE` still works as a shared fallback if both are set
 
 The flow: open `/faculty.html`, enter the facilitator code, create a session, and read out the five-character code or share the join link. Students land on a name screen, then wait. You shuffle them into groups of one to three, press start, and the incident begins for everyone.
 
-While it runs you can freeze the clock, which puts a hold screen over every student's sim without losing anything, and resume when the discussion is done. Groups who finish are held on a waiting screen until you release the debrief — worth holding until the room has committed out loud, because the conversation is better while nobody knows who was right.
+While it runs you can freeze the clock, which puts a hold screen over every student's sim without losing anything, and resume when the discussion is done. Groups who finish are held on a waiting screen until you release the debrief — worth holding until the class has committed out loud, because the conversation is better while nobody knows who was right.
 
 The Compare tab shows every group's reading, action and tripwire for one moment at a time, plus who got the coverage admission and when. That last row is the best single indicator of how well a group ran it.
 

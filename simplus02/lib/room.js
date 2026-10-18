@@ -38,7 +38,7 @@ function shuffle(arr, seed) {
 }
 
 function seatRoom(sess, roster) {
-  if (sess.phase !== 'lobby' || sess.tableIds.length) throw Object.assign(new Error('The room is already seated'), { code: 'REJECTED' });
+  if (sess.phase !== 'lobby' || sess.tableIds.length) throw Object.assign(new Error('Students are already seated'), { code: 'REJECTED' });
   const pids = shuffle(Object.keys(roster).sort(), sess.seed);
   const plan = T.planTables(pids.length);
   const next = { ...roster }, tables = {}, ids = [];
@@ -57,7 +57,7 @@ function seatRoom(sess, roster) {
 function setPhase(sess, to, now) {
   const from = PHASES.indexOf(sess.phase), dest = PHASES.indexOf(to);
   if (dest !== from + 1) throw Object.assign(new Error(`Cannot go from ${sess.phase} to ${to}`), { code: 'REJECTED' });
-  if (to === 'briefing' && !sess.tableIds.length) throw Object.assign(new Error('Seat the room first'), { code: 'REJECTED' });
+  if (to === 'briefing' && !sess.tableIds.length) throw Object.assign(new Error('Seat the students first'), { code: 'REJECTED' });
   const next = { ...sess, phase: to, phaseEndsAt: TIMED[to] ? now + C.timing[TIMED[to]] * MIN : null };
   if (to === 'negotiation') next.negotiationStartedAt = now;
   return next;

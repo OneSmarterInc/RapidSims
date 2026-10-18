@@ -584,7 +584,7 @@ function renderAllocation(year){
   const intro=year===1?'':(S.year1Outcome?.year2Intro||'A year has passed. Dale is back at the table looking at the Run number.');
   const howto=year===1?`<div class="howto"><div class="eyebrow">How to set your Year 1 budget</div><p>You have $${C.annualBudget} million to divide across the five budget lines. Work through it in four steps.</p><ol>
     <li><b>Start with Run.</b> Run must get at least $${C.runMinimum}M. That is the lowest amount that keeps Midland’s current systems working. Last year Run got $6.1M, so every million you move out of Run is a million you can spend on something new.</li>
-    <li><b>Decide what Midland needs most over the next three years.</b> Each line answers a different need. Uptime keeps dispatch working on a bad day. Capacity gives the company room to run new computing work. Connect brings data back from the units in the field. Features gives the business something visible to show. Look back at the four people and the exhibits if you need to.</li>
+    <li><b>Decide what Midland needs most over the next three years.</b> Each line answers a different need. Uptime keeps dispatch working on a bad day. Capacity gives the company the computing power to run new work. Connect brings data back from the units in the field. Features gives the business something visible to show. Look back at the four people and the exhibits if you need to.</li>
     <li><b>Set your priorities.</b> After Run, you have about $${C.annualBudget-C.runMinimum}M left, and each other line can take up to $${C.lineMaximum}M a year. Put the most money where you think it matters most.</li>
     <li><b>Remember that spending adds up.</b> Money you put in a line this year still counts next year and in Year 3.</li></ol>
     <p>When the budget totals exactly $${C.annualBudget}M, write one sentence about what this budget is for, then commit. Year 1 locks when you commit, and you see what happened.</p></div>`
@@ -680,7 +680,7 @@ function renderYear3(){
   const o=S.allOutcomes?.year3;
   const cum=o?.cumulative||(S.year1&&S.year2?runningTotals(S.year1,S.year2):null);
   shell(`<div class="eyebrow">Year 3 · What happened</div><h2>Tom wants to sell a new service: fixing units before they fail.</h2>
-  <p class="bridge">Year 3 runs on everything you bought in Year 1 and Year 2. Tom, the CEO, wants to sell customers a service that predicts when a rooftop unit is about to fail, so a technician can fix it before the customer has a problem. That service needs two things from your budget: field history from Connect, and computing room from Capacity.</p>
+  <p class="bridge">Year 3 runs on everything you bought in Year 1 and Year 2. Tom, the CEO, wants to sell customers a service that predicts when a rooftop unit is about to fail, so a technician can fix it before the customer has a problem. That service needs two things from your budget: field history from Connect, and computing power from Capacity.</p>
   ${cum?runningHTML(cum,'Two-year totals',['connect','capacity']):''}
   <section class="year3-stage">
     <div class="eyebrow">Your reason for the Year 1 budget</div><div class="year3-opening">“${esc(S.strategicView||'—')}”</div>
@@ -707,7 +707,7 @@ const RESULT_PHRASE={
   y1:{strong:'Report sent the next day',middle:'Late, thin report',weak:'A week on the roofs'},
   heat:{strong:'Dispatch held',middle:'Six-hour outage',weak:'Four-day outage'},
   comp:{strong:'Matched the offer',middle:'Thirty-unit pilot',weak:'Offer out of reach'},
-  y3:{strong:'A service to sell',pilot:'A pilot',data_no_room:'Data with no room to run it',weak:'Too little history'}};
+  y3:{strong:'A service to sell',pilot:'A pilot',data_no_room:'Data with no capacity to run it',weak:'Too little history'}};
 function timelineHTML(y1o,y2o,y3o,cum){
   const rows=[
     y1o&&['Year 1','District report',RESULT_PHRASE.y1[y1o.band],`Connect $${S.year1?.connect??0}M`],

@@ -54,7 +54,7 @@ global.fetch = async (url, options) => {
   assert.deepEqual(removed.sort(), ['DONE1', 'MISS1', 'ZZZZ2']);
   assert(calls.some(args => args[0] === 'SCAN'), 'pre-deploy sessions are backfilled once');
   assert(expiries.includes(indexKey) && expiries.includes(readyKey));
-  const practice = { code: 'PRACT', name: 'Practice room', platformAuth: true, courseId: 'course-04',
+  const practice = { code: 'PRACT', name: 'Practice session', platformAuth: true, courseId: 'course-04',
     mode: 'team', state: 'lobby', stage: 0, practice: true };
   await store.createSession(practice.code, practice);
   assert(!indexedCodes.includes('PRACT'), 'a faculty practice room is never added to the course index');

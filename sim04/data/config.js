@@ -16,6 +16,7 @@ module.exports = {
     'MIS', '3000', '4400', '7000', 'Wright State', 'university', 'semester',
     'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
     '2024', '2025', '2026', '2027',
+    'room', 'rooms', 'bridge',
   ],
   placeholderPatterns: ['TODO', 'TBD', 'lorem', 'XXX', '\\[NAME\\]'],
 };
