@@ -1220,7 +1220,11 @@ mountHelp();
   // a class. The platform says which; only the second belongs in the console.
   if (LAUNCH && (LAUNCH.role === 'faculty' || LAUNCH.role === 'faculty_preview')
       && LAUNCH.mode === 'session') {
-    location.replace(BASE + '/instructor.html#lt=' + encodeURIComponent(LAUNCH_TOKEN));
+    // Keep the session (and tab) the platform asked for, so "See the faculty view" from Rehearse and a past
+    // session's Results open that session, not the Sessions list.
+    const keep = new URLSearchParams();
+    for (const k of ['session', 'tab']) { const v = new URLSearchParams(location.search).get(k); if (v) keep.set(k, v); }
+    location.replace(BASE + '/instructor.html' + (keep.size ? '?' + keep : '') + '#lt=' + encodeURIComponent(LAUNCH_TOKEN));
     return;
   }
   app.innerHTML = `<div class="doc"><div class="doc-in">

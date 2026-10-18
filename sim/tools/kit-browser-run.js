@@ -136,6 +136,12 @@ function token({ sub, name, role, course, mode = 'play' }) {
     await fac.locator('[data-session-control="close"]').click();
     await fac.waitForFunction(() => FacultySession.page.state?.session?.state === 'closed');
     ok((await post('session', { action: 'course_session' }, ana)).code === null, 'A closed session takes no students');
+    // "See the faculty view" (Rehearse, a past session's Results): a faculty session launch with ?session= opens that session.
+    const again = await open('faculty-again');
+    await again.goto(`${origin}/sim01/?session=${code}#lt=${encodeURIComponent(token({ sub: 'fac-1', name: 'Vikram', role: 'faculty', course: 'crs_A', mode: 'session' }))}`);
+    await again.waitForURL(/instructor\.html/);
+    await again.waitForFunction(c => window.FacultySession && FacultySession.page.code === c, code);
+    ok(true, 'A faculty launch for one session opens that session, not the Sessions list');
     ok(errors.length === 0, 'No browser errors ' + errors.join(' | '));
     console.log(`SIM01_KIT_BROWSER_PASSED (${checks} checks). Screenshots: ${artifacts}`);
   } finally { await browser.close(); server.close(); }
