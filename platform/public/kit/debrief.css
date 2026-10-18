@@ -177,4 +177,4 @@
 :root[data-theme="light"] .md-root .md-zone-p{background:rgba(201,149,29,.10)}
 :root[data-theme="light"] .md-root .md-zone-s{background:rgba(46,158,102,.10)}
 :root[data-theme="light"] .md-root .md-dots button[aria-selected=true],:root[data-theme="light"] .md-root .md-btn.md-pri{color:#FFFFFF!important}
-:root[data-theme="light"] .md-root .md-btn.md-amber{color:#8A4A00}
+:root[data-theme="light"] .md-root .md-btn.md-amber{color:#8A4A00!important}
