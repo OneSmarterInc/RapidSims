@@ -601,3 +601,14 @@ body.rs-has-menu .top .right{flex-wrap:wrap;justify-content:flex-end}
 .guide-page p{margin:0 0 10px;line-height:1.6}
 .guide-actions{max-width:760px;margin:12px 0 40px}
 @media print{.guide-actions,.crumb{display:none}.guide-page{border:0;box-shadow:none;padding:0;max-width:none}}
+
+/* Admin Facilitators: Open, Edit and Reset stack in one narrow column, so the row fits its card without scrolling. */
+@media (min-width:821px){
+  .panel td.act.stack{white-space:normal;width:1%}
+  .panel td.act.stack .btn{display:block;width:100%;margin:0 0 5px;text-align:center;white-space:nowrap}
+  .panel td.act.stack .btn:last-child{margin-bottom:0}
+}
+@media (min-width:821px) and (max-width:1000px){
+  .panel:has(td.act.stack) th.num{white-space:normal}
+  .panel:has(td.act.stack) th.num,.panel:has(td.act.stack) td.num{padding-left:10px}
+}
