@@ -19,8 +19,10 @@ require.cache[transport]={id:transport,filename:transport,loaded:true,exports:{c
   if(a[0]==='ZCARD')return queue.size;
   if(a[0]==='ZADD'){queue.set(a[3],Number(a[2]));return 1;}
   if(a[0]==='ZRANGEBYSCORE')return [...queue].filter(([,t])=>t<=Number(a[3])).map(([id])=>id).slice(0,Number(a[6]));
-  if(a[0]==='EVAL'&&a[1].includes("'SET'")){if(!memory.has(a[3]))memory.set(a[3],a[5]);queue.set(a[7],Number(a[6]));return 1;}
-  if(a[0]==='EVAL'&&a[1].includes("'ZREM'")){queue.delete(a[5]);memory.delete(a[4]);return 1;}
+  if(a[0]==='HINCRBY'){const h=hashes.get(a[1])||new Map();h.set(a[2],String(Number(h.get(a[2])||0)+Number(a[3])));hashes.set(a[1],h);return Number(h.get(a[2]));}
+  // Outbox scripts (shared/report-outbox.js): enqueue has 5 keys then raw, now, id; acknowledge has 3 keys then id.
+  if(a[0]==='EVAL'&&a[1].includes("'SET'")&&a[2]==='5'){if(!memory.has(a[3]))memory.set(a[3],a[8]);if(!hashes.has(a[5]))hashes.set(a[5],new Map([['first',a[9]],['attempts','0']]));queue.set(a[10],Number(a[9]));return 1;}
+  if(a[0]==='EVAL'&&a[1].includes("'ZREM'")&&a[2]==='3'){queue.delete(a[6]);memory.delete(a[4]);hashes.delete(a[5]);return 1;}
   throw new Error('Unexpected Redis test command '+a[0]);
 }}};
 const L=require('../../platform/lib/launch');

@@ -8,7 +8,7 @@ async function main() {
   while (!stopping) {
     try {
       const result = await drain();
-      if (result.pending) console.log(JSON.stringify({ event: 'report_outbox', ...result }));
+      if (result.pending || result.deadLettered) console.log(JSON.stringify({ event: 'report_outbox', ...result }));
     } catch (error) { console.error('Report worker failed:', error.code || error.message); }
     if (!stopping) await new Promise(resolve => setTimeout(resolve, 5000));
   }
