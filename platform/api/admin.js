@@ -148,6 +148,17 @@ module.exports = async (req, res) => {
         return res.status(200).json({ ok: true, trialEndsAt: rows[0].trial_ends_at });
       }
 
+      // A full account becomes a trial, for the given days from today. Classes and results stay.
+      case 'make_trial': {
+        const uid = String(b.facultyId || '');
+        const days = T.days(b.days, T.DEFAULT_DAYS);
+        if (!days) return res.status(400).json({ error: 'invalid_days', message: 'Give a whole number of days, 1 to 365.' });
+        const rows = await s`UPDATE users SET account_kind = 'trial', trial_ends_at = now() + make_interval(days => ${days})
+          WHERE id = ${uid} AND role = 'faculty' AND account_kind = 'full' RETURNING id, trial_ends_at`;
+        if (!rows.length) return res.status(404).json({ error: 'no_such_full_account' });
+        return res.status(200).json({ ok: true, trialEndsAt: rows[0].trial_ends_at });
+      }
+
       // Trials: the account becomes full. Classes, practice sessions and results carry over.
       case 'make_full': {
         const uid = String(b.facultyId || '');

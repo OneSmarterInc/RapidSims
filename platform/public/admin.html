@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Administration — Flexee RapidSims</title>
-<link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/app.css?v=20261019a">
 <script src="/sim-identity.js"></script>
 <script src="/portal-navigation.js"></script>
 </head>
@@ -261,7 +261,7 @@ function facTab() {
           <td data-l="Released" class="num"><span class="ratio ${Number(f.paid_students) < Number(f.students) ? 'part' : ''}">${f.paid_students} <span class="of">of ${f.students}</span></span></td>
           <td data-l="Launches" class="num">${f.launches || 0}</td>
           <td data-l="Last seen" class="num">${when(f.last_seen_at)}</td>
-          <td data-l="" class="act">
+          <td data-l="" class="act stack">
             <button class="btn sm" data-open="${esc(f.id)}">Open</button>
             <button class="btn sm" data-pedit="${esc(f.id)}">${D.personEdit===f.id?'Close':'Edit'}</button>
             <button class="btn sm" data-prow="${esc(f.id)}" data-acc="${f.accepted?'1':'0'}">${f.accepted?'Reset':'Re-invite'}</button>
@@ -276,6 +276,7 @@ function facTab() {
           <div class="hint">Correcting an email keeps their courses and students. If they never accepted the invitation, issue a fresh one afterwards — the old link points at the old address.</div>
           <button class="btn pri sm" data-psave="${esc(f.id)}">Save changes</button>
           <button class="btn sm" data-pedit="${esc(f.id)}">Cancel</button>
+          ${f.account_kind === 'trial' ? '' : `<button class="btn sm" style="margin-left:6px" data-make-trial="${esc(f.id)}">Make trial</button>`}
           ${Number(f.courses) === 0 ? `<button class="btn sm danger" style="margin-left:6px" data-pdel="${esc(f.id)}">Delete account</button>` : ''}
           <div data-pout="${esc(f.id)}"></div>
         </td></tr>` : ''}
@@ -315,7 +316,7 @@ function trialsSection() {
         <td data-l="Trial">${dot(t.ended ? 'off' : 'warn', t.label)}</td>
         <td data-l="Classes" class="num">${f.courses || 0}</td>
         <td data-l="Last seen" class="num">${when(f.last_seen_at)}</td>
-        <td data-l="" class="act" style="white-space:nowrap;width:1%">
+        <td data-l="" class="act stack">
           <button class="btn sm" data-extend="${esc(f.id)}">Extend</button>
           <button class="btn sm pri" data-make-full="${esc(f.id)}">Make full</button>
         </td></tr>`; }).join('')}</tbody></table></div></div>`;
@@ -326,6 +327,14 @@ function wireTrials() {
     if (v === null) return;
     const done = acting(b, 'Extending…');
     try { await api('/api/admin', { action:'extend_trial', facultyId:b.dataset.extend, days:v.trim() }); done(); await load(); }
+    catch (e) { if (e.stale) return; done('Failed','bad'); alert(e.message); }
+  });
+  app.querySelectorAll('[data-make-trial]').forEach(b => b.onclick = async () => {
+    const f = D.data.faculty.find(x => x.id === b.dataset.makeTrial);
+    const v = prompt(`Make ${f ? f.name : 'this account'} a trial account for how many days?\n\nDays count from today. Their classes stay. Students join again once you make the account full under Trials.`, '10');
+    if (v === null) return;
+    const done = acting(b, 'Saving…');
+    try { await api('/api/admin', { action:'make_trial', facultyId:b.dataset.makeTrial, days:v.trim() }); done(); D.personEdit = null; await load(); }
     catch (e) { if (e.stale) return; done('Failed','bad'); alert(e.message); }
   });
   app.querySelectorAll('[data-make-full]').forEach(b => b.onclick = async () => {

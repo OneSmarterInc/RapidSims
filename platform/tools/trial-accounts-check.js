@@ -158,6 +158,15 @@ const DAY = 86400000;
   check((await call('student', { action: 'enrol', joinCode: tcode }, 's1')).statusCode === 200, 'Students join once the account is full');
   r = await launch({ sim: 'rapid-03-midland', course: tc, mode: 'session', format: 'json' }, 'tr');
   check(r.statusCode === 200, 'Sessions with students open once the account is full');
+  // A full account can be made a trial again (for an account invited as full by mistake).
+  check((await call('admin', { action: 'make_trial', facultyId: tid, days: 10 }, 'f1')).statusCode === 403, 'A faculty member cannot make an account a trial');
+  check((await call('admin', { action: 'make_trial', facultyId: tid, days: 0 }, 'a1')).statusCode === 400, 'Make trial needs 1 to 365 days');
+  r = await call('admin', { action: 'make_trial', facultyId: tid, days: 10 }, 'a1');
+  row = (await s`SELECT account_kind, trial_ends_at FROM users WHERE id = ${tid}`)[0];
+  check(r.statusCode === 200 && row.account_kind === 'trial' && Math.abs(ends(row) - Date.now() - 10 * DAY) < 60000, 'Make trial sets a trial that ends in the given days');
+  check((await s`SELECT 1 FROM courses WHERE id = ${tc}`).length === 1, 'Make trial keeps the classes');
+  check((await call('admin', { action: 'make_trial', facultyId: tid, days: 10 }, 'a1')).statusCode === 404, 'A trial cannot be made a trial again');
+  await call('admin', { action: 'make_full', facultyId: tid }, 'a1');
 
   // 8. The per-sim seven-day preview is retired from the faculty pages.
   const facultyHtml = fs.readFileSync(path.join(__dirname, '../public/faculty.html'), 'utf8');
@@ -241,8 +250,21 @@ const DAY = 86400000;
       await page.locator(`[data-trial-row="${tid}"] [data-make-full]`).click();
       await page.waitForFunction(id => !document.querySelector(`[data-trial-row="${id}"]`), tid);
       check((await s`SELECT account_kind FROM users WHERE id = ${tid}`)[0].account_kind === 'full', 'Browser: Make full from the Trials list makes the account full');
+      // Make trial from Edit turns a full account back into a trial; the Facilitators table fits its card.
+      for (const w of [1360, 1000, 860]) {
+        await page.setViewportSize({ width: w, height: 960 }); await page.waitForTimeout(200);
+        const over = await page.evaluate(() => [...document.querySelectorAll('.tablewrap')].filter(x => x.scrollWidth > x.clientWidth + 1).map(x => x.closest('.panel').className + ' ' + x.scrollWidth + '/' + x.clientWidth)); const fits = !over.length; if (!fits) console.log('OVER', over);
+        check(fits, `Browser: Admin tables fit their cards at ${w}px, with no sideways scroll`);
+      }
+      await page.setViewportSize({ width: 1360, height: 960 });
+      await page.locator(`[data-pedit="${tid}"]`).first().click();
+      page.once('dialog', d => d.accept('10'));
+      await page.locator(`[data-make-trial="${tid}"]`).click();
+      await page.locator(`[data-trial-row="${tid}"]`).waitFor();
+      check(/10 days left/i.test(await page.locator(`[data-trial-row="${tid}"]`).innerText()), 'Browser: Make trial in Edit puts the account under Trials with 10 days left');
+      await page.screenshot({ path: path.join(shots, 'trial-admin-make-trial.png'), fullPage: true });
       check(errors.length === 0, 'Browser: no page errors ' + errors.join(' | '));
-      console.log('Screenshots: ' + ['trial-class-page.png', 'trial-ended.png', 'trial-admin-trials.png'].map(f => path.join(shots, f)).join(', '));
+      console.log('Screenshots: ' + ['trial-class-page.png', 'trial-ended.png', 'trial-admin-trials.png', 'trial-admin-make-trial.png'].map(f => path.join(shots, f)).join(', '));
     } finally { await browser.close(); server.close(); }
   }
   console.log(`PASS trial-accounts-check: ${n} assertions`);
