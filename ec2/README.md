@@ -12,6 +12,8 @@ All 13 app services load /etc/rapidsims.env, then optional /etc/rapidsims/<servi
 
 For production, use strong independent LAUNCH_SECRET, REPORT_SECRET and HEALTH_SECRET values. Keep files root-owned and readable by the service group only. Remove SETUP_KEY after creating the first administrator. Enable Redis persistence and backups; the report outbox is not disposable cache.
 
+Result queue and dead-letter list. Reports wait in `rapidsims:<APP_ENV>:reports` until the receiver accepts them; the worker retries every minute. A final refusal (404 `no_matching_launch`, 400, 413) or a report older than 7 days from when it was first queued moves to `rapidsims:<APP_ENV>:reports:dead` with its status, error code, first-queued time, attempt count and dead-letter time. Everything else (401, 5xx including `no_secret`, network failures) keeps retrying. Nothing is deleted automatically; the dead-letter list holds student work and follows the same retention and privacy rules as the queue. To look at it, run with the worker's environment, from `/var/www/rapidsims-services/platform`: `node ec2/report-dead-letters.js` (list: sim, student id, launch id, reason, dates; never summaries or transcripts), `--json`, or `node ec2/report-dead-letters.js requeue <reportId>` to send one report again.
+
 Leave standalone ACCESS_CODE, FACULTY_CODE and FACULTY_CODES unset for account-only access. Where intentionally needed, configure them per service. Platform sign-in and signed launch tokens remain the preferred account flow.
 
 ## EC2 setup
