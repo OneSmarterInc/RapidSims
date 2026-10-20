@@ -53,7 +53,7 @@ async function open(sim, status, data = {}, extra = '') {
     assert.equal(denied.destination, undefined, `${folder} denied account stays on notice`);
     assert.match(denied.elements.message.textContent, /Not registered/);
     const guest = await open(sim, 401);
-    assert.match(guest.destination, new RegExp('^/' + (folder === 'sim' ? 'sim01' : folder === 'sim-02' ? 'sim02' : folder === 'sim-plus-01' ? 'simplus01' : folder) + '/'));
+    assert.match(guest.destination, new RegExp('^/' + (folder === 'sim' ? 'sim01' : folder === 'sim-02' ? 'sim02' : folder) + '/'));
     assert.match(guest.destination, /guest=1$/, `${folder} guest access code`);
     assert.equal(guest.request.options.credentials, 'same-origin');
   }

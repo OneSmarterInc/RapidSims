@@ -4,7 +4,7 @@
   'use strict';
   const guestPaths = Object.freeze({
     'rapid-01-disaster': '/sim01/', 'rapid-02-relay': '/sim02/',
-    'rapidsimplus-01': '/simplus01/',
+    'rapidsimplus-01': '/sim-plus-01/',
     'rapidsimplus-02': '/simplus02/',
     'rapid-03-midland': '/sim03/launch.html',
     'rapid-04-whose-number': '/sim04/launch.html',
