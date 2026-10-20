@@ -22,5 +22,16 @@ for(const app of Object.values(require('../../ec2/apps.json'))) {
   for(const prefix of [app.prefix,...(app.aliases||[])].filter(Boolean))assert(routes.includes('location = '+prefix));
 }
 assert(!routes.includes('listen 80'),'managed include must not replace TLS');
+// RapidSim+ 01's legacy paths reach RapidSim+ 01, not Midland (the old Vercel project behind /simplus01 was
+// named flexee-rapid-sim-03-vercel but ran RapidSim+ 01).
+const appsCfg = require('../../ec2/apps.json');
+for (const alias of ['/rapidsims01', '/simplus01']) {
+  const owners = Object.entries(appsCfg).filter(([, a]) => (a.aliases || []).includes(alias)).map(([id]) => id);
+  assert.deepEqual(owners, ['simplus01'], alias + ' belongs to simplus01');
+  const block = routes.split('location ^~ ' + alias + '/ {')[1].split('}')[0];
+  assert(block.includes('127.0.0.1:' + appsCfg.simplus01.port + '/'), alias + ' proxies to the RapidSim+ 01 service');
+}
+assert.equal(appsCfg.simplus01.prefix, '/sim-plus-01', 'RapidSim+ 01 SIM_URL is PUBLIC_BASE_URL + /sim-plus-01');
+assert(/'rapidsimplus-01': '\/sim-plus-01\/'/.test(read('platform/public/open.js')), 'Guest link for RapidSim+ 01 opens /sim-plus-01/');
 console.log('AWS release checks passed: tested SHA, locked dependencies, all registered services restarted, new service rollback, manifest routes.');
 

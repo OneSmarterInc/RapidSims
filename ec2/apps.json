@@ -21,11 +21,7 @@
     "dir": "sim03",
     "port": 3103,
     "prefix": "/sim03",
-    "title": "rapid-sim-03",
-    "aliases": [
-      "/rapidsims01",
-      "/simplus01"
-    ]
+    "title": "rapid-sim-03"
   },
   "sim04": {
     "dir": "sim04",
@@ -73,7 +69,11 @@
     "dir": "sim-plus-01",
     "port": 3111,
     "prefix": "/sim-plus-01",
-    "title": "rapid-sim-plus-01"
+    "title": "rapid-sim-plus-01",
+    "aliases": [
+      "/rapidsims01",
+      "/simplus01"
+    ]
   },
   "simplus02": {
     "dir": "simplus02",
