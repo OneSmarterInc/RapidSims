@@ -11,6 +11,9 @@ name: release-registry
 #   Build    the number of commits on master at this point. It only goes up.
 #   Release  one GitHub Release per tag, titled "sim05 v0.1.3 (build 291)".
 #
+# Run it by hand from the Actions tab with "start_all" ticked to give every sim
+# folder that has no version yet its first version, v0.1.0.
+#
 # Put [skip release] in a commit message to merge without a release.
 # The Flexee Release Registry reads these releases every day.
 
@@ -18,6 +21,11 @@ on:
   push:
     branches: [master]
   workflow_dispatch:
+    inputs:
+      start_all:
+        description: "Give every sim folder that has no version yet its first version (v0.1.0)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -42,21 +50,27 @@ jobs:
           REPO: ${{ github.repository }}
           SHA: ${{ github.sha }}
           BEFORE: ${{ github.event.before }}
+          START_ALL: ${{ inputs.start_all || false }}
         run: |
           set -euo pipefail
           sims="sim sim-02 sim03 sim04 sim05 sim06 sim07 sim08 sim09 sim10 sim-plus-01 simplus02"
 
-          if [ -n "${BEFORE:-}" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ] && git cat-file -e "$BEFORE" 2>/dev/null; then
-            changed=$(git diff --name-only "$BEFORE" "$SHA" | cut -d/ -f1 | sort -u)
-          else
-            changed=$(git diff-tree --no-commit-id --name-only -r -m --first-parent "$SHA" | cut -d/ -f1 | sort -u)
-          fi
-
           prefixes=""
-          for top in $changed; do
-            if echo " $sims " | grep -q " $top "; then prefixes="$prefixes $top"; else prefixes="$prefixes platform"; fi
-          done
-          prefixes=$(echo $prefixes | tr ' ' '\n' | sort -u | tr '\n' ' ')
+          if [ "${START_ALL:-false}" = "true" ]; then
+            for f in $sims; do
+              if [ -d "$f" ] && [ -z "$(git tag -l "$f/v*")" ]; then prefixes="$prefixes $f"; fi
+            done
+          else
+            if [ -n "${BEFORE:-}" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ] && git cat-file -e "$BEFORE" 2>/dev/null; then
+              changed=$(git diff --name-only "$BEFORE" "$SHA" | cut -d/ -f1 | sort -u)
+            else
+              changed=$(git diff-tree --no-commit-id --name-only -r -m --first-parent "$SHA" | cut -d/ -f1 | sort -u)
+            fi
+            for top in $changed; do
+              if echo " $sims " | grep -q " $top "; then prefixes="$prefixes $top"; else prefixes="$prefixes platform"; fi
+            done
+          fi
+          prefixes=$(echo $prefixes | tr ' ' '\n' | sort -u | xargs)
           [ -z "$prefixes" ] && { echo "Nothing changed."; exit 0; }
 
           build=$(git rev-list --count "$SHA")
@@ -80,7 +94,11 @@ jobs:
             echo "Releasing $tag, build $build, commit ${SHA:0:7}"
             git tag "$tag" "$SHA"
             git push origin "refs/tags/$tag"
-            args=(--title "$p v$version (build $build)" --target "$SHA" --generate-notes --notes "Build $build · commit ${SHA:0:7}")
+            if [ -z "$last" ]; then
+              args=(--title "$p v$version (build $build)" --target "$SHA" --notes "Build $build · commit ${SHA:0:7}. First version of $p.")
+            else
+              args=(--title "$p v$version (build $build)" --target "$SHA" --generate-notes --notes "Build $build · commit ${SHA:0:7}")
+            fi
             if [ -n "$last" ]; then args+=(--notes-start-tag "$last"); fi
             gh release create "$tag" "${args[@]}"
           done
