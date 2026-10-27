@@ -1,0 +1,86 @@
+name: release-registry
+
+# Gives every RapidSim its own version, and the shared platform its own version.
+# On each push to master, every top-level folder that changed gets a new tag:
+#
+#   sim05/v0.1.3    for a RapidSim folder (sim, sim-02, sim03 ... sim10, sim-plus-01, simplus02)
+#   platform/v0.4.0 for anything outside those folders (platform, shared, docs, tools ...)
+#
+#   Version  patch goes up by default. Label the PR "minor" or "major" for a bigger step.
+#            The first tag for a folder is v0.1.0.
+#   Build    the number of commits on master at this point. It only goes up.
+#   Release  one GitHub Release per tag, titled "sim05 v0.1.3 (build 291)".
+#
+# Put [skip release] in a commit message to merge without a release.
+# The Flexee Release Registry reads these releases every day.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: release-registry
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: ${{ !contains(github.event.head_commit.message, '[skip release]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Tag and release each changed sim
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          sims="sim sim-02 sim03 sim04 sim05 sim06 sim07 sim08 sim09 sim10 sim-plus-01 simplus02"
+
+          if [ -n "${BEFORE:-}" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ] && git cat-file -e "$BEFORE" 2>/dev/null; then
+            changed=$(git diff --name-only "$BEFORE" "$SHA" | cut -d/ -f1 | sort -u)
+          else
+            changed=$(git diff-tree --no-commit-id --name-only -r -m --first-parent "$SHA" | cut -d/ -f1 | sort -u)
+          fi
+
+          prefixes=""
+          for top in $changed; do
+            if echo " $sims " | grep -q " $top "; then prefixes="$prefixes $top"; else prefixes="$prefixes platform"; fi
+          done
+          prefixes=$(echo $prefixes | tr ' ' '\n' | sort -u | tr '\n' ' ')
+          [ -z "$prefixes" ] && { echo "Nothing changed."; exit 0; }
+
+          build=$(git rev-list --count "$SHA")
+          labels=$(gh api "repos/$REPO/commits/$SHA/pulls" --jq '[.[0].labels[]?.name] | join(",")' 2>/dev/null || true)
+
+          for p in $prefixes; do
+            if git tag --points-at "$SHA" | grep -q "^$p/v"; then echo "$p already tagged here."; continue; fi
+            last=$(git tag -l "$p/v[0-9]*.[0-9]*.[0-9]*" --sort=-v:refname | head -n1)
+            if [ -z "$last" ]; then
+              version="0.1.0"
+            else
+              IFS=. read -r ma mi pa <<< "${last#"$p"/v}"
+              case ",$labels," in
+                *,major,*) ma=$((ma + 1)); mi=0; pa=0 ;;
+                *,minor,*) mi=$((mi + 1)); pa=0 ;;
+                *)         pa=$((pa + 1)) ;;
+              esac
+              version="$ma.$mi.$pa"
+            fi
+            tag="$p/v$version"
+            echo "Releasing $tag, build $build, commit ${SHA:0:7}"
+            git tag "$tag" "$SHA"
+            git push origin "refs/tags/$tag"
+            args=(--title "$p v$version (build $build)" --target "$SHA" --generate-notes --notes "Build $build · commit ${SHA:0:7}")
+            if [ -n "$last" ]; then args+=(--notes-start-tag "$last"); fi
+            gh release create "$tag" "${args[@]}"
+          done
